@@ -13,6 +13,7 @@ import com.vesanieminen.views.MainLayout;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 
 @PageTitle("EV Statistics")
@@ -30,6 +31,7 @@ public class EVStatisticsView extends Main {
                 return;
             }
             final var chart = new Chart();
+            chart.setTimeline(true);
             chart.setHeightFull();
             setHeightFull();
             final var configuration = chart.getConfiguration();
@@ -38,8 +40,8 @@ public class EVStatisticsView extends Main {
             final var categories = new ArrayList<String>();
             for (AUT_FI_Service.EVStats stat : evStats.get()) {
                 categories.add(stat.name());
-                evRegistrations.add(new DataSeriesItem(stat.name(), (double) stat.evAmount() / stat.totalAmount() * 100.0));
-                otherRegistrations.add(new DataSeriesItem(stat.name(), (double) stat.otherAmount() / stat.totalAmount() * 100.0));
+                evRegistrations.add(new DataSeriesItem(stat.date().atStartOfDay().toInstant(ZoneOffset.UTC), (double) stat.evAmount() / stat.totalAmount() * 100.0));
+                otherRegistrations.add(new DataSeriesItem(stat.date().atStartOfDay().toInstant(ZoneOffset.UTC), (double) stat.otherAmount() / stat.totalAmount() * 100.0));
             }
             configuration.getxAxis().setCategories(categories.toArray(String[]::new));
             configuration.getyAxis().setMax(100);

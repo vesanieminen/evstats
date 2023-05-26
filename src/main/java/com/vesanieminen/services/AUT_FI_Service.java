@@ -16,11 +16,13 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.channels.Channels;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static com.vesanieminen.Utils.getInt;
+import static com.vesanieminen.Utils.getMonth;
 
 public class AUT_FI_Service {
 
@@ -28,11 +30,13 @@ public class AUT_FI_Service {
     private final static String CSV_FILENAME = "aut.fi.csv";
     private final static String DEFAULT_CSV_FILENAME = "data/ensirekisteroinnit_kayttovoimat_jakauma-2.csv";
 
+    // Doesn't work atm. due to the url serving a page instead of the actual file.
     public static HttpResponse<String> loadData() {
         try {
             final var readableByteChannel = Channels.newChannel(new URL(URL).openStream());
             FileOutputStream fileOutputStream = new FileOutputStream(CSV_FILENAME);
             fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+            fileOutputStream.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -67,17 +71,25 @@ public class AUT_FI_Service {
 
         String[] line;
         final var evStats = new ArrayList<EVStats>();
+        String year = "";
         while ((line = csvReader.readNext()) != null) {
+            String month = line[0];
+            if (line[0].contains("/")) {
+                final var split = line[0].split("/");
+                year = split[0];
+                month = split[1];
+            }
+            final var date = LocalDate.of(Integer.parseInt(year), getMonth(month), 1);
             final var evAmount = getInt(line[3]);
             final var totalAmount = getInt(line[11]);
             final var otherAmount = totalAmount - evAmount;
-            evStats.add(new EVStats(line[0], evAmount, otherAmount, totalAmount));
+            evStats.add(new EVStats(line[0], date, evAmount, otherAmount, totalAmount));
         }
         csvReader.close();
         return Optional.of(evStats);
     }
 
-    public record EVStats(String name, int evAmount, int otherAmount, int totalAmount) {
+    public record EVStats(String name, LocalDate date, int evAmount, int otherAmount, int totalAmount) {
     }
 
 }
