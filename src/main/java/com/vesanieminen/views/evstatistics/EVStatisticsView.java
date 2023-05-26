@@ -5,6 +5,7 @@ import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.DataSeries;
 import com.vaadin.flow.component.charts.model.DataSeriesItem;
+import com.vaadin.flow.component.charts.model.Labels;
 import com.vaadin.flow.component.charts.model.Marker;
 import com.vaadin.flow.component.charts.model.PlotOptionsLine;
 import com.vaadin.flow.component.charts.model.Tooltip;
@@ -17,7 +18,6 @@ import com.vesanieminen.views.MainLayout;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 
 import static com.vaadin.flow.component.charts.model.style.SolidColor.BLUE;
 import static com.vaadin.flow.component.charts.model.style.SolidColor.RED;
@@ -43,15 +43,20 @@ public class EVStatisticsView extends Main {
             final var configuration = chart.getConfiguration();
             final var evRegistrations = new DataSeries("BEV");
             final var otherRegistrations = new DataSeries("Other (incl. PHEV etc.)");
-            final var categories = new ArrayList<String>();
             for (AUT_FI_Service.EVStats stat : evStats.get()) {
-                categories.add(stat.name());
                 evRegistrations.add(new DataSeriesItem(stat.date().atStartOfDay().toInstant(ZoneOffset.UTC), (double) stat.evAmount() / stat.totalAmount() * 100.0));
                 otherRegistrations.add(new DataSeriesItem(stat.date().atStartOfDay().toInstant(ZoneOffset.UTC), (double) stat.otherAmount() / stat.totalAmount() * 100.0));
             }
-            configuration.getxAxis().setCategories(categories.toArray(String[]::new));
-            configuration.getyAxis().setMax(100);
-            configuration.getyAxis().setMin(0);
+            configuration.getLegend().setEnabled(true);
+            final var yAxis = configuration.getyAxis();
+            yAxis.setMax(100);
+            yAxis.setMin(0);
+            yAxis.setOpposite(false);
+            var labels = new Labels();
+            labels.setFormatter("return this.value +'%'");
+            yAxis.setLabels(labels);
+            //yAxis.setTitle(getTranslation(""));
+            yAxis.setLabels(labels);
             configuration.addSeries(evRegistrations);
             configuration.addSeries(otherRegistrations);
             configuration.setTitle("Car registration percentage in Finland");
