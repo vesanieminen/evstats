@@ -79,7 +79,8 @@ public class AUT_FI_Service {
                 year = split[0];
                 month = split[1];
             }
-            final var date = LocalDate.of(Integer.parseInt(year), getMonth(month), 1);
+            var date = LocalDate.of(Integer.parseInt(year), getMonth(month), 1);
+            date = date.withDayOfMonth(date.lengthOfMonth());
             final var evAmount = getInt(line[3]);
             final var totalAmount = getInt(line[11]);
             final var otherAmount = totalAmount - evAmount;

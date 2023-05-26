@@ -5,6 +5,9 @@ import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.DataSeries;
 import com.vaadin.flow.component.charts.model.DataSeriesItem;
+import com.vaadin.flow.component.charts.model.Marker;
+import com.vaadin.flow.component.charts.model.PlotOptionsLine;
+import com.vaadin.flow.component.charts.model.Tooltip;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -15,6 +18,9 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+
+import static com.vaadin.flow.component.charts.model.style.SolidColor.BLUE;
+import static com.vaadin.flow.component.charts.model.style.SolidColor.RED;
 
 @PageTitle("EV Statistics")
 @Route(value = "", layout = MainLayout.class)
@@ -49,6 +55,25 @@ public class EVStatisticsView extends Main {
             configuration.addSeries(evRegistrations);
             configuration.addSeries(otherRegistrations);
             configuration.setTitle("Car registration percentage in Finland");
+
+            final var evPlotOptions = new PlotOptionsLine();
+            evPlotOptions.setColor(BLUE);
+            evRegistrations.setPlotOptions(evPlotOptions);
+            final var otherPlotOptions = new PlotOptionsLine();
+            otherPlotOptions.setColor(RED);
+            otherRegistrations.setPlotOptions(otherPlotOptions);
+
+            final var plotOptionsLine = new PlotOptionsLine();
+            plotOptionsLine.setAnimation(false);
+            plotOptionsLine.setStickyTracking(true);
+            plotOptionsLine.setMarker(new Marker(false));
+            chart.getConfiguration().setPlotOptions(plotOptionsLine);
+            final var tooltip = new Tooltip();
+            tooltip.setValueDecimals(2);
+            tooltip.setValueSuffix("%");
+            configuration.setTooltip(tooltip);
+
+
             add(chart);
 
         } catch (IOException | URISyntaxException e) {
