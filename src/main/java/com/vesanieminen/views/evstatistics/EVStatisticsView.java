@@ -59,7 +59,7 @@ public class EVStatisticsView extends Main {
             yAxis.setLabels(labels);
             configuration.addSeries(evRegistrations);
             configuration.addSeries(otherRegistrations);
-            configuration.setTitle("Car registration percentage in Finland");
+            configuration.setTitle("Car registration percentages in Finland");
 
             final var evPlotOptions = new PlotOptionsLine();
             evPlotOptions.setColor(BLUE);
