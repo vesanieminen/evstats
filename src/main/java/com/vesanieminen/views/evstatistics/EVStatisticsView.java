@@ -48,6 +48,8 @@ public class EVStatisticsView extends Main {
                 otherRegistrations.add(new DataSeriesItem(stat.date().atStartOfDay().toInstant(ZoneOffset.UTC), (double) stat.otherAmount() / stat.totalAmount() * 100.0));
             }
             configuration.getLegend().setEnabled(true);
+            configuration.getNavigator().setEnabled(false);
+            configuration.getScrollbar().setEnabled(false);
             final var yAxis = configuration.getyAxis();
             yAxis.setMax(100);
             yAxis.setMin(0);
