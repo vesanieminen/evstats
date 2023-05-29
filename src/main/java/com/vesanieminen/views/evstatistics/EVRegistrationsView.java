@@ -28,8 +28,11 @@ public class EVRegistrationsView extends Main {
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
+        setHeightFull();
         attachEvent.getUI().getPage().retrieveExtendedClientDetails(details -> {
-            setHeight("var(--fullscreen-height)");
+            if (details.isTouchDevice() && details.isIOS()) {
+                setHeight("var(--fullscreen-height)");
+            }
         });
         try {
             final var evStats = AUT_FI_Service.loadDataFromFile();
