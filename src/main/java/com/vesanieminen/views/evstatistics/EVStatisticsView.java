@@ -9,9 +9,13 @@ import com.vaadin.flow.component.charts.model.Labels;
 import com.vaadin.flow.component.charts.model.Marker;
 import com.vaadin.flow.component.charts.model.PlotOptionsLine;
 import com.vaadin.flow.component.charts.model.Tooltip;
+import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vesanieminen.services.AUT_FI_Service;
 import com.vesanieminen.views.MainLayout;
 
@@ -27,6 +31,7 @@ import static com.vaadin.flow.component.charts.model.style.SolidColor.RED;
 public class EVStatisticsView extends Main {
 
     public EVStatisticsView() {
+        //addClassNames(LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
     }
 
     @Override
@@ -80,8 +85,13 @@ public class EVStatisticsView extends Main {
             tooltip.setValueSuffix("%");
             configuration.setTooltip(tooltip);
 
-
             add(chart);
+
+            final var sourceSpan = new Span("Source: ");
+            final var link = new Anchor("https://www.aut.fi/tilastot/ensirekisteroinnit/ensirekisteroinnit_kayttovoimittain/henkiloautojen_kayttovoimatilastot", "aut.fi");
+            final var footer = new Div(sourceSpan, link);
+            footer.addClassNames(LumoUtility.Display.FLEX, LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.SMALL, LumoUtility.Margin.Bottom.XSMALL, LumoUtility.Gap.XSMALL, LumoUtility.JustifyContent.CENTER);
+            add(footer);
 
         } catch (IOException | URISyntaxException e) {
             throw new RuntimeException(e);
