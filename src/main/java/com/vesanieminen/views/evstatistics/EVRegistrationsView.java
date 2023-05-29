@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.ZoneOffset;
 
-@PageTitle("EV registrations per month")
+@PageTitle("New EV registrations per month")
 @Route(value = "registrations", layout = MainLayout.class)
 public class EVRegistrationsView extends Main {
 

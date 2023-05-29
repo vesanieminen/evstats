@@ -74,7 +74,7 @@ public class MainLayout extends AppLayout {
         final var sourceSpan = new Span("Source: ");
         final var link = new Anchor("https://www.aut.fi/tilastot/ensirekisteroinnit/ensirekisteroinnit_kayttovoimittain/henkiloautojen_kayttovoimatilastot", "aut.fi");
         final var footer = new Div(sourceSpan, link);
-        footer.addClassNames(LumoUtility.Display.FLEX, LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.SMALL, LumoUtility.Margin.Bottom.XSMALL, LumoUtility.Gap.XSMALL, LumoUtility.JustifyContent.CENTER);
+        footer.addClassNames(LumoUtility.Display.FLEX, LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.SMALL, LumoUtility.Margin.Bottom.XSMALL, LumoUtility.Gap.XSMALL);
         layout.add(footer);
 
         // GitHub link
