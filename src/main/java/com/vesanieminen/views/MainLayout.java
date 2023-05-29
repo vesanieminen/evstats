@@ -11,7 +11,8 @@ import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import com.vesanieminen.views.evstatistics.EVStatisticsView;
+import com.vesanieminen.views.evstatistics.EVPercentageView;
+import com.vesanieminen.views.evstatistics.EVRegistrationsView;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 
 /**
@@ -34,7 +35,7 @@ public class MainLayout extends AppLayout {
         viewTitle = new H2();
         viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
 
-        //addToNavbar(true, toggle, viewTitle);
+        addToNavbar(true, toggle, viewTitle);
     }
 
     private void addDrawerContent() {
@@ -44,7 +45,7 @@ public class MainLayout extends AppLayout {
 
         Scroller scroller = new Scroller(createNavigation());
 
-        //addToDrawer(header, scroller, createFooter());
+        addToDrawer(header, scroller, createFooter());
     }
 
     private SideNav createNavigation() {
@@ -56,7 +57,8 @@ public class MainLayout extends AppLayout {
         SideNav nav = new SideNav();
 
         nav.addItem(
-                new SideNavItem("EV Statistics", EVStatisticsView.class, LineAwesomeIcon.CHART_AREA_SOLID.create()));
+                new SideNavItem("Percentages", EVPercentageView.class, LineAwesomeIcon.CHART_AREA_SOLID.create()),
+                new SideNavItem("Registrations", EVRegistrationsView.class, LineAwesomeIcon.CHART_BAR_SOLID.create()));
 
         return nav;
     }

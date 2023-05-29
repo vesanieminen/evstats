@@ -26,12 +26,11 @@ import java.time.ZoneOffset;
 import static com.vaadin.flow.component.charts.model.style.SolidColor.BLUE;
 import static com.vaadin.flow.component.charts.model.style.SolidColor.RED;
 
-@PageTitle("EV Statistics")
+@PageTitle("Car registration percentages in Finland")
 @Route(value = "", layout = MainLayout.class)
-public class EVStatisticsView extends Main {
+public class EVPercentageView extends Main {
 
-    public EVStatisticsView() {
-        //addClassNames(LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
+    public EVPercentageView() {
     }
 
     @Override
@@ -62,11 +61,9 @@ public class EVStatisticsView extends Main {
             var labels = new Labels();
             labels.setFormatter("return this.value +'%'");
             yAxis.setLabels(labels);
-            //yAxis.setTitle(getTranslation(""));
             yAxis.setLabels(labels);
             configuration.addSeries(evRegistrations);
             configuration.addSeries(otherRegistrations);
-            configuration.setTitle("Car registration percentages in Finland");
 
             final var evPlotOptions = new PlotOptionsLine();
             evPlotOptions.setColor(BLUE);
