@@ -9,13 +9,9 @@ import com.vaadin.flow.component.charts.model.Labels;
 import com.vaadin.flow.component.charts.model.Marker;
 import com.vaadin.flow.component.charts.model.PlotOptionsLine;
 import com.vaadin.flow.component.charts.model.Tooltip;
-import com.vaadin.flow.component.html.Anchor;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Main;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vesanieminen.services.AUT_FI_Service;
 import com.vesanieminen.views.MainLayout;
 
@@ -26,7 +22,7 @@ import java.time.ZoneOffset;
 import static com.vaadin.flow.component.charts.model.style.SolidColor.BLUE;
 import static com.vaadin.flow.component.charts.model.style.SolidColor.RED;
 
-@PageTitle("Car registration percentages in Finland")
+@PageTitle("Car registration percentages in Finland per month")
 @Route(value = "", layout = MainLayout.class)
 public class EVPercentageView extends Main {
 
@@ -61,7 +57,6 @@ public class EVPercentageView extends Main {
             var labels = new Labels();
             labels.setFormatter("return this.value +'%'");
             yAxis.setLabels(labels);
-            yAxis.setLabels(labels);
             configuration.addSeries(evRegistrations);
             configuration.addSeries(otherRegistrations);
 
@@ -83,13 +78,6 @@ public class EVPercentageView extends Main {
             configuration.setTooltip(tooltip);
 
             add(chart);
-
-            final var sourceSpan = new Span("Source: ");
-            final var link = new Anchor("https://www.aut.fi/tilastot/ensirekisteroinnit/ensirekisteroinnit_kayttovoimittain/henkiloautojen_kayttovoimatilastot", "aut.fi");
-            final var footer = new Div(sourceSpan, link);
-            footer.addClassNames(LumoUtility.Display.FLEX, LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.SMALL, LumoUtility.Margin.Bottom.XSMALL, LumoUtility.Gap.XSMALL, LumoUtility.JustifyContent.CENTER);
-            add(footer);
-
         } catch (IOException | URISyntaxException e) {
             throw new RuntimeException(e);
         }

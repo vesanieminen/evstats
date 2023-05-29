@@ -2,10 +2,14 @@ package com.vesanieminen.views;
 
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Footer;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Header;
+import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
@@ -65,6 +69,22 @@ public class MainLayout extends AppLayout {
 
     private Footer createFooter() {
         Footer layout = new Footer();
+        layout.addClassNames(LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
+
+        final var sourceSpan = new Span("Source: ");
+        final var link = new Anchor("https://www.aut.fi/tilastot/ensirekisteroinnit/ensirekisteroinnit_kayttovoimittain/henkiloautojen_kayttovoimatilastot", "aut.fi");
+        final var footer = new Div(sourceSpan, link);
+        footer.addClassNames(LumoUtility.Display.FLEX, LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.SMALL, LumoUtility.Margin.Bottom.XSMALL, LumoUtility.Gap.XSMALL, LumoUtility.JustifyContent.CENTER);
+        layout.add(footer);
+
+        // GitHub link
+        final var githubIcon = new Image("icons/GitHub-Mark-32px.png", "GitHub icon");
+        githubIcon.addClassNames("footer-icon");
+        final var githubLink = new Anchor("https://github.com/vesanieminen/evstats", "Code on Github");
+        githubLink.addClassNames(LumoUtility.Display.FLEX);
+        githubLink.add(githubIcon);
+        githubIcon.addClassNames(LumoUtility.IconSize.MEDIUM, LumoUtility.TextColor.PRIMARY, LumoUtility.Margin.Left.SMALL);
+        layout.add(githubLink);
 
         return layout;
     }
