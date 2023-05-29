@@ -12,3 +12,7 @@ html {
     }
 }
 
+vaadin-app-layout::part(drawer) {
+    width: 220px;
+}
+
