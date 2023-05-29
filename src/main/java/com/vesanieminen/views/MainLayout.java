@@ -61,8 +61,8 @@ public class MainLayout extends AppLayout {
         SideNav nav = new SideNav();
 
         nav.addItem(
-                new SideNavItem("Percentages", EVPercentageView.class, LineAwesomeIcon.CHART_AREA_SOLID.create()),
-                new SideNavItem("Registrations", EVRegistrationsView.class, LineAwesomeIcon.CHART_BAR_SOLID.create()));
+                new SideNavItem("Adoption curve", EVPercentageView.class, LineAwesomeIcon.CHART_AREA_SOLID.create()),
+                new SideNavItem("New cars", EVRegistrationsView.class, LineAwesomeIcon.CHART_BAR_SOLID.create()));
 
         return nav;
     }
