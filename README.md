@@ -1,5 +1,7 @@
 # EV stats
 
+Hosted on: https://evstats.vesanieminen.com/
+
 ![Screenshot 2023-05-26 at 18 08 49](https://github.com/vesanieminen/evstats/assets/108755/3f82f791-3c29-41c0-9bbf-675bac4ba8a8)
 
 
