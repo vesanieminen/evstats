@@ -22,7 +22,7 @@ import java.time.ZoneOffset;
 import static com.vaadin.flow.component.charts.model.style.SolidColor.BLUE;
 import static com.vaadin.flow.component.charts.model.style.SolidColor.RED;
 
-@PageTitle("New EV registration percentage in Finland per month")
+@PageTitle("New EV registration percentage")
 @Route(value = "", layout = MainLayout.class)
 public class EVAdoptionRateView extends Main {
 
