@@ -1,2 +1,14 @@
 @import url('./main-layout.css');
 @import url('./views/e-v-statistics-view.css');
+
+html {
+    --fullscreen-height: 100%;
+}
+
+/* iOS specific height setting */
+@supports (-webkit-touch-callout: none) {
+    html {
+        --fullscreen-height: calc(100% - 7.5rem);
+    }
+}
+

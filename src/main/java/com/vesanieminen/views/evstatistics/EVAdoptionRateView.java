@@ -31,6 +31,10 @@ public class EVAdoptionRateView extends Main {
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
+        attachEvent.getUI().getPage().retrieveExtendedClientDetails(details -> {
+            setHeight("var(--fullscreen-height)");
+        });
+
         try {
             final var evStats = AUT_FI_Service.loadDataFromFile();
             if (evStats.isEmpty()) {
@@ -39,7 +43,6 @@ public class EVAdoptionRateView extends Main {
             final var chart = new Chart();
             chart.setTimeline(true);
             chart.setHeightFull();
-            setHeightFull();
             final var configuration = chart.getConfiguration();
             final var evRegistrations = new DataSeries("BEV");
             final var otherRegistrations = new DataSeries("Other (incl. PHEV etc.)");

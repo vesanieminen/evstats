@@ -28,6 +28,9 @@ public class EVRegistrationsView extends Main {
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
+        attachEvent.getUI().getPage().retrieveExtendedClientDetails(details -> {
+            setHeight("var(--fullscreen-height)");
+        });
         try {
             final var evStats = AUT_FI_Service.loadDataFromFile();
             if (evStats.isEmpty()) {
@@ -36,7 +39,6 @@ public class EVRegistrationsView extends Main {
             final var chart = new Chart();
             chart.setTimeline(true);
             chart.setHeightFull();
-            setHeightFull();
             final var configuration = chart.getConfiguration();
             final var evRegistrations = new DataSeries("BEV");
             for (AUT_FI_Service.EVStats stat : evStats.get()) {
