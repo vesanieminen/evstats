@@ -62,6 +62,7 @@ public class EVRegistrationsView extends Main {
             plotOptionsLine.setMarker(new Marker(false));
             chart.getConfiguration().setPlotOptions(plotOptionsLine);
             final var tooltip = new Tooltip();
+            tooltip.setShared(true);
             configuration.setTooltip(tooltip);
 
             add(chart);
