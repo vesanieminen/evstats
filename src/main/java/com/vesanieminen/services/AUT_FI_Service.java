@@ -25,7 +25,7 @@ import static com.vesanieminen.Utils.getMonth;
 
 public class AUT_FI_Service {
 
-    private final static String URL = "https://www.aut.fi/tilastot/ensirekisteroinnit/ensirekisteroinnit_kayttovoimittain/henkiloautojen_kayttovoimatilastot?download_8097=1&download_8098=1";
+    private final static String URL = "https://www.aut.fi/tilastot/ensirekisteroinnit/ensirekisteroinnit_kayttovoimittain/henkiloautojen_kayttovoimatilastot?download_8098=1";
     private final static String CSV_FILENAME = "aut.fi.csv";
     private final static String DEFAULT_CSV_FILENAME = "data/ensirekisteroinnit_kayttovoimat_jakauma-2.csv";
 
