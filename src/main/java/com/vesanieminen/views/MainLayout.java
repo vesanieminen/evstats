@@ -17,6 +17,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vesanieminen.views.evstatistics.EVAdoptionRateView;
 import com.vesanieminen.views.evstatistics.EVRegistrationsView;
+import com.vesanieminen.views.evstatistics.TeslaRegistrationsView;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 
 /**
@@ -62,7 +63,9 @@ public class MainLayout extends AppLayout {
 
         nav.addItem(
                 new SideNavItem("Adoption curve", EVAdoptionRateView.class, LineAwesomeIcon.CHART_AREA_SOLID.create()),
-                new SideNavItem("New cars", EVRegistrationsView.class, LineAwesomeIcon.CHART_BAR_SOLID.create()));
+                new SideNavItem("New cars", EVRegistrationsView.class, LineAwesomeIcon.CHART_BAR_SOLID.create()),
+                new SideNavItem("Tesla registrations", TeslaRegistrationsView.class, LineAwesomeIcon.CAR_BATTERY_SOLID.create())
+        );
 
         return nav;
     }

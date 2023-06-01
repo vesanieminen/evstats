@@ -28,6 +28,7 @@ public class AUT_FI_Service {
     private final static String URL = "https://www.aut.fi/tilastot/ensirekisteroinnit/ensirekisteroinnit_kayttovoimittain/henkiloautojen_kayttovoimatilastot?download_8098=1";
     private final static String CSV_FILENAME = "aut.fi.csv";
     private final static String DEFAULT_CSV_FILENAME = "data/ensirekisteroinnit_kayttovoimat_jakauma-3.csv";
+    private final static String TESLA_CSV_FILENAME = "data/Tesla registrations.csv";
 
     // Doesn't work atm. due to the url serving a page instead of the actual file.
     public static HttpResponse<String> loadData() {
@@ -80,6 +81,40 @@ public class AUT_FI_Service {
     }
 
     public record EVStats(String name, LocalDate date, int evAmount, int otherAmount, int totalAmount) {
+    }
+
+
+    public static Optional<List<TeslaStats>> loadTeslaDataFromFile() throws IOException, URISyntaxException {
+        try (InputStream inputStream = AUT_FI_Service.class.getClassLoader().getResourceAsStream(TESLA_CSV_FILENAME);
+             InputStreamReader inputStreamReader = new InputStreamReader(Objects.requireNonNull(inputStream));
+             BufferedReader reader = new BufferedReader(inputStreamReader)) {
+
+            CSVParser parser = new CSVParserBuilder().withSeparator(',').build();
+            CSVReader csvReader = new CSVReaderBuilder(reader)
+                    .withSkipLines(1)
+                    .withCSVParser(parser)
+                    .build();
+
+            String[] line;
+            final List<TeslaStats> teslaStats = new ArrayList<>();
+            while ((line = csvReader.readNext()) != null) {
+                final var monthAndYear = line[0].split("/");
+                final var month = monthAndYear[0];
+                final var year = monthAndYear[1];
+                var date = LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), 1);
+                final var amount = getInt(line[1]);
+                teslaStats.add(new TeslaStats(date, amount));
+            }
+            csvReader.close();
+            return Optional.of(teslaStats);
+        } catch (IOException e) {
+            // Handle or log the exception accordingly
+            e.printStackTrace();
+        }
+        return Optional.empty();
+    }
+
+    public record TeslaStats(LocalDate date, int amount) {
     }
 
 }
