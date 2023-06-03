@@ -110,6 +110,22 @@ public class MainLayout extends AppLayout {
         footer.addClassNames(LumoUtility.Display.FLEX, LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.SMALL, LumoUtility.Margin.Bottom.XSMALL, LumoUtility.Gap.XSMALL);
         layout.add(footer);
 
+        final var vaadinIcon = VaadinIcon.VAADIN_H.create();
+        vaadinIcon.addClassNames(LumoUtility.IconSize.SMALL);
+        final var vaadinLink = new Anchor("http://vaadin.com", "Built with Vaadin");
+        vaadinLink.addClassNames(
+                LumoUtility.AlignItems.CENTER,
+                LumoUtility.BorderRadius.LARGE,
+                LumoUtility.Display.FLEX,
+                LumoUtility.FontSize.SMALL,
+                LumoUtility.FontWeight.MEDIUM,
+                LumoUtility.Gap.XSMALL,
+                LumoUtility.Height.MEDIUM,
+                LumoUtility.JustifyContent.CENTER
+        );
+        vaadinLink.add(vaadinIcon);
+        layout.add(vaadinLink);
+
         // GitHub link
         final var githubIcon = new Span();
         githubIcon.addClassNames(LumoUtility.Display.FLEX);
@@ -119,6 +135,7 @@ public class MainLayout extends AppLayout {
         githubLink.add(githubIcon);
         githubIcon.addClassNames(LumoUtility.IconSize.MEDIUM, LumoUtility.TextColor.PRIMARY, LumoUtility.Margin.Left.SMALL);
         layout.add(githubLink);
+
 
         return layout;
     }
