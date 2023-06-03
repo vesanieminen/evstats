@@ -2,7 +2,8 @@
 
 Hosted on: https://evstats.vesanieminen.com/
 
-![Screenshot 2023-05-26 at 18 08 49](https://github.com/vesanieminen/evstats/assets/108755/3f82f791-3c29-41c0-9bbf-675bac4ba8a8)
+<img width="1792" alt="Screenshot 2023-06-03 at 21 37 50" src="https://github.com/vesanieminen/evstats/assets/108755/2254d286-a8aa-4c4d-b512-9c7d32c265bd">
+
 
 
 This project can be used as a starting point to create your own Vaadin application with Spring Boot.
