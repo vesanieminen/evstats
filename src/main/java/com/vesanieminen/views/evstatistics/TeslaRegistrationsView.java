@@ -54,6 +54,7 @@ public class TeslaRegistrationsView extends Main {
             configuration.getScrollbar().setEnabled(false);
             final var yAxis = configuration.getyAxis();
             yAxis.setMin(0);
+            yAxis.setTickInterval(250);
             yAxis.setOpposite(false);
             configuration.addSeries(evRegistrations);
 

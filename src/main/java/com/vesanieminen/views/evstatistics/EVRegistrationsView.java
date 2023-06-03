@@ -54,6 +54,7 @@ public class EVRegistrationsView extends Main {
             configuration.getScrollbar().setEnabled(false);
             final var yAxis = configuration.getyAxis();
             yAxis.setMin(0);
+            yAxis.setTickInterval(1000);
             yAxis.setOpposite(false);
             configuration.addSeries(evRegistrations);
 
