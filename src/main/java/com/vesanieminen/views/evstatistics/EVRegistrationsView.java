@@ -48,6 +48,7 @@ public class EVRegistrationsView extends Main {
                 evRegistrations.add(new DataSeriesItem(stat.date().atStartOfDay().toInstant(ZoneOffset.UTC), stat.evAmount()));
             }
             configuration.getChart().setType(ChartType.COLUMN);
+            configuration.getChart().setStyledMode(true);
             configuration.getLegend().setEnabled(true);
             configuration.getNavigator().setEnabled(false);
             configuration.getScrollbar().setEnabled(false);

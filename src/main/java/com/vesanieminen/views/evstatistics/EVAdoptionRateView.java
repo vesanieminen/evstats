@@ -19,9 +19,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.ZoneOffset;
 
-import static com.vaadin.flow.component.charts.model.style.SolidColor.BLUE;
-import static com.vaadin.flow.component.charts.model.style.SolidColor.RED;
-
 @PageTitle("New EV registration percentage")
 @Route(value = "", layout = MainLayout.class)
 public class EVAdoptionRateView extends Main {
@@ -52,6 +49,7 @@ public class EVAdoptionRateView extends Main {
                 evRegistrations.add(new DataSeriesItem(stat.date().atStartOfDay().toInstant(ZoneOffset.UTC), (double) stat.evAmount() / stat.totalAmount() * 100.0));
                 otherRegistrations.add(new DataSeriesItem(stat.date().atStartOfDay().toInstant(ZoneOffset.UTC), (double) stat.otherAmount() / stat.totalAmount() * 100.0));
             }
+            configuration.getChart().setStyledMode(true);
             configuration.getLegend().setEnabled(true);
             configuration.getNavigator().setEnabled(false);
             configuration.getScrollbar().setEnabled(false);
@@ -65,11 +63,8 @@ public class EVAdoptionRateView extends Main {
             configuration.addSeries(evRegistrations);
             configuration.addSeries(otherRegistrations);
 
-            final var evPlotOptions = new PlotOptionsLine();
-            evPlotOptions.setColor(BLUE);
-            evRegistrations.setPlotOptions(evPlotOptions);
             final var otherPlotOptions = new PlotOptionsLine();
-            otherPlotOptions.setColor(RED);
+            otherPlotOptions.setColorIndex(2);
             otherRegistrations.setPlotOptions(otherPlotOptions);
 
             final var plotOptionsLine = new PlotOptionsLine();
