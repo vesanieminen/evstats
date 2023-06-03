@@ -59,7 +59,9 @@ public class TeslaRegistrationsBarView extends Main {
                 configuration.addSeries(series);
             }
             configuration.getChart().setType(ChartType.BAR);
+            configuration.getChart().setStyledMode(true);
             configuration.getLegend().setEnabled(true);
+            configuration.getLegend().setReversed(true);
             configuration.getNavigator().setEnabled(false);
             configuration.getScrollbar().setEnabled(false);
             final var yAxis = configuration.getyAxis();
