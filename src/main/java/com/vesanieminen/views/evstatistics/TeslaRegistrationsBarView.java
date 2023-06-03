@@ -62,8 +62,6 @@ public class TeslaRegistrationsBarView extends Main {
             configuration.getChart().setStyledMode(true);
             configuration.getLegend().setEnabled(true);
             configuration.getLegend().setReversed(true);
-            configuration.getNavigator().setEnabled(false);
-            configuration.getScrollbar().setEnabled(false);
             final var yAxis = configuration.getyAxis();
             yAxis.setMin(0);
             final var labels = new Labels();
@@ -72,9 +70,9 @@ public class TeslaRegistrationsBarView extends Main {
             configuration.getxAxis().setCategories("2019", "2020", "2021", "2022", "2023");
 
             final var plotOptionsBar = new PlotOptionsBar();
-            final var dataLabels = new DataLabels();
-            dataLabels.setEnabled(true);
-            plotOptionsBar.setDataLabels(dataLabels);
+            //final var dataLabels = new DataLabels();
+            //dataLabels.setEnabled(true);
+            //plotOptionsBar.setDataLabels(dataLabels);
             plotOptionsBar.setStacking(Stacking.NORMAL);
             plotOptionsBar.setAnimation(false);
             plotOptionsBar.setStickyTracking(true);

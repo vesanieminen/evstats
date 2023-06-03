@@ -1,7 +1,10 @@
 package com.vesanieminen.views;
 
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Footer;
@@ -10,6 +13,7 @@ import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Header;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
@@ -28,26 +32,48 @@ public class MainLayout extends AppLayout {
 
     private H2 viewTitle;
 
+    public boolean darkMode = false;
     public MainLayout() {
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
         addHeaderContent();
     }
 
-    private void addHeaderContent() {
+    protected void onAttach(AttachEvent attachEvent) {
+        Button theme = new Button(VaadinIcon.MOON_O.create());
+        theme.getElement().setAttribute("aria-label", getTranslation("Switch to dark mode"));
+        theme.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        theme.addClickListener(e -> {
+            if (this.darkMode) {
+                attachEvent.getUI().getPage().executeJs("document.documentElement.setAttribute('theme', '');");
+                theme.setIcon(VaadinIcon.MOON_O.create());
+                theme.getElement().setAttribute("aria-label", getTranslation("Switch to dark mode"));
+            } else {
+                attachEvent.getUI().getPage().executeJs("document.documentElement.setAttribute('theme', 'dark');");
+                theme.setIcon(VaadinIcon.SUN_O.create());
+                theme.getElement().setAttribute("aria-label", getTranslation("Switch to light mode"));
+            }
+            this.darkMode = !this.darkMode;
+        });
+        final var span = new Span();
+        span.addClassNames(LumoUtility.Flex.GROW);
+        addToNavbar(span, theme);
+    }
+
+        private void addHeaderContent() {
         DrawerToggle toggle = new DrawerToggle();
         toggle.getElement().setAttribute("aria-label", "Menu toggle");
 
         viewTitle = new H2();
         viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
 
-        addToNavbar(true, toggle, viewTitle);
+        addToNavbar(false, toggle, viewTitle);
     }
 
     private void addDrawerContent() {
         H1 appName = new H1("Finnish EV stats");
         appName.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
-        Header header = new Header(appName);
+        final var header = new Header(appName);
 
         Scroller scroller = new Scroller(createNavigation());
 

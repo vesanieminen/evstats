@@ -1,0 +1,4 @@
+/* This is not working for some reason atm. */
+:where([styled-mode]) .highcharts-range-selector-buttons .highcharts-label text {
+    fill: var(--lumo-primary-text-color);
+}
