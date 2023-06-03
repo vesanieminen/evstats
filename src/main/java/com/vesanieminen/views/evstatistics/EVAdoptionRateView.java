@@ -55,6 +55,7 @@ public class EVAdoptionRateView extends Main {
             configuration.getScrollbar().setEnabled(false);
             final var yAxis = configuration.getyAxis();
             yAxis.setMax(100);
+            yAxis.setTickInterval(10);
             yAxis.setMin(0);
             yAxis.setOpposite(false);
             var labels = new Labels();

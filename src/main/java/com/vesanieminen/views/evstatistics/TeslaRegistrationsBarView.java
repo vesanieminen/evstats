@@ -4,7 +4,6 @@ package com.vesanieminen.views.evstatistics;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.ChartType;
-import com.vaadin.flow.component.charts.model.DataLabels;
 import com.vaadin.flow.component.charts.model.Labels;
 import com.vaadin.flow.component.charts.model.ListSeries;
 import com.vaadin.flow.component.charts.model.PlotOptionsBar;
@@ -63,10 +62,12 @@ public class TeslaRegistrationsBarView extends Main {
             configuration.getLegend().setEnabled(true);
             configuration.getLegend().setReversed(true);
             final var yAxis = configuration.getyAxis();
+            yAxis.setTitle("");
             yAxis.setMin(0);
             final var labels = new Labels();
             yAxis.setLabels(labels);
             yAxis.setOpposite(false);
+            yAxis.setTickInterval(500);
             configuration.getxAxis().setCategories("2019", "2020", "2021", "2022", "2023");
 
             final var plotOptionsBar = new PlotOptionsBar();
