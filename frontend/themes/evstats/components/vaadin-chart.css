@@ -2,3 +2,7 @@
 :where([styled-mode]) .highcharts-range-selector-buttons .highcharts-label text {
     fill: var(--lumo-primary-text-color);
 }
+
+:where([styled-mode]) .highcharts-axis-labels {
+    font-size: var(--lumo-font-size-s);
+}

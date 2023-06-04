@@ -267,7 +267,7 @@
   "Frontend/src/prefers-color-scheme.js"
  ],
  "frontendHashes": {
-  "themes/evstats/components/vaadin-chart.css": "92d44ed195705394afafd8aa5ce6449a010a3032f44e64cbeefed542d4a6e196",
+  "themes/evstats/components/vaadin-chart.css": "8de72acfba16f14e5d1dd5ae97dda17f94b7d2eef01bc609716d5ee15111590c",
   "src/prefers-color-scheme.js": "73ea2254f500b9fea62c87cc1c2eaa2fd51f1e04659ba1c305674e97e4f3b277",
   "buttonFunctions.js": "c852123f9b2c44eb75e555119d3e05a7dbe78b91d0ab616feb9df1654474707d",
   "comboBoxConnector.js": "1d004c3dae9c76f8bcc68678abe1b8f7bdc8b456f5c9c4c7f190df8ed25d66cd",
@@ -294,7 +294,7 @@
   "evstats": "{\n  \"lumoImports\" : [ \"typography\", \"color\", \"spacing\", \"badge\", \"utility\" ]\n}"
  },
  "entryScripts": [
-  "VAADIN/build/indexhtml-c82b19ed.js"
+  "VAADIN/build/indexhtml-63d5c31e.js"
  ],
  "webComponents": [],
  "cvdlModules": {
@@ -329,6 +329,6 @@
  },
  "packageJsonHash": "b24c4e24dbba5a509581afc3ee23612321ba91cf551c9d31b1e98bc2804be81f",
  "indexHtmlGenerated": [
-  "  <script type=\"module\" crossorigin src=\"./VAADIN/build/indexhtml-c82b19ed.js\"></script>"
+  "  <script type=\"module\" crossorigin src=\"./VAADIN/build/indexhtml-63d5c31e.js\"></script>"
  ]
 }

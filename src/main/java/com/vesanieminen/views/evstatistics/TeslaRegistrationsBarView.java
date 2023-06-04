@@ -67,7 +67,7 @@ public class TeslaRegistrationsBarView extends Main {
             final var labels = new Labels();
             yAxis.setLabels(labels);
             yAxis.setOpposite(false);
-            yAxis.setTickInterval(500);
+            yAxis.setTickInterval(1000);
             configuration.getxAxis().setCategories("2019", "2020", "2021", "2022", "2023");
 
             final var plotOptionsBar = new PlotOptionsBar();
