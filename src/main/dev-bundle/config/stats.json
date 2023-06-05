@@ -78,7 +78,7 @@
   "proj4": "2.9.0"
  },
  "npmModules": {
-  "@lit/reactive-element": "1.6.1",
+  "@lit/reactive-element": "1.6.2",
   "@open-wc/dedupe-mixin": "1.3.1",
   "@polymer/polymer": "3.5.1",
   "@vaadin/a11y-base": "24.1.0-beta2",
@@ -162,7 +162,7 @@
   "quickselect": "2.0.0",
   "rbush": "3.0.1",
   "strip-css-comments": "5.0.0",
-  "tslib": "2.5.2",
+  "tslib": "2.5.3",
   "wkt-parser": "1.3.3"
  },
  "bundleImports": [
@@ -294,7 +294,7 @@
   "evstats": "{\n  \"lumoImports\" : [ \"typography\", \"color\", \"spacing\", \"badge\", \"utility\" ]\n}"
  },
  "entryScripts": [
-  "VAADIN/build/indexhtml-63d5c31e.js"
+  "VAADIN/build/indexhtml-04c02e10.js"
  ],
  "webComponents": [],
  "cvdlModules": {
@@ -329,6 +329,6 @@
  },
  "packageJsonHash": "b24c4e24dbba5a509581afc3ee23612321ba91cf551c9d31b1e98bc2804be81f",
  "indexHtmlGenerated": [
-  "  <script type=\"module\" crossorigin src=\"./VAADIN/build/indexhtml-63d5c31e.js\"></script>"
+  "  <script type=\"module\" crossorigin src=\"./VAADIN/build/indexhtml-04c02e10.js\"></script>"
  ]
 }
