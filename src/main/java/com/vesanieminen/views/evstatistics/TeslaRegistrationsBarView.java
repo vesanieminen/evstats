@@ -42,7 +42,7 @@ public class TeslaRegistrationsBarView extends Main {
             chart.setHeightFull();
             final var configuration = chart.getConfiguration();
             final var teslaStats = evStats.get();
-            for (int month = 4; month >= 0; --month) {
+            for (int month = 5; month >= 0; --month) {
                 final var series = new ListSeries();
                 switch (month) {
                     case 0 -> series.setName("January");
@@ -50,6 +50,7 @@ public class TeslaRegistrationsBarView extends Main {
                     case 2 -> series.setName("March");
                     case 3 -> series.setName("April");
                     case 4 -> series.setName("May");
+                    case 5 -> series.setName("June");
                 }
                 for (int year = 0; year < 5; ++year) {
                     final var stat = teslaStats.get(month + year * 12);
