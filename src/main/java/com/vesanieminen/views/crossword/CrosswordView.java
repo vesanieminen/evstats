@@ -25,8 +25,8 @@ import org.vaadin.addons.crossword.Puzzle;
 import java.io.InputStream;
 import java.net.URL;
 
-@Route(value = "Crossword", layout = MainView.class)
-@PageTitle("Crossword")
+@Route(value = "Grid", layout = MainView.class)
+@PageTitle("Grid")
 public class CrosswordView extends VerticalLayout {
     private static final String TOPIC_ID = "crossword-demo";
 

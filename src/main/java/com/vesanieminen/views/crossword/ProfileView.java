@@ -34,7 +34,7 @@ public class ProfileView extends VerticalLayout
         name.setValueChangeMode(ValueChangeMode.LAZY);
         name.focus();
 
-        Button startButton = new Button("Start crossword",
+        Button startButton = new Button("Start Grid",
                 e -> UI.getCurrent().navigate(CrosswordView.class));
         startButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 

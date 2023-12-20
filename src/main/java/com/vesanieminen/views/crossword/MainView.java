@@ -45,7 +45,7 @@ public class MainView extends AppLayout {
     }
 
     private Component createSideMenu() {
-        H2 header = new H2("Crossword Demo");
+        H2 header = new H2("Grid Demo");
         header.addClassNames("flex", "items-center", "h-xl", "m-0", "px-m",
                 "text-m");
 
@@ -64,7 +64,7 @@ public class MainView extends AppLayout {
         Nav menu = new Nav();
         menu.addClassName("mb-l");
 
-        menu.add(createLink(VaadinIcon.GRID, "Crossword", CrosswordView.class));
+        menu.add(createLink(VaadinIcon.GRID, "Grid", CrosswordView.class));
         return menu;
     }
 
