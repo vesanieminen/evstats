@@ -42,11 +42,11 @@ public class ChargingView extends Main {
         add(topGrid);
 
         final var secondRow = new GridLayout();
-        var chargingSpeedField = new IntegerField("Charging speed");
-        chargingSpeedField.setMin(0);
-        chargingSpeedField.setStepButtonsVisible(true);
-        chargingSpeedField.setHelperText("In amperes (A)");
-        secondRow.add(chargingSpeedField);
+        var amperesField = new IntegerField("Charging speed");
+        amperesField.setMin(0);
+        amperesField.setStepButtonsVisible(true);
+        amperesField.setHelperText("In amperes (A)");
+        secondRow.add(amperesField);
         var phasesField = new IntegerField("Phases");
         phasesField.setHelperText("How many phases are used?");
         phasesField.setMin(1);
@@ -68,26 +68,26 @@ public class ChargingView extends Main {
         chargingLossField.setMin(0);
         chargingLossField.setMax(99);
         thirdRow.add(chargingLossField);
-        TimePicker chargingStartTime = new TimePicker("Charging start time");
-        chargingStartTime.setStep(Duration.ofMinutes(15));
-        chargingStartTime.setLocale(new Locale("fi", "FI"));
-        thirdRow.add(chargingStartTime);
-        TimePicker chargingEndTime = new TimePicker("Calculated charging end time");
-        chargingEndTime.setStep(Duration.ofMinutes(1));
-        chargingEndTime.setReadOnly(true);
-        chargingEndTime.setLocale(new Locale("fi", "FI"));
-        thirdRow.add(chargingEndTime);
+        TimePicker chargingStartTimeField = new TimePicker("Charging start time");
+        chargingStartTimeField.setStep(Duration.ofMinutes(15));
+        chargingStartTimeField.setLocale(new Locale("fi", "FI"));
+        thirdRow.add(chargingStartTimeField);
+        TimePicker chargingEndTimeField = new TimePicker("Calculated charging end time");
+        chargingEndTimeField.setStep(Duration.ofMinutes(1));
+        chargingEndTimeField.setReadOnly(true);
+        chargingEndTimeField.setLocale(new Locale("fi", "FI"));
+        thirdRow.add(chargingEndTimeField);
         add(thirdRow);
 
         final var chargeBinder = new Binder<Charge>();
         chargeBinder.bind(batteryCapacityField, Charge::getCapacity, Charge::setCapacity);
         chargeBinder.bind(currentSocField, Charge::getCurrentSOC, Charge::setCurrentSOC);
         chargeBinder.bind(targetSocField, Charge::getTargetSOC, Charge::setTargetSOC);
-        chargeBinder.bind(chargingSpeedField, Charge::getChargingSpeed, Charge::setChargingSpeed);
+        chargeBinder.bind(amperesField, Charge::getAmperes, Charge::setAmperes);
         chargeBinder.bind(phasesField, Charge::getPhases, Charge::setPhases);
         chargeBinder.bind(voltageField, Charge::getVoltage, Charge::setVoltage);
         chargeBinder.bind(chargingLossField, Charge::getChargingLoss, Charge::setChargingLoss);
-        chargeBinder.bind(chargingStartTime, Charge::getStartTime, Charge::setStartTime);
+        chargeBinder.bind(chargingStartTimeField, Charge::getStartTime, Charge::setStartTime);
 
         final var charge = new Charge(
                 75,
@@ -101,10 +101,15 @@ public class ChargingView extends Main {
         );
         chargeBinder.setBean(charge);
 
-        var volts = 230;
         chargeBinder.addValueChangeListener(e -> {
             var socIncrease = targetSocField.getValue() - currentSocField.getValue();
             var capacityIncrease = batteryCapacityField.getValue() / 100 * socIncrease;
+            var chargingSpeed = amperesField.getValue() * phasesField.getValue() * voltageField.getValue();
+            var chargingSpeedMinusLoss = chargingSpeed * ((100 - chargingLossField.getValue()) / 100);
+            var chargingTimeHours = capacityIncrease * 1000 / chargingSpeedMinusLoss;
+            var chargingTimeMinutes = chargingTimeHours * 60;
+            var chargingEndTime = chargingStartTimeField.getValue().plusMinutes((long) chargingTimeMinutes);
+            chargingEndTimeField.setValue(chargingEndTime);
         });
     }
 
@@ -112,7 +117,7 @@ public class ChargingView extends Main {
         double capacity;
         int currentSOC;
         int targetSOC;
-        int chargingSpeed;
+        int amperes;
         int phases;
         int voltage;
         double chargingLoss;
@@ -121,11 +126,11 @@ public class ChargingView extends Main {
         public Charge() {
         }
 
-        public Charge(double capacity, int currentSOC, int targetSOC, int chargingSpeed, int phases, int voltage, double chargingLoss, LocalTime startTime) {
+        public Charge(double capacity, int currentSOC, int targetSOC, int amperes, int phases, int voltage, double chargingLoss, LocalTime startTime) {
             this.capacity = capacity;
             this.currentSOC = currentSOC;
             this.targetSOC = targetSOC;
-            this.chargingSpeed = chargingSpeed;
+            this.amperes = amperes;
             this.phases = phases;
             this.voltage = voltage;
             this.chargingLoss = chargingLoss;
@@ -156,12 +161,12 @@ public class ChargingView extends Main {
             this.targetSOC = targetSOC;
         }
 
-        public int getChargingSpeed() {
-            return chargingSpeed;
+        public int getAmperes() {
+            return amperes;
         }
 
-        public void setChargingSpeed(int chargingSpeed) {
-            this.chargingSpeed = chargingSpeed;
+        public void setAmperes(int amperes) {
+            this.amperes = amperes;
         }
 
         public int getPhases() {
