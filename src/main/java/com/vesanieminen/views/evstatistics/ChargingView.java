@@ -80,6 +80,7 @@ public class ChargingView extends Main {
         chargingLossField = new NumberField("Charging loss");
         chargingLossField.setHelperText("How much goes to waste?");
         chargingLossField.setSuffixComponent(new Span("%"));
+        chargingLossField.setStepButtonsVisible(true);
         chargingLossField.setMin(0);
         chargingLossField.setMax(99);
         thirdRow.add(chargingLossField);
