@@ -23,12 +23,10 @@ public class ChargingView extends Main {
         final var topGrid = new GridLayout();
         var batteryCapacityField = new NumberField("Battery capacity");
         batteryCapacityField.setSuffixComponent(new Span("kWh"));
-        batteryCapacityField.setValue(75d);
         batteryCapacityField.setHelperText("e.g. 75 kWh");
         topGrid.add(batteryCapacityField);
         var currentSocField = new IntegerField("Current SOC");
         currentSocField.setSuffixComponent(new Span("%"));
-        currentSocField.setValue(20);
         currentSocField.setStep(1);
         currentSocField.setMin(0);
         currentSocField.setStepButtonsVisible(true);
@@ -38,7 +36,6 @@ public class ChargingView extends Main {
         targetSocField.setMin(0);
         targetSocField.setSuffixComponent(new Span("%"));
         targetSocField.setStep(1);
-        targetSocField.setValue(50);
         targetSocField.setStepButtonsVisible(true);
         targetSocField.setHelperText("Target battery charge level");
         topGrid.add(targetSocField);
@@ -46,14 +43,12 @@ public class ChargingView extends Main {
 
         final var secondRow = new GridLayout();
         var chargingSpeedField = new IntegerField("Charging speed");
-        chargingSpeedField.setValue(16);
         chargingSpeedField.setMin(0);
         chargingSpeedField.setStepButtonsVisible(true);
         chargingSpeedField.setHelperText("In amperes (A)");
         secondRow.add(chargingSpeedField);
         var phasesField = new IntegerField("Phases");
         phasesField.setHelperText("How many phases are used?");
-        phasesField.setValue(3);
         phasesField.setMin(1);
         phasesField.setMax(3);
         phasesField.setStepButtonsVisible(true);
@@ -62,7 +57,6 @@ public class ChargingView extends Main {
         chargingLossField.setSuffixComponent(new Span("%"));
         chargingLossField.setMin(0);
         chargingLossField.setMax(99);
-        chargingLossField.setValue(15d);
         secondRow.add(phasesField);
         secondRow.add(chargingLossField);
         add(secondRow);
@@ -75,12 +69,9 @@ public class ChargingView extends Main {
         TimePicker chargingEndTime = new TimePicker("Calculated charging end time");
         chargingEndTime.setStep(Duration.ofMinutes(1));
         chargingEndTime.setReadOnly(true);
-        chargingEndTime.setValue(LocalTime.of(2, 30));
         chargingEndTime.setLocale(new Locale("fi", "FI"));
         thirdRow.add(chargingEndTime);
         add(thirdRow);
-
-        var charge = new Charge(0, 0, 0, 0, 0, 0, LocalTime.MIN);
 
         final var chargeBinder = new Binder<Charge>();
         chargeBinder.bind(batteryCapacityField, Charge::getCapacity, Charge::setCapacity);
@@ -90,6 +81,17 @@ public class ChargingView extends Main {
         chargeBinder.bind(phasesField, Charge::getPhases, Charge::setPhases);
         chargeBinder.bind(chargingLossField, Charge::getChargingLoss, Charge::setChargingLoss);
         chargeBinder.bind(chargingStartTime, Charge::getStartTime, Charge::setStartTime);
+
+        final var charge = new Charge(
+                75,
+                20,
+                50,
+                16,
+                3,
+                15,
+                LocalTime.of(0, 0)
+        );
+        chargeBinder.setBean(charge);
     }
 
     static class Charge {
