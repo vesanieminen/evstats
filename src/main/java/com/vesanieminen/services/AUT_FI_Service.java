@@ -4,6 +4,7 @@ import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvValidationException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,13 +22,12 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static com.vesanieminen.Utils.getInt;
-import static com.vesanieminen.Utils.getMonth;
 
 public class AUT_FI_Service {
 
     private final static String URL = "https://www.aut.fi/tilastot/ensirekisteroinnit/ensirekisteroinnit_kayttovoimittain/henkiloautojen_kayttovoimatilastot?download_8098=1";
     private final static String CSV_FILENAME = "aut.fi.csv";
-    private final static String DEFAULT_CSV_FILENAME = "data/ensirekisteroinnit_kayttovoimat_jakauma-7.csv";
+    private final static String DEFAULT_CSV_FILENAME = "data/ensirekisteroinnit_kayttovoimat_jakauma.csv";
     private final static String TESLA_CSV_FILENAME = "data/Tesla registrations.csv";
 
     // Doesn't work atm. due to the url serving a page instead of the actual file.
@@ -56,15 +56,11 @@ public class AUT_FI_Service {
 
             String[] line;
             final List<EVStats> evStats = new ArrayList<>();
-            String year = "";
             while ((line = csvReader.readNext()) != null) {
-                String month = line[0];
-                if (line[0].contains("/")) {
-                    final var yearAndMonth = line[0].split("/");
-                    year = yearAndMonth[0];
-                    month = yearAndMonth[1];
-                }
-                var date = LocalDate.of(Integer.parseInt(year), getMonth(month), 1);
+                final var yearAndMonth = line[0].split("M");
+                var year = yearAndMonth[0];
+                var month = yearAndMonth[1];
+                var date = LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), 1);
                 date = date.withDayOfMonth(date.lengthOfMonth());
                 final var evAmount = getInt(line[3]);
                 final var totalAmount = getInt(line[11]);
@@ -76,6 +72,8 @@ public class AUT_FI_Service {
         } catch (IOException e) {
             // Handle or log the exception accordingly
             e.printStackTrace();
+        } catch (CsvValidationException e) {
+            throw new RuntimeException(e);
         }
         return Optional.empty();
     }
@@ -110,6 +108,8 @@ public class AUT_FI_Service {
         } catch (IOException e) {
             // Handle or log the exception accordingly
             e.printStackTrace();
+        } catch (CsvValidationException e) {
+            throw new RuntimeException(e);
         }
         return Optional.empty();
     }
