@@ -42,7 +42,7 @@ public class TeslaRegistrationsBarView extends Main {
             chart.setHeightFull();
             final var configuration = chart.getConfiguration();
             final var teslaStats = evStats.get();
-            for (int month = 11; month >= 0; --month) {
+            for (int month = 7; month >= 0; --month) {
                 final var series = new ListSeries();
                 switch (month) {
                     case 0 -> series.setName("January");
@@ -53,12 +53,12 @@ public class TeslaRegistrationsBarView extends Main {
                     case 5 -> series.setName("June");
                     case 6 -> series.setName("July");
                     case 7 -> series.setName("August");
-                    case 8 -> series.setName("September");
-                    case 9 -> series.setName("October");
-                    case 10 -> series.setName("November");
-                    case 11 -> series.setName("December");
+                    //case 8 -> series.setName("September");
+                    //case 9 -> series.setName("October");
+                    //case 10 -> series.setName("November");
+                    //case 11 -> series.setName("December");
                 }
-                for (int year = 0; year < 5; ++year) {
+                for (int year = 0; year < 6; ++year) {
                     final var stat = teslaStats.get(month + year * 12);
                     series.addData(stat.amount());
                 }
@@ -75,7 +75,7 @@ public class TeslaRegistrationsBarView extends Main {
             yAxis.setLabels(labels);
             yAxis.setOpposite(false);
             yAxis.setTickInterval(1000);
-            configuration.getxAxis().setCategories("2019", "2020", "2021", "2022", "2023");
+            configuration.getxAxis().setCategories("2019", "2020", "2021", "2022", "2023", "2024");
 
             final var plotOptionsBar = new PlotOptionsBar();
             //final var dataLabels = new DataLabels();
