@@ -1,3 +1,4 @@
+@import "theme-editor.css";
 @import url('./main-layout.css');
 @import url('./views/e-v-statistics-view.css');
 
@@ -15,4 +16,3 @@ html {
 vaadin-app-layout::part(drawer) {
     width: 220px;
 }
-
