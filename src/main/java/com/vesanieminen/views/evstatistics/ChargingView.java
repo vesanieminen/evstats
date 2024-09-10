@@ -2,6 +2,7 @@ package com.vesanieminen.views.evstatistics;
 
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.timepicker.TimePicker;
@@ -19,20 +20,34 @@ import java.util.Locale;
 @Route(value = "charging", layout = MainLayout.class)
 public class ChargingView extends Main {
 
+    private final NumberField batteryCapacityField;
+    private final IntegerField currentSocField;
+    private final IntegerField targetSocField;
+    private final IntegerField amperesField;
+    private final IntegerField phasesField;
+    private final IntegerField voltageField;
+    private final NumberField chargingLossField;
+    private final TimePicker chargingStartTimeField;
+    private final TimePicker chargingEndTimeField;
+    private final Span consumedElectricitySpan;
+    private final Span lostElectricitySpan;
+
     public ChargingView() {
         final var topGrid = new GridLayout();
-        var batteryCapacityField = new NumberField("Battery capacity");
+        batteryCapacityField = new NumberField("Battery capacity");
+        batteryCapacityField.setStep(1);
+        batteryCapacityField.setStepButtonsVisible(true);
         batteryCapacityField.setSuffixComponent(new Span("kWh"));
         batteryCapacityField.setHelperText("e.g. 75 kWh");
         topGrid.add(batteryCapacityField);
-        var currentSocField = new IntegerField("Current SOC");
+        currentSocField = new IntegerField("Current SOC");
         currentSocField.setSuffixComponent(new Span("%"));
         currentSocField.setStep(1);
         currentSocField.setMin(0);
         currentSocField.setStepButtonsVisible(true);
         currentSocField.setHelperText("Current battery charge level");
         topGrid.add(currentSocField);
-        var targetSocField = new IntegerField("Target SOC");
+        targetSocField = new IntegerField("Target SOC");
         targetSocField.setMin(0);
         targetSocField.setSuffixComponent(new Span("%"));
         targetSocField.setStep(1);
@@ -42,18 +57,18 @@ public class ChargingView extends Main {
         add(topGrid);
 
         final var secondRow = new GridLayout();
-        var amperesField = new IntegerField("Charging speed");
+        amperesField = new IntegerField("Charging speed");
         amperesField.setMin(0);
         amperesField.setStepButtonsVisible(true);
         amperesField.setHelperText("In amperes (A)");
         secondRow.add(amperesField);
-        var phasesField = new IntegerField("Phases");
+        phasesField = new IntegerField("Phases");
         phasesField.setHelperText("How many phases are used?");
         phasesField.setMin(1);
         phasesField.setMax(3);
         phasesField.setStepButtonsVisible(true);
         secondRow.add(phasesField);
-        var voltageField = new IntegerField("Voltage");
+        voltageField = new IntegerField("Voltage");
         voltageField.setHelperText("What voltage is used? (V)");
         voltageField.setMin(1);
         voltageField.setMax(1000);
@@ -62,22 +77,33 @@ public class ChargingView extends Main {
         add(secondRow);
 
         final var thirdRow = new GridLayout();
-        NumberField chargingLossField = new NumberField("Charging loss");
+        chargingLossField = new NumberField("Charging loss");
         chargingLossField.setHelperText("How much goes to waste?");
         chargingLossField.setSuffixComponent(new Span("%"));
         chargingLossField.setMin(0);
         chargingLossField.setMax(99);
         thirdRow.add(chargingLossField);
-        TimePicker chargingStartTimeField = new TimePicker("Charging start time");
+        chargingStartTimeField = new TimePicker("Charging start time");
         chargingStartTimeField.setStep(Duration.ofMinutes(15));
         chargingStartTimeField.setLocale(new Locale("fi", "FI"));
         thirdRow.add(chargingStartTimeField);
-        TimePicker chargingEndTimeField = new TimePicker("Calculated charging end time");
+        chargingEndTimeField = new TimePicker("Calculated charging end time");
         chargingEndTimeField.setStep(Duration.ofMinutes(1));
         chargingEndTimeField.setReadOnly(true);
         chargingEndTimeField.setLocale(new Locale("fi", "FI"));
         thirdRow.add(chargingEndTimeField);
         add(thirdRow);
+
+        final var fourthRow = new VerticalLayout();
+        final var consumedElectricity = "Consumed electricity: %s";
+        consumedElectricitySpan = new Span();
+        consumedElectricitySpan.setClassName("text-s");
+        fourthRow.add(consumedElectricitySpan);
+        final var lostElectricity = "Lost electricity: %s";
+        lostElectricitySpan = new Span();
+        lostElectricitySpan.setClassName("text-s");
+        fourthRow.add(lostElectricitySpan);
+        add(fourthRow);
 
         final var chargeBinder = new Binder<Charge>();
         chargeBinder.bind(batteryCapacityField, Charge::getCapacity, Charge::setCapacity);
@@ -99,18 +125,23 @@ public class ChargingView extends Main {
                 15,
                 LocalTime.of(0, 0)
         );
-        chargeBinder.setBean(charge);
 
         chargeBinder.addValueChangeListener(e -> {
-            var socIncrease = targetSocField.getValue() - currentSocField.getValue();
-            var capacityIncrease = batteryCapacityField.getValue() / 100 * socIncrease;
-            var chargingSpeed = amperesField.getValue() * phasesField.getValue() * voltageField.getValue();
-            var chargingSpeedMinusLoss = chargingSpeed * ((100 - chargingLossField.getValue()) / 100);
-            var chargingTimeHours = capacityIncrease * 1000 / chargingSpeedMinusLoss;
-            var chargingTimeMinutes = chargingTimeHours * 60;
-            var chargingEndTime = chargingStartTimeField.getValue().plusMinutes((long) chargingTimeMinutes);
-            chargingEndTimeField.setValue(chargingEndTime);
+            doCalculation();
         });
+        chargeBinder.setBean(charge);
+        doCalculation();
+    }
+
+    private void doCalculation() {
+        var socIncrease = targetSocField.getValue() - currentSocField.getValue();
+        var capacityIncrease = batteryCapacityField.getValue() / 100 * socIncrease;
+        var chargingSpeed = amperesField.getValue() * phasesField.getValue() * voltageField.getValue();
+        var chargingSpeedMinusLoss = chargingSpeed * ((100 - chargingLossField.getValue()) / 100);
+        var chargingTimeHours = capacityIncrease * 1000 / chargingSpeedMinusLoss;
+        var chargingTimeMinutes = chargingTimeHours * 60;
+        var chargingEndTime = chargingStartTimeField.getValue().plusMinutes((long) chargingTimeMinutes);
+        chargingEndTimeField.setValue(chargingEndTime);
     }
 
     static class Charge {
