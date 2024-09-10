@@ -95,11 +95,9 @@ public class ChargingView extends Main {
         add(thirdRow);
 
         final var fourthRow = new VerticalLayout();
-        final var consumedElectricity = "Consumed electricity: %s";
         consumedElectricitySpan = new Span();
         consumedElectricitySpan.setClassName("text-s");
         fourthRow.add(consumedElectricitySpan);
-        final var lostElectricity = "Lost electricity: %s";
         lostElectricitySpan = new Span();
         lostElectricitySpan.setClassName("text-s");
         fourthRow.add(lostElectricitySpan);
@@ -136,12 +134,19 @@ public class ChargingView extends Main {
     private void doCalculation() {
         var socIncrease = targetSocField.getValue() - currentSocField.getValue();
         var capacityIncrease = batteryCapacityField.getValue() / 100 * socIncrease;
-        var chargingSpeed = amperesField.getValue() * phasesField.getValue() * voltageField.getValue();
-        var chargingSpeedMinusLoss = chargingSpeed * ((100 - chargingLossField.getValue()) / 100);
+        var chargingSpeedInWatts = amperesField.getValue() * phasesField.getValue() * voltageField.getValue();
+        var chargingSpeedMinusLoss = chargingSpeedInWatts * ((100 - chargingLossField.getValue()) / 100);
         var chargingTimeHours = capacityIncrease * 1000 / chargingSpeedMinusLoss;
         var chargingTimeMinutes = chargingTimeHours * 60;
         var chargingEndTime = chargingStartTimeField.getValue().plusMinutes((long) chargingTimeMinutes);
         chargingEndTimeField.setValue(chargingEndTime);
+
+        var electricityConsumed = (chargingSpeedInWatts / 1000) * chargingTimeHours;
+        final var electricityConsumedText = "Consumed electricity: %.2f kWh".formatted(electricityConsumed);
+        consumedElectricitySpan.setText(electricityConsumedText);
+
+        final var electricityLostText = "Lost electricity: %.2f kWh".formatted(electricityConsumed * (chargingLossField.getValue() / 100));
+        lostElectricitySpan.setText(electricityLostText);
     }
 
     static class Charge {
