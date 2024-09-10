@@ -52,16 +52,22 @@ public class ChargingView extends Main {
         phasesField.setMin(1);
         phasesField.setMax(3);
         phasesField.setStepButtonsVisible(true);
+        secondRow.add(phasesField);
+        var voltageField = new IntegerField("Voltage");
+        voltageField.setHelperText("What voltage is used? (V)");
+        voltageField.setMin(1);
+        voltageField.setMax(1000);
+        voltageField.setStepButtonsVisible(true);
+        secondRow.add(voltageField);
+        add(secondRow);
+
+        final var thirdRow = new GridLayout();
         NumberField chargingLossField = new NumberField("Charging loss");
         chargingLossField.setHelperText("How much goes to waste?");
         chargingLossField.setSuffixComponent(new Span("%"));
         chargingLossField.setMin(0);
         chargingLossField.setMax(99);
-        secondRow.add(phasesField);
-        secondRow.add(chargingLossField);
-        add(secondRow);
-
-        final var thirdRow = new GridLayout();
+        thirdRow.add(chargingLossField);
         TimePicker chargingStartTime = new TimePicker("Charging start time");
         chargingStartTime.setStep(Duration.ofMinutes(15));
         chargingStartTime.setLocale(new Locale("fi", "FI"));
@@ -79,6 +85,7 @@ public class ChargingView extends Main {
         chargeBinder.bind(targetSocField, Charge::getTargetSOC, Charge::setTargetSOC);
         chargeBinder.bind(chargingSpeedField, Charge::getChargingSpeed, Charge::setChargingSpeed);
         chargeBinder.bind(phasesField, Charge::getPhases, Charge::setPhases);
+        chargeBinder.bind(voltageField, Charge::getVoltage, Charge::setVoltage);
         chargeBinder.bind(chargingLossField, Charge::getChargingLoss, Charge::setChargingLoss);
         chargeBinder.bind(chargingStartTime, Charge::getStartTime, Charge::setStartTime);
 
@@ -88,10 +95,17 @@ public class ChargingView extends Main {
                 50,
                 16,
                 3,
+                230,
                 15,
                 LocalTime.of(0, 0)
         );
         chargeBinder.setBean(charge);
+
+        var volts = 230;
+        chargeBinder.addValueChangeListener(e -> {
+            var socIncrease = targetSocField.getValue() - currentSocField.getValue();
+            var capacityIncrease = batteryCapacityField.getValue() / 100 * socIncrease;
+        });
     }
 
     static class Charge {
@@ -100,18 +114,20 @@ public class ChargingView extends Main {
         int targetSOC;
         int chargingSpeed;
         int phases;
+        int voltage;
         double chargingLoss;
         LocalTime startTime;
 
         public Charge() {
         }
 
-        public Charge(double capacity, int currentSOC, int targetSOC, int chargingSpeed, int phases, double chargingLoss, LocalTime startTime) {
+        public Charge(double capacity, int currentSOC, int targetSOC, int chargingSpeed, int phases, int voltage, double chargingLoss, LocalTime startTime) {
             this.capacity = capacity;
             this.currentSOC = currentSOC;
             this.targetSOC = targetSOC;
             this.chargingSpeed = chargingSpeed;
             this.phases = phases;
+            this.voltage = voltage;
             this.chargingLoss = chargingLoss;
             this.startTime = startTime;
         }
@@ -171,7 +187,14 @@ public class ChargingView extends Main {
         public void setStartTime(LocalTime startTime) {
             this.startTime = startTime;
         }
-    }
 
+        public int getVoltage() {
+            return voltage;
+        }
+
+        public void setVoltage(int voltage) {
+            this.voltage = voltage;
+        }
+    }
 
 }
