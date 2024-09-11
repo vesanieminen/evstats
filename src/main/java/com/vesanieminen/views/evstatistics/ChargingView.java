@@ -33,6 +33,7 @@ public class ChargingView extends Main {
     private final Span consumedElectricitySpan;
     private final Span lostElectricitySpan;
     private final Select<CalculationTarget> calculationTarget;
+    private final Span chargingSpeedSpan;
 
     public ChargingView() {
         final var topGrid = new GridLayout();
@@ -108,6 +109,9 @@ public class ChargingView extends Main {
         chargingResultTimeField.setReadOnly(true);
         chargingResultTimeField.setLocale(new Locale("fi", "FI"));
         fourthRow.add(chargingResultTimeField);
+        chargingSpeedSpan = new Span();
+        chargingSpeedSpan.setClassName("text-s");
+        fourthRow.add(chargingSpeedSpan);
         consumedElectricitySpan = new Span();
         consumedElectricitySpan.setClassName("text-s");
         fourthRow.add(consumedElectricitySpan);
@@ -146,6 +150,7 @@ public class ChargingView extends Main {
             if (chargeBinder.isValid()) {
                 doCalculation();
             } else {
+                chargingSpeedSpan.setText(null);
                 chargingResultTimeField.setValue(null);
                 consumedElectricitySpan.setText(null);
                 lostElectricitySpan.setText(null);
@@ -173,6 +178,8 @@ public class ChargingView extends Main {
             chargingResultTimeField.setValue(chargingEndTime);
             chargingResultTimeField.setLabel("Calculated charging start time");
         }
+
+        chargingSpeedSpan.setText("Charging speed: %.2f kWh".formatted(chargingSpeedInWatts / 1000.0));
 
         var electricityConsumed = (chargingSpeedInWatts / 1000) * chargingTimeHours;
         final var electricityConsumedText = "Consumed electricity: %.2f kWh".formatted(electricityConsumed);
