@@ -314,10 +314,10 @@ public class ChargingView extends Main {
     }
 
     enum CalculationTarget {
-        CHARGING_START("Charging start time"),
-        CHARGING_END("Charging end time");
+        CHARGING_START("Start time"),
+        CHARGING_END("End time");
 
-        private String name;
+        private final String name;
 
         CalculationTarget(String name) {
             this.name = name;
