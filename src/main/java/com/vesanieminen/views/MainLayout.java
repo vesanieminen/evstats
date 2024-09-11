@@ -1,6 +1,7 @@
 package com.vesanieminen.views;
 
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.button.Button;
@@ -40,19 +41,16 @@ public class MainLayout extends AppLayout {
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
         addHeaderContent();
-    }
-
-    protected void onAttach(AttachEvent attachEvent) {
         Button theme = new Button(VaadinIcon.MOON_O.create());
         theme.getElement().setAttribute("aria-label", getTranslation("Switch to dark mode"));
         theme.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         theme.addClickListener(e -> {
             if (this.darkMode) {
-                attachEvent.getUI().getPage().executeJs("document.documentElement.setAttribute('theme', '');");
+                UI.getCurrent().getPage().executeJs("document.documentElement.setAttribute('theme', '');");
                 theme.setIcon(VaadinIcon.MOON_O.create());
                 theme.getElement().setAttribute("aria-label", getTranslation("Switch to dark mode"));
             } else {
-                attachEvent.getUI().getPage().executeJs("document.documentElement.setAttribute('theme', 'dark');");
+                UI.getCurrent().getPage().executeJs("document.documentElement.setAttribute('theme', 'dark');");
                 theme.setIcon(VaadinIcon.SUN_O.create());
                 theme.getElement().setAttribute("aria-label", getTranslation("Switch to light mode"));
             }
@@ -61,6 +59,9 @@ public class MainLayout extends AppLayout {
         final var span = new Span();
         span.addClassNames(LumoUtility.Flex.GROW);
         addToNavbar(span, theme);
+    }
+
+    protected void onAttach(AttachEvent attachEvent) {
     }
 
         private void addHeaderContent() {

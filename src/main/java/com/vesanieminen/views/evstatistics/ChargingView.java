@@ -8,10 +8,13 @@ import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.timepicker.TimePicker;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.PreserveOnRefresh;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.spring.annotation.VaadinSessionScope;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vesanieminen.components.GridLayout;
 import com.vesanieminen.views.MainLayout;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.LocalTime;
@@ -19,6 +22,7 @@ import java.util.Locale;
 
 @PageTitle("Charging tool")
 @Route(value = "charging", layout = MainLayout.class)
+@PreserveOnRefresh
 public class ChargingView extends Main {
 
     private final NumberField batteryCapacityField;
@@ -38,7 +42,7 @@ public class ChargingView extends Main {
     private final Span addedElectricitySpan;
     private final Span chargingLength;
 
-    public ChargingView() {
+    public ChargingView(PreservedState preservedState) {
         final var topGrid = new GridLayout();
         batteryCapacityField = new NumberField("Battery capacity");
         batteryCapacityField.setStepButtonsVisible(true);
@@ -145,19 +149,7 @@ public class ChargingView extends Main {
         chargeBinder.bind(calculationTarget, Charge::getCalculationTarget, Charge::setCalculationTarget);
         chargeBinder.bind(chargingTimeField, Charge::getStartTime, Charge::setStartTime);
 
-        final var charge = new Charge(
-                75,
-                20,
-                50,
-                16,
-                3,
-                230,
-                10,
-                CalculationTarget.CHARGING_END,
-                LocalTime.of(0, 0)
-        );
-
-        chargeBinder.setBean(charge);
+        chargeBinder.setBean(preservedState.charge);
         chargeBinder.addValueChangeListener(e -> {
             if (chargeBinder.isValid()) {
                 doCalculation();
@@ -326,6 +318,22 @@ public class ChargingView extends Main {
         public String getName() {
             return name;
         }
+    }
+
+    @VaadinSessionScope
+    @Component
+    public static class PreservedState {
+        Charge charge = new Charge(
+                75,
+                20,
+                50,
+                16,
+                3,
+                230,
+                10,
+                CalculationTarget.CHARGING_END,
+                LocalTime.of(0, 0)
+        );
     }
 
 }
