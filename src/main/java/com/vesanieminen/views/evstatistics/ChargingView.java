@@ -60,6 +60,7 @@ public class ChargingView extends Main {
 
         final var secondRow = new GridLayout();
         amperesField = new IntegerField("Charging speed");
+        amperesField.setSuffixComponent(new Span("A"));
         amperesField.setMin(0);
         amperesField.setStepButtonsVisible(true);
         amperesField.setHelperText("In amperes (A)");
