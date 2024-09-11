@@ -3,6 +3,7 @@ package com.vesanieminen.views.evstatistics;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.timepicker.TimePicker;
@@ -27,10 +28,11 @@ public class ChargingView extends Main {
     private final IntegerField phasesField;
     private final IntegerField voltageField;
     private final NumberField chargingLossField;
-    private final TimePicker chargingStartTimeField;
-    private final TimePicker chargingEndTimeField;
+    private final TimePicker chargingTimeField;
+    private final TimePicker chargingResultTimeField;
     private final Span consumedElectricitySpan;
     private final Span lostElectricitySpan;
+    private final Select<CalculationTarget> calculationTarget;
 
     public ChargingView() {
         final var topGrid = new GridLayout();
@@ -85,18 +87,26 @@ public class ChargingView extends Main {
         chargingLossField.setMin(0);
         chargingLossField.setMax(99);
         thirdRow.add(chargingLossField);
-        chargingStartTimeField = new TimePicker("Charging start time");
-        chargingStartTimeField.setStep(Duration.ofMinutes(15));
-        chargingStartTimeField.setLocale(new Locale("fi", "FI"));
-        thirdRow.add(chargingStartTimeField);
-        chargingEndTimeField = new TimePicker("Calculated charging end time");
-        chargingEndTimeField.setStep(Duration.ofMinutes(1));
-        chargingEndTimeField.setReadOnly(true);
-        chargingEndTimeField.setLocale(new Locale("fi", "FI"));
-        thirdRow.add(chargingEndTimeField);
+
+        calculationTarget = new Select<>();
+        calculationTarget.setItems(CalculationTarget.values());
+        calculationTarget.setItemLabelGenerator(CalculationTarget::getName);
+        calculationTarget.setLabel("Calculation target");
+        thirdRow.add(calculationTarget);
+
+        chargingTimeField = new TimePicker();
+        chargingTimeField.setStep(Duration.ofMinutes(15));
+        chargingTimeField.setLocale(new Locale("fi", "FI"));
+        thirdRow.add(chargingTimeField);
         add(thirdRow);
 
         final var fourthRow = new VerticalLayout();
+        chargingResultTimeField = new TimePicker();
+        chargingResultTimeField.setWidthFull();
+        chargingResultTimeField.setStep(Duration.ofMinutes(1));
+        chargingResultTimeField.setReadOnly(true);
+        chargingResultTimeField.setLocale(new Locale("fi", "FI"));
+        fourthRow.add(chargingResultTimeField);
         consumedElectricitySpan = new Span();
         consumedElectricitySpan.setClassName("text-s");
         fourthRow.add(consumedElectricitySpan);
@@ -113,7 +123,8 @@ public class ChargingView extends Main {
         chargeBinder.bind(phasesField, Charge::getPhases, Charge::setPhases);
         chargeBinder.bind(voltageField, Charge::getVoltage, Charge::setVoltage);
         chargeBinder.bind(chargingLossField, Charge::getChargingLoss, Charge::setChargingLoss);
-        chargeBinder.bind(chargingStartTimeField, Charge::getStartTime, Charge::setStartTime);
+        chargeBinder.bind(calculationTarget, Charge::getCalculationTarget, Charge::setCalculationTarget);
+        chargeBinder.bind(chargingTimeField, Charge::getStartTime, Charge::setStartTime);
 
         final var charge = new Charge(
                 75,
@@ -123,11 +134,10 @@ public class ChargingView extends Main {
                 3,
                 230,
                 10,
+                CalculationTarget.CHARGING_END,
                 LocalTime.of(0, 0)
         );
-        chargeBinder.addValueChangeListener(e -> {
-            doCalculation();
-        });
+        chargeBinder.addValueChangeListener(e -> doCalculation());
         chargeBinder.setBean(charge);
         doCalculation();
     }
@@ -139,8 +149,18 @@ public class ChargingView extends Main {
         var chargingSpeedMinusLoss = chargingSpeedInWatts * ((100 - chargingLossField.getValue()) / 100);
         var chargingTimeHours = capacityIncrease * 1000 / chargingSpeedMinusLoss;
         var chargingTimeMinutes = chargingTimeHours * 60;
-        var chargingEndTime = chargingStartTimeField.getValue().plusMinutes((long) chargingTimeMinutes);
-        chargingEndTimeField.setValue(chargingEndTime);
+
+        if (calculationTarget.getValue() == CalculationTarget.CHARGING_END) {
+            chargingTimeField.setLabel("Charging start time");
+            var chargingEndTime = chargingTimeField.getValue().plusMinutes((long) chargingTimeMinutes);
+            chargingResultTimeField.setValue(chargingEndTime);
+            chargingResultTimeField.setLabel("Calculated charging end time");
+        } else {
+            chargingTimeField.setLabel("Charging end time");
+            var chargingEndTime = chargingTimeField.getValue().minusMinutes((long) chargingTimeMinutes);
+            chargingResultTimeField.setValue(chargingEndTime);
+            chargingResultTimeField.setLabel("Calculated charging start time");
+        }
 
         var electricityConsumed = (chargingSpeedInWatts / 1000) * chargingTimeHours;
         final var electricityConsumedText = "Consumed electricity: %.2f kWh".formatted(electricityConsumed);
@@ -158,12 +178,13 @@ public class ChargingView extends Main {
         int phases;
         int voltage;
         double chargingLoss;
+        CalculationTarget calculationTarget;
         LocalTime startTime;
 
         public Charge() {
         }
 
-        public Charge(double capacity, int currentSOC, int targetSOC, int amperes, int phases, int voltage, double chargingLoss, LocalTime startTime) {
+        public Charge(double capacity, int currentSOC, int targetSOC, int amperes, int phases, int voltage, double chargingLoss, CalculationTarget calculationTarget, LocalTime startTime) {
             this.capacity = capacity;
             this.currentSOC = currentSOC;
             this.targetSOC = targetSOC;
@@ -171,6 +192,7 @@ public class ChargingView extends Main {
             this.phases = phases;
             this.voltage = voltage;
             this.chargingLoss = chargingLoss;
+            this.calculationTarget = calculationTarget;
             this.startTime = startTime;
         }
 
@@ -236,6 +258,29 @@ public class ChargingView extends Main {
 
         public void setVoltage(int voltage) {
             this.voltage = voltage;
+        }
+
+        public CalculationTarget getCalculationTarget() {
+            return calculationTarget;
+        }
+
+        public void setCalculationTarget(CalculationTarget calculationTarget) {
+            this.calculationTarget = calculationTarget;
+        }
+    }
+
+    enum CalculationTarget {
+        CHARGING_START("Charging start time"),
+        CHARGING_END("Charging end time");
+
+        private String name;
+
+        CalculationTarget(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
         }
     }
 
