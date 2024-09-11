@@ -121,7 +121,7 @@ public class ChargingView extends Main {
                 16,
                 3,
                 230,
-                15,
+                10,
                 LocalTime.of(0, 0)
         );
 
