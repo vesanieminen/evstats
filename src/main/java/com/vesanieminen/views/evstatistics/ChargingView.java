@@ -66,7 +66,6 @@ public class ChargingView extends Main {
         amperesField.setHelperText("In amperes (A)");
         secondRow.add(amperesField);
         phasesField = new IntegerField("Phases");
-        phasesField.setStep(2);
         phasesField.setHelperText("How many phases are used?");
         phasesField.setMin(1);
         phasesField.setMax(3);
@@ -120,8 +119,8 @@ public class ChargingView extends Main {
         chargeBinder.bind(batteryCapacityField, Charge::getCapacity, Charge::setCapacity);
         chargeBinder.bind(currentSocField, Charge::getCurrentSOC, Charge::setCurrentSOC);
         chargeBinder.bind(targetSocField, Charge::getTargetSOC, Charge::setTargetSOC);
-        //chargeBinder.forField(currentSocField).withValidator((value, context) -> value <= targetSocField.getValue() ? ValidationResult.ok() : ValidationResult.error("Invalid SOC target")).bind(Charge::getCurrentSOC, //Charge::setCurrentSOC);
-        //chargeBinder.forField(targetSocField).withValidator((value, context) -> value >= currentSocField.getValue() ? ValidationResult.ok() : ValidationResult.error("Invalid SOC target")).bind(Charge::getTargetSOC, Charge::setTargetSOC);
+        //chargeBinder.forField(currentSocField).withValidator((value, context) -> value <= charge.getTargetSOC() ? ValidationResult.ok() : ValidationResult.error("Invalid SOC target")).bind(Charge::getCurrentSOC, Charge::setCurrentSOC);
+        //chargeBinder.forField(targetSocField).withValidator((value, context) -> value >= charge.getCurrentSOC() ? ValidationResult.ok() : ValidationResult.error("Invalid SOC target")).bind(Charge::getTargetSOC, Charge::setTargetSOC);
         chargeBinder.bind(amperesField, Charge::getAmperes, Charge::setAmperes);
         chargeBinder.bind(phasesField, Charge::getPhases, Charge::setPhases);
         chargeBinder.bind(voltageField, Charge::getVoltage, Charge::setVoltage);
@@ -140,8 +139,17 @@ public class ChargingView extends Main {
                 CalculationTarget.CHARGING_END,
                 LocalTime.of(0, 0)
         );
+
         chargeBinder.setBean(charge);
-        chargeBinder.addValueChangeListener(e -> doCalculation());
+        chargeBinder.addValueChangeListener(e -> {
+            if (chargeBinder.isValid()) {
+                doCalculation();
+            } else {
+                chargingResultTimeField.setValue(null);
+                consumedElectricitySpan.setText(null);
+                lostElectricitySpan.setText(null);
+            }
+        });
         doCalculation();
     }
 
