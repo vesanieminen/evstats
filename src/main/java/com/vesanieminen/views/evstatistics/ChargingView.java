@@ -2,7 +2,6 @@ package com.vesanieminen.views.evstatistics;
 
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
@@ -10,6 +9,7 @@ import com.vaadin.flow.component.timepicker.TimePicker;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vesanieminen.components.GridLayout;
 import com.vesanieminen.views.MainLayout;
 
@@ -61,52 +61,53 @@ public class ChargingView extends Main {
         topGrid.add(targetSocField);
         add(topGrid);
 
-        final var secondRow = new GridLayout();
         amperesField = new IntegerField("Charging speed");
         amperesField.setSuffixComponent(new Span("A"));
         amperesField.setMin(0);
         amperesField.setStepButtonsVisible(true);
         amperesField.setHelperText("In amperes (A)");
-        secondRow.add(amperesField);
+        topGrid.add(amperesField);
         phasesField = new IntegerField("Phases");
         phasesField.setHelperText("How many phases are used?");
         phasesField.setMin(1);
         phasesField.setMax(3);
         phasesField.setStepButtonsVisible(true);
-        secondRow.add(phasesField);
+        topGrid.add(phasesField);
         voltageField = new IntegerField("Voltage");
         voltageField.setSuffixComponent(new Span("V"));
         voltageField.setHelperText("What voltage is used? (V)");
         voltageField.setMin(1);
         voltageField.setMax(1000);
         voltageField.setStepButtonsVisible(true);
-        secondRow.add(voltageField);
-        add(secondRow);
+        topGrid.add(voltageField);
 
-        final var thirdRow = new GridLayout();
         chargingLossField = new NumberField("Charging loss");
         chargingLossField.setHelperText("How much goes to waste?");
         chargingLossField.setSuffixComponent(new Span("%"));
         chargingLossField.setStepButtonsVisible(true);
         chargingLossField.setMin(0);
         chargingLossField.setMax(99);
-        thirdRow.add(chargingLossField);
+        topGrid.add(chargingLossField);
 
         calculationTarget = new Select<>();
         calculationTarget.setItems(CalculationTarget.values());
         calculationTarget.setItemLabelGenerator(CalculationTarget::getName);
         calculationTarget.setLabel("Calculation target");
-        thirdRow.add(calculationTarget);
+        topGrid.add(calculationTarget);
 
         chargingTimeField = new TimePicker();
         chargingTimeField.setStep(Duration.ofMinutes(15));
         chargingTimeField.setLocale(new Locale("fi", "FI"));
-        thirdRow.add(chargingTimeField);
-        add(thirdRow);
+        topGrid.add(chargingTimeField);
 
-        final var fourthRow = new VerticalLayout();
+        final var fourthRow = new GridLayout();
+        fourthRow.removeClassNames(
+                LumoUtility.Grid.Breakpoint.Large.COLUMNS_3,
+                LumoUtility.Grid.Column.COLUMNS_2
+        );
+        fourthRow.addClassNames(LumoUtility.Grid.Breakpoint.Small.COLUMNS_1);
         chargingResultTimeField = new TimePicker();
-        chargingResultTimeField.setWidthFull();
+        //chargingResultTimeField.addClassNames(LumoUtility.Grid.Column.COLUMN_SPAN_2);
         chargingResultTimeField.setStep(Duration.ofMinutes(1));
         chargingResultTimeField.setReadOnly(true);
         chargingResultTimeField.setLocale(new Locale("fi", "FI"));

@@ -7,12 +7,11 @@ public class GridLayout extends Div {
 
     public GridLayout() {
         addClassNames(
-                LumoUtility.Display.FLEX,
-                LumoUtility.FlexDirection.COLUMN,
-                LumoUtility.Grid.FLOW_COLUMN,
+                LumoUtility.Display.GRID,
+                LumoUtility.Grid.Breakpoint.Large.COLUMNS_3,
+                LumoUtility.Grid.Column.COLUMNS_2,
                 LumoUtility.Padding.Horizontal.MEDIUM,
-                LumoUtility.Gap.MEDIUM,
-                LumoUtility.Display.Breakpoint.Medium.GRID
+                LumoUtility.Gap.Column.MEDIUM
         );
     }
 }
