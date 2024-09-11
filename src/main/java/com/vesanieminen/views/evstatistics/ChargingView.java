@@ -34,6 +34,7 @@ public class ChargingView extends Main {
     private final Span lostElectricitySpan;
     private final Select<CalculationTarget> calculationTarget;
     private final Span chargingSpeedSpan;
+    private final Span chargingSpeedMinusLossSpan;
 
     public ChargingView() {
         final var topGrid = new GridLayout();
@@ -112,6 +113,9 @@ public class ChargingView extends Main {
         chargingSpeedSpan = new Span();
         chargingSpeedSpan.setClassName("text-s");
         fourthRow.add(chargingSpeedSpan);
+        chargingSpeedMinusLossSpan = new Span();
+        chargingSpeedMinusLossSpan.setClassName("text-s");
+        fourthRow.add(chargingSpeedMinusLossSpan);
         consumedElectricitySpan = new Span();
         consumedElectricitySpan.setClassName("text-s");
         fourthRow.add(consumedElectricitySpan);
@@ -180,12 +184,14 @@ public class ChargingView extends Main {
         }
 
         chargingSpeedSpan.setText("Charging speed: %.2f kWh".formatted(chargingSpeedInWatts / 1000.0));
+        chargingSpeedMinusLossSpan.setText("Charging speed: %.2f kWh".formatted(chargingSpeedMinusLoss / 1000.0));
 
-        var electricityConsumed = (chargingSpeedInWatts / 1000) * chargingTimeHours;
+        var electricityConsumed = (chargingSpeedInWatts / 1000.0) * chargingTimeHours;
         final var electricityConsumedText = "Consumed electricity: %.2f kWh".formatted(electricityConsumed);
         consumedElectricitySpan.setText(electricityConsumedText);
 
-        final var electricityLostText = "Lost electricity: %.2f kWh".formatted(electricityConsumed * (chargingLossField.getValue() / 100));
+        final var lostPercentage = chargingLossField.getValue() / 100.0;
+        final var electricityLostText = "Lost electricity: %.2f kWh".formatted(electricityConsumed * lostPercentage);
         lostElectricitySpan.setText(electricityLostText);
     }
 
