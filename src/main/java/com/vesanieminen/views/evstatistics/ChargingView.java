@@ -72,6 +72,7 @@ public class ChargingView extends Main {
         phasesField.setStepButtonsVisible(true);
         secondRow.add(phasesField);
         voltageField = new IntegerField("Voltage");
+        voltageField.setSuffixComponent(new Span("V"));
         voltageField.setHelperText("What voltage is used? (V)");
         voltageField.setMin(1);
         voltageField.setMax(1000);
