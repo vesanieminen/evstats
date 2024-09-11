@@ -183,8 +183,8 @@ public class ChargingView extends Main {
             chargingResultTimeField.setLabel("Calculated charging start time");
         }
 
-        chargingSpeedSpan.setText("Charging speed: %.2f kWh".formatted(chargingSpeedInWatts / 1000.0));
-        chargingSpeedMinusLossSpan.setText("Charging speed minus loss: %.2f kWh".formatted(chargingSpeedMinusLoss / 1000.0));
+        chargingSpeedSpan.setText("Charging speed: %.2f kW".formatted(chargingSpeedInWatts / 1000.0));
+        chargingSpeedMinusLossSpan.setText("Charging speed minus loss: %.2f kW".formatted(chargingSpeedMinusLoss / 1000.0));
 
         var electricityConsumed = (chargingSpeedInWatts / 1000.0) * chargingTimeHours;
         final var electricityConsumedText = "Consumed electricity: %.2f kWh".formatted(electricityConsumed);
