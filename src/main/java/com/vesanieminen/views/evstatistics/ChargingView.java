@@ -35,6 +35,7 @@ public class ChargingView extends Main {
     private final Select<CalculationTarget> calculationTarget;
     private final Span chargingSpeedSpan;
     private final Span chargingSpeedMinusLossSpan;
+    private final Span addedElectricitySpan;
 
     public ChargingView() {
         final var topGrid = new GridLayout();
@@ -119,6 +120,9 @@ public class ChargingView extends Main {
         consumedElectricitySpan = new Span();
         consumedElectricitySpan.setClassName("text-s");
         fourthRow.add(consumedElectricitySpan);
+        addedElectricitySpan = new Span();
+        addedElectricitySpan.setClassName("text-s");
+        fourthRow.add(addedElectricitySpan);
         lostElectricitySpan = new Span();
         lostElectricitySpan.setClassName("text-s");
         fourthRow.add(lostElectricitySpan);
@@ -155,8 +159,10 @@ public class ChargingView extends Main {
                 doCalculation();
             } else {
                 chargingSpeedSpan.setText(null);
+                chargingSpeedMinusLossSpan.setText(null);
                 chargingResultTimeField.setValue(null);
                 consumedElectricitySpan.setText(null);
+                addedElectricitySpan.setText(null);
                 lostElectricitySpan.setText(null);
             }
         });
@@ -191,8 +197,14 @@ public class ChargingView extends Main {
         consumedElectricitySpan.setText(electricityConsumedText);
 
         final var lostPercentage = chargingLossField.getValue() / 100.0;
-        final var electricityLostText = "Lost electricity: %.2f kWh".formatted(electricityConsumed * lostPercentage);
+        final var lostElectricity = electricityConsumed * lostPercentage;
+        final var electricityLostText = "Lost electricity: %.2f kWh".formatted(lostElectricity);
         lostElectricitySpan.setText(electricityLostText);
+
+        var addedElectricity = electricityConsumed - lostElectricity;
+        final var addedElectricityText = "Charge added to battery: %.2f kWh".formatted(addedElectricity);
+        addedElectricitySpan.setText(addedElectricityText);
+
     }
 
     static class Charge {
