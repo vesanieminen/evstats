@@ -36,6 +36,7 @@ public class ChargingView extends Main {
     private final Span chargingSpeedSpan;
     private final Span chargingSpeedMinusLossSpan;
     private final Span addedElectricitySpan;
+    private final Span chargingLength;
 
     public ChargingView() {
         final var topGrid = new GridLayout();
@@ -111,6 +112,9 @@ public class ChargingView extends Main {
         chargingResultTimeField.setReadOnly(true);
         chargingResultTimeField.setLocale(new Locale("fi", "FI"));
         fourthRow.add(chargingResultTimeField);
+        chargingLength = new Span();
+        chargingLength.setClassName("text-s");
+        fourthRow.add(chargingLength);
         chargingSpeedSpan = new Span();
         chargingSpeedSpan.setClassName("text-s");
         fourthRow.add(chargingSpeedSpan);
@@ -158,6 +162,7 @@ public class ChargingView extends Main {
             if (chargeBinder.isValid()) {
                 doCalculation();
             } else {
+                chargingLength.setText(null);
                 chargingSpeedSpan.setText(null);
                 chargingSpeedMinusLossSpan.setText(null);
                 chargingResultTimeField.setValue(null);
@@ -175,19 +180,21 @@ public class ChargingView extends Main {
         var chargingSpeedInWatts = amperesField.getValue() * phasesField.getValue() * voltageField.getValue();
         var chargingSpeedMinusLoss = chargingSpeedInWatts * ((100 - chargingLossField.getValue()) / 100);
         var chargingTimeHours = capacityIncrease * 1000 / chargingSpeedMinusLoss;
-        var chargingTimeMinutes = chargingTimeHours * 60;
+        var chargingTimeSeconds = (int) (chargingTimeHours * 3600);
 
         if (calculationTarget.getValue() == CalculationTarget.CHARGING_END) {
             chargingTimeField.setLabel("Charging start time");
-            var chargingEndTime = chargingTimeField.getValue().plusMinutes((long) chargingTimeMinutes);
+            var chargingEndTime = chargingTimeField.getValue().plusSeconds(chargingTimeSeconds);
             chargingResultTimeField.setValue(chargingEndTime);
             chargingResultTimeField.setLabel("Calculated charging end time");
         } else {
             chargingTimeField.setLabel("Charging end time");
-            var chargingEndTime = chargingTimeField.getValue().minusMinutes((long) chargingTimeMinutes);
+            var chargingEndTime = chargingTimeField.getValue().minusSeconds(chargingTimeSeconds);
             chargingResultTimeField.setValue(chargingEndTime);
             chargingResultTimeField.setLabel("Calculated charging start time");
         }
+
+        chargingLength.setText("Charging length: %.0f h, %d min, %d sec".formatted(chargingTimeHours, chargingTimeSeconds % 3600 / 60, chargingTimeSeconds % 60));
 
         chargingSpeedSpan.setText("Charging speed: %.2f kW".formatted(chargingSpeedInWatts / 1000.0));
         chargingSpeedMinusLossSpan.setText("Charging speed minus loss: %.2f kW".formatted(chargingSpeedMinusLoss / 1000.0));
