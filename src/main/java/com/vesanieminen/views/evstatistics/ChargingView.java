@@ -63,6 +63,7 @@ public class ChargingView extends Main {
         amperesField.setHelperText("In amperes (A)");
         secondRow.add(amperesField);
         phasesField = new IntegerField("Phases");
+        phasesField.setStep(2);
         phasesField.setHelperText("How many phases are used?");
         phasesField.setMin(1);
         phasesField.setMax(3);
@@ -124,7 +125,6 @@ public class ChargingView extends Main {
                 10,
                 LocalTime.of(0, 0)
         );
-
         chargeBinder.addValueChangeListener(e -> {
             doCalculation();
         });
