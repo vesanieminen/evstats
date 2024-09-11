@@ -41,7 +41,6 @@ public class ChargingView extends Main {
     public ChargingView() {
         final var topGrid = new GridLayout();
         batteryCapacityField = new NumberField("Battery capacity");
-        batteryCapacityField.setStep(1);
         batteryCapacityField.setStepButtonsVisible(true);
         batteryCapacityField.setSuffixComponent(new Span("kWh"));
         batteryCapacityField.setHelperText("e.g. 75 kWh");
