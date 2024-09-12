@@ -26,8 +26,8 @@ import java.util.Locale;
 public class ChargingView extends Main {
 
     private final NumberField batteryCapacityField;
-    private final IntegerField currentSocField;
-    private final IntegerField targetSocField;
+    private final NumberField currentSocField;
+    private final NumberField targetSocField;
     private final IntegerField amperesField;
     private final IntegerField phasesField;
     private final IntegerField voltageField;
@@ -49,17 +49,15 @@ public class ChargingView extends Main {
         batteryCapacityField.setSuffixComponent(new Span("kWh"));
         batteryCapacityField.setHelperText("e.g. 75 kWh");
         topGrid.add(batteryCapacityField);
-        currentSocField = new IntegerField("Current SOC");
+        currentSocField = new NumberField("Current SOC");
         currentSocField.setSuffixComponent(new Span("%"));
-        currentSocField.setStep(1);
         currentSocField.setMin(0);
         currentSocField.setStepButtonsVisible(true);
         currentSocField.setHelperText("Current battery charge level");
         topGrid.add(currentSocField);
-        targetSocField = new IntegerField("Target SOC");
+        targetSocField = new NumberField("Target SOC");
         targetSocField.setMin(0);
         targetSocField.setSuffixComponent(new Span("%"));
-        targetSocField.setStep(1);
         targetSocField.setStepButtonsVisible(true);
         targetSocField.setHelperText("Target battery charge level");
         topGrid.add(targetSocField);
@@ -208,8 +206,8 @@ public class ChargingView extends Main {
 
     static class Charge {
         double capacity;
-        int currentSOC;
-        int targetSOC;
+        double currentSOC;
+        double targetSOC;
         int amperes;
         int phases;
         int voltage;
@@ -240,19 +238,19 @@ public class ChargingView extends Main {
             this.capacity = capacity;
         }
 
-        public int getCurrentSOC() {
+        public double getCurrentSOC() {
             return currentSOC;
         }
 
-        public void setCurrentSOC(int currentSOC) {
+        public void setCurrentSOC(double currentSOC) {
             this.currentSOC = currentSOC;
         }
 
-        public int getTargetSOC() {
+        public double getTargetSOC() {
             return targetSOC;
         }
 
-        public void setTargetSOC(int targetSOC) {
+        public void setTargetSOC(double targetSOC) {
             this.targetSOC = targetSOC;
         }
 
