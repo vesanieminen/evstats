@@ -10,6 +10,7 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.PreserveOnRefresh;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.spring.annotation.VaadinSessionScope;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vesanieminen.components.GridLayout;
@@ -21,7 +22,8 @@ import java.time.LocalTime;
 import java.util.Locale;
 
 @PageTitle("Charging tool")
-@Route(value = "charging", layout = MainLayout.class)
+@Route(value = "lataus", layout = MainLayout.class)
+@RouteAlias(value = "charging", layout = MainLayout.class)
 @PreserveOnRefresh
 public class ChargingView extends Main {
 
@@ -184,7 +186,7 @@ public class ChargingView extends Main {
             chargingResultTimeField.setLabel("Calculated charging start time");
         }
 
-        chargingLength.setText("Charging length: %.0f h, %d min, %d sec".formatted(chargingTimeHours, chargingTimeSeconds % 3600 / 60, chargingTimeSeconds % 60));
+        chargingLength.setText("Charging length: %d h, %d min, %d sec".formatted((int) chargingTimeHours, (chargingTimeSeconds % 3600) / 60, chargingTimeSeconds % 60));
 
         chargingSpeedSpan.setText("Charging speed: %.2f kW".formatted(chargingSpeedInWatts / 1000.0));
         chargingSpeedMinusLossSpan.setText("Charging speed minus loss: %.2f kW".formatted(chargingSpeedMinusLoss / 1000.0));
