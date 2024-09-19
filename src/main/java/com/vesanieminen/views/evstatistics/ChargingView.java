@@ -8,7 +8,6 @@ import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.timepicker.TimePicker;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.PreserveOnRefresh;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.spring.annotation.VaadinSessionScope;
@@ -24,7 +23,6 @@ import java.util.Locale;
 @PageTitle("Charging tool")
 @Route(value = "lataus", layout = MainLayout.class)
 @RouteAlias(value = "charging", layout = MainLayout.class)
-@PreserveOnRefresh
 public class ChargingView extends Main {
 
     private final NumberField batteryCapacityField;
