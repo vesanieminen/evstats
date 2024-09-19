@@ -14,5 +14,5 @@ html {
 }
 
 vaadin-app-layout::part(drawer) {
-    width: 220px;
+    width: 240px;
 }

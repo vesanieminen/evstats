@@ -20,7 +20,7 @@ import java.net.URISyntaxException;
 import java.time.ZoneOffset;
 
 @PageTitle("New EV registration percentage")
-@Route(value = "", layout = MainLayout.class)
+@Route(value = "adoption", layout = MainLayout.class)
 public class EVAdoptionRateView extends Main {
 
     public EVAdoptionRateView() {

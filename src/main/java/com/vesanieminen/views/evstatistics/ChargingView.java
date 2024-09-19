@@ -21,7 +21,8 @@ import java.time.LocalTime;
 import java.util.Locale;
 
 @PageTitle("Charging tool")
-@Route(value = "lataus", layout = MainLayout.class)
+@Route(value = "", layout = MainLayout.class)
+@RouteAlias(value = "lataus", layout = MainLayout.class)
 @RouteAlias(value = "charging", layout = MainLayout.class)
 public class ChargingView extends Main {
 

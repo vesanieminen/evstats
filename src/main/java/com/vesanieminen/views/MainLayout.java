@@ -91,13 +91,16 @@ public class MainLayout extends AppLayout {
         // These changes are likely to cause some breaking change to the custom css
         // applied to the component.
         SideNav nav = new SideNav();
-
-        nav.addItem(
+        final var statistics = new SideNavItem("Statistics");
+        statistics.setExpanded(true);
+        statistics.addItem(
                 new SideNavItem("Adoption curve", EVAdoptionRateView.class, LineAwesomeIcon.CHART_AREA_SOLID.create()),
                 new SideNavItem("New cars", EVRegistrationsView.class, LineAwesomeIcon.CHART_BAR_SOLID.create()),
                 new SideNavItem("Tesla registrations", TeslaRegistrationsView.class, LineAwesomeIcon.CHART_BAR_SOLID.create()),
-                new SideNavItem("New Teslas / year", TeslaRegistrationsBarView.class, LineAwesomeIcon.BARS_SOLID.create()),
-                new SideNavItem("Charging tool", ChargingView.class, LineAwesomeIcon.CAR_BATTERY_SOLID.create())
+                new SideNavItem("New Teslas / year", TeslaRegistrationsBarView.class, LineAwesomeIcon.BARS_SOLID.create()));
+        nav.addItem(
+                new SideNavItem("Charging tool", ChargingView.class, LineAwesomeIcon.CAR_BATTERY_SOLID.create()),
+                statistics
         );
 
         return nav;
