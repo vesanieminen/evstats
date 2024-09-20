@@ -1,7 +1,13 @@
 package com.vesanieminen.views.evstatistics;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vaadin.flow.component.AbstractField;
+import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.page.WebStorage;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
@@ -15,10 +21,13 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vesanieminen.components.GridLayout;
 import com.vesanieminen.services.LiukuriService;
 import com.vesanieminen.views.MainLayout;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -33,6 +42,7 @@ import java.util.Locale;
 @Route(value = "", layout = MainLayout.class)
 @RouteAlias(value = "lataus", layout = MainLayout.class)
 @RouteAlias(value = "charging", layout = MainLayout.class)
+@Slf4j
 public class ChargingView extends Main {
 
     private final NumberField batteryCapacityField;
@@ -60,17 +70,20 @@ public class ChargingView extends Main {
         this.liukuriService = liukuriService;
         final var topGrid = new GridLayout();
         batteryCapacityField = new NumberField("Battery capacity");
+        batteryCapacityField.setId("batteryCapacityField");
         batteryCapacityField.setStepButtonsVisible(true);
         batteryCapacityField.setSuffixComponent(new Span("kWh"));
         batteryCapacityField.setHelperText("e.g. 75 kWh");
         topGrid.add(batteryCapacityField);
         currentSocField = new NumberField("Current SOC");
+        currentSocField.setId("currentSocField");
         currentSocField.setSuffixComponent(new Span("%"));
         currentSocField.setMin(0);
         currentSocField.setStepButtonsVisible(true);
         currentSocField.setHelperText("Current battery charge level");
         topGrid.add(currentSocField);
         targetSocField = new NumberField("Target SOC");
+        targetSocField.setId("targetSocField");
         targetSocField.setMin(0);
         targetSocField.setSuffixComponent(new Span("%"));
         targetSocField.setStepButtonsVisible(true);
@@ -79,18 +92,21 @@ public class ChargingView extends Main {
         add(topGrid);
 
         amperesField = new IntegerField("Charging speed");
+        amperesField.setId("amperesField");
         amperesField.setSuffixComponent(new Span("A"));
         amperesField.setMin(0);
         amperesField.setStepButtonsVisible(true);
         amperesField.setHelperText("In amperes (A)");
         topGrid.add(amperesField);
         phasesField = new IntegerField("Phases");
+        phasesField.setId("phasesField");
         phasesField.setHelperText("How many phases are used?");
         phasesField.setMin(1);
         phasesField.setMax(3);
         phasesField.setStepButtonsVisible(true);
         topGrid.add(phasesField);
         voltageField = new IntegerField("Voltage");
+        voltageField.setId("voltageField");
         voltageField.setSuffixComponent(new Span("V"));
         voltageField.setHelperText("What voltage is used? (V)");
         voltageField.setMin(1);
@@ -99,6 +115,7 @@ public class ChargingView extends Main {
         topGrid.add(voltageField);
 
         chargingLossField = new NumberField("Charging loss");
+        chargingLossField.setId("chargingLossField");
         chargingLossField.setHelperText("How much goes to waste?");
         chargingLossField.setSuffixComponent(new Span("%"));
         chargingLossField.setStepButtonsVisible(true);
@@ -107,12 +124,14 @@ public class ChargingView extends Main {
         topGrid.add(chargingLossField);
 
         calculationTarget = new Select<>();
+        calculationTarget.setId("calculationTarget");
         calculationTarget.setItems(CalculationTarget.values());
         calculationTarget.setItemLabelGenerator(CalculationTarget::getName);
         calculationTarget.setLabel("Calculation target");
         topGrid.add(calculationTarget);
 
         chargingTimeField = new TimePicker();
+        chargingTimeField.setId("chargingTimeField");
         chargingTimeField.setStep(Duration.ofMinutes(15));
         chargingTimeField.setLocale(Locale.of("fi", "FI"));
         topGrid.add(chargingTimeField);
@@ -183,6 +202,17 @@ public class ChargingView extends Main {
             }
         });
         doCalculation();
+        readFieldValues();
+
+        batteryCapacityField.addValueChangeListener(item -> saveFieldValue(batteryCapacityField));
+        currentSocField.addValueChangeListener(item -> saveFieldValue(currentSocField));
+        targetSocField.addValueChangeListener(item -> saveFieldValue(targetSocField));
+        amperesField.addValueChangeListener(item -> saveFieldValue(amperesField));
+        phasesField.addValueChangeListener(item -> saveFieldValue(phasesField));
+        voltageField.addValueChangeListener(item -> saveFieldValue(voltageField));
+        chargingLossField.addValueChangeListener(item -> saveFieldValue(chargingLossField));
+        calculationTarget.addValueChangeListener(item -> saveFieldValue(calculationTarget));
+        chargingTimeField.addValueChangeListener(item -> saveFieldValue(chargingTimeField));
     }
 
     private void doCalculation() {
@@ -295,9 +325,47 @@ public class ChargingView extends Main {
         return consumptionData;
     }
 
+    ObjectMapper mapper = new ObjectMapper();
+
+    public <C extends AbstractField<C, T>, T> void saveFieldValue(AbstractField<C, T> field) {
+        try {
+            WebStorage.setItem(field.getId().orElseThrow(), mapper.writeValueAsString(field.getValue()));
+        } catch (JsonProcessingException e) {
+            log.info("Could not save value: %s".formatted(e.toString()));
+        }
+    }
+
+    public void readFieldValues() {
+        WebStorage.getItem(batteryCapacityField.getId().orElseThrow(), item -> readValue(item, batteryCapacityField));
+        WebStorage.getItem(currentSocField.getId().orElseThrow(), item -> readValue(item, currentSocField));
+        WebStorage.getItem(targetSocField.getId().orElseThrow(), item -> readValue(item, targetSocField));
+        WebStorage.getItem(amperesField.getId().orElseThrow(), item -> readValue(item, amperesField));
+        WebStorage.getItem(phasesField.getId().orElseThrow(), item -> readValue(item, phasesField));
+        WebStorage.getItem(voltageField.getId().orElseThrow(), item -> readValue(item, voltageField));
+        WebStorage.getItem(chargingLossField.getId().orElseThrow(), item -> readValue(item, chargingLossField));
+        WebStorage.getItem(calculationTarget.getId().orElseThrow(), item -> readValue(item, calculationTarget));
+        WebStorage.getItem(chargingTimeField.getId().orElseThrow(), item -> readValue(item, chargingTimeField));
+    }
+
+
+    public <C extends HasValue.ValueChangeEvent<T>, T> void readValue(String key, HasValue<C, T> hasValue) {
+        if (key == null) {
+            return;
+        }
+        try {
+            T value = mapper.readValue(key, new TypeReference<>() {
+            });
+            hasValue.setValue(value);
+        } catch (IOException e) {
+            log.info("Could not read value: %s".formatted(e.toString()));
+        }
+    }
+
+
 
     @Setter
     @Getter
+    @AllArgsConstructor
     static class Charge {
         double capacity;
         double currentSOC;
@@ -309,33 +377,15 @@ public class ChargingView extends Main {
         CalculationTarget calculationTarget;
         LocalTime startTime;
 
-        public Charge() {
-        }
-
-        public Charge(double capacity, int currentSOC, int targetSOC, int amperes, int phases, int voltage, double chargingLoss, CalculationTarget calculationTarget, LocalTime startTime) {
-            this.capacity = capacity;
-            this.currentSOC = currentSOC;
-            this.targetSOC = targetSOC;
-            this.amperes = amperes;
-            this.phases = phases;
-            this.voltage = voltage;
-            this.chargingLoss = chargingLoss;
-            this.calculationTarget = calculationTarget;
-            this.startTime = startTime;
-        }
-
     }
 
     @Getter
+    @AllArgsConstructor
     enum CalculationTarget {
         CHARGING_START("Start time"),
         CHARGING_END("End time");
 
         private final String name;
-
-        CalculationTarget(String name) {
-            this.name = name;
-        }
 
     }
 
