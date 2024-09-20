@@ -234,7 +234,7 @@ public class ChargingView extends Main {
         final var calculationResponse = liukuriService.performCalculation(longDoubleLinkedHashMap, 0, true);
         if (calculationResponse != null) {
 
-            electricityCostSpan.setText("Total cost: %.2f €".formatted(calculationResponse.getTotalCost()));
+            electricityCostSpan.setText("Total cost (inc. VAT): %.2f €".formatted(calculationResponse.getTotalCost()));
             spotAverage.setText("Spot average: %.2f €".formatted(calculationResponse.getAveragePrice()));
         }
     }
