@@ -13,11 +13,20 @@ import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.spring.annotation.VaadinSessionScope;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vesanieminen.components.GridLayout;
+import com.vesanieminen.services.LiukuriService;
 import com.vesanieminen.views.MainLayout;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 
 @PageTitle("Charging tool")
@@ -42,8 +51,13 @@ public class ChargingView extends Main {
     private final Span chargingSpeedMinusLossSpan;
     private final Span addedElectricitySpan;
     private final Span chargingLength;
+    public static final ZoneId fiZoneID = ZoneId.of("Europe/Helsinki");
+    private final LiukuriService liukuriService;
+    private final Span electricityCostSpan;
+    private final Span spotAverage;
 
-    public ChargingView(PreservedState preservedState) {
+    public ChargingView(PreservedState preservedState, LiukuriService liukuriService) {
+        this.liukuriService = liukuriService;
         final var topGrid = new GridLayout();
         batteryCapacityField = new NumberField("Battery capacity");
         batteryCapacityField.setStepButtonsVisible(true);
@@ -100,7 +114,7 @@ public class ChargingView extends Main {
 
         chargingTimeField = new TimePicker();
         chargingTimeField.setStep(Duration.ofMinutes(15));
-        chargingTimeField.setLocale(new Locale("fi", "FI"));
+        chargingTimeField.setLocale(Locale.of("fi", "FI"));
         topGrid.add(chargingTimeField);
 
         final var fourthRow = new GridLayout();
@@ -113,7 +127,7 @@ public class ChargingView extends Main {
         //chargingResultTimeField.addClassNames(LumoUtility.Grid.Column.COLUMN_SPAN_2);
         chargingResultTimeField.setStep(Duration.ofMinutes(1));
         chargingResultTimeField.setReadOnly(true);
-        chargingResultTimeField.setLocale(new Locale("fi", "FI"));
+        chargingResultTimeField.setLocale(Locale.of("fi", "FI"));
         fourthRow.add(chargingResultTimeField);
         chargingLength = new Span();
         chargingLength.setClassName("text-s");
@@ -133,6 +147,12 @@ public class ChargingView extends Main {
         lostElectricitySpan = new Span();
         lostElectricitySpan.setClassName("text-s");
         fourthRow.add(lostElectricitySpan);
+        electricityCostSpan = new Span();
+        electricityCostSpan.setClassName("text-s");
+        fourthRow.add(electricityCostSpan);
+        spotAverage = new Span();
+        spotAverage.setClassName("text-s");
+        fourthRow.add(spotAverage);
         add(fourthRow);
 
         final var chargeBinder = new Binder<Charge>();
@@ -168,29 +188,35 @@ public class ChargingView extends Main {
     private void doCalculation() {
         var socIncrease = targetSocField.getValue() - currentSocField.getValue();
         var capacityIncrease = batteryCapacityField.getValue() / 100 * socIncrease;
-        var chargingSpeedInWatts = amperesField.getValue() * phasesField.getValue() * voltageField.getValue();
-        var chargingSpeedMinusLoss = chargingSpeedInWatts * ((100 - chargingLossField.getValue()) / 100);
+        var chargingPowerInWatts = amperesField.getValue() * phasesField.getValue() * voltageField.getValue();
+        var chargingSpeedMinusLoss = chargingPowerInWatts * ((100 - chargingLossField.getValue()) / 100);
         var chargingTimeHours = capacityIncrease * 1000 / chargingSpeedMinusLoss;
         var chargingTimeSeconds = (int) (chargingTimeHours * 3600);
 
+        Instant chargingStartTime;
         if (calculationTarget.getValue() == CalculationTarget.CHARGING_END) {
             chargingTimeField.setLabel("Charging start time");
             var chargingEndTime = chargingTimeField.getValue().plusSeconds(chargingTimeSeconds);
             chargingResultTimeField.setValue(chargingEndTime);
             chargingResultTimeField.setLabel("Calculated charging end time");
+
+            chargingStartTime = ZonedDateTime.of(getChargingLocalDate(chargingTimeField.getValue()), chargingTimeField.getValue(), fiZoneID).toInstant();
         } else {
             chargingTimeField.setLabel("Charging end time");
             var chargingEndTime = chargingTimeField.getValue().minusSeconds(chargingTimeSeconds);
             chargingResultTimeField.setValue(chargingEndTime);
             chargingResultTimeField.setLabel("Calculated charging start time");
+
+            chargingStartTime = ZonedDateTime.of(getChargingLocalDate(chargingResultTimeField.getValue()), chargingResultTimeField.getValue(), fiZoneID).toInstant();
         }
 
         chargingLength.setText("Charging length: %d h, %d min, %d sec".formatted((int) chargingTimeHours, (chargingTimeSeconds % 3600) / 60, chargingTimeSeconds % 60));
 
-        chargingSpeedSpan.setText("Charging speed: %.2f kW".formatted(chargingSpeedInWatts / 1000.0));
+        final var chargingPowerInKilowatts = chargingPowerInWatts / 1000.0;
+        chargingSpeedSpan.setText("Charging speed: %.2f kW".formatted(chargingPowerInKilowatts));
         chargingSpeedMinusLossSpan.setText("Charging speed minus loss: %.2f kW".formatted(chargingSpeedMinusLoss / 1000.0));
 
-        var electricityConsumed = (chargingSpeedInWatts / 1000.0) * chargingTimeHours;
+        var electricityConsumed = (chargingPowerInWatts / 1000.0) * chargingTimeHours;
         final var electricityConsumedText = "Consumed electricity: %.2f kWh".formatted(electricityConsumed);
         consumedElectricitySpan.setText(electricityConsumedText);
 
@@ -203,8 +229,70 @@ public class ChargingView extends Main {
         final var addedElectricityText = "Charge added to battery: %.2f kWh".formatted(addedElectricity);
         addedElectricitySpan.setText(addedElectricityText);
 
+
+        final var longDoubleLinkedHashMap = mapChargingEventToConsumptionData(chargingPowerInKilowatts, chargingStartTime, chargingTimeHours);
+        final var calculationResponse = liukuriService.performCalculation(longDoubleLinkedHashMap, 0.55d, true);
+        if (calculationResponse != null) {
+
+            electricityCostSpan.setText("Total cost: %.2f €".formatted(calculationResponse.getTotalCost()));
+            spotAverage.setText("Spot average: %.2f €".formatted(calculationResponse.getAveragePrice()));
+        }
     }
 
+    private LocalDate getChargingLocalDate(LocalTime nextChargingTime) {
+        // Current LocalTime
+        LocalTime currentTime = LocalTime.now();
+
+        // Determine the next LocalDate when the givenTime is in the future
+        LocalDate nextDate;
+        if (nextChargingTime.isAfter(currentTime)) {
+            // The given time is in the future today
+            return LocalDate.now();
+        } else {
+            // The given time has already passed today; use the next day
+            return LocalDate.now().plusDays(1);
+        }
+    }
+
+    public static LinkedHashMap<Long, Double> mapChargingEventToConsumptionData(
+            double chargingPowerKw, Instant startInstant, double lengthHours) {
+
+        LinkedHashMap<Long, Double> consumptionData = new LinkedHashMap<>();
+
+        // Calculate the end time of the charging event
+        Instant endInstant = startInstant.plusSeconds((long) (lengthHours * 3600));
+
+        Instant currentIntervalStart = startInstant;
+
+        while (currentIntervalStart.isBefore(endInstant)) {
+            // Determine the end of the current interval (either after 1 hour or at the end of the charging event)
+            Instant currentIntervalEnd = currentIntervalStart.plus(1, ChronoUnit.HOURS);
+            if (currentIntervalEnd.isAfter(endInstant)) {
+                currentIntervalEnd = endInstant;
+            }
+
+            // Calculate the duration of the current interval in hours
+            double intervalDurationHours = Duration.between(currentIntervalStart, currentIntervalEnd).toSeconds() / 3600.0;
+
+            // Calculate the energy consumed during this interval
+            double energyConsumedKwh = chargingPowerKw * intervalDurationHours;
+
+            // Key is the start time of the interval in epoch milliseconds
+            long intervalStartEpochMilli = currentIntervalStart.toEpochMilli();
+
+            // Store the interval's start time and energy consumed in the map
+            consumptionData.put(intervalStartEpochMilli, energyConsumedKwh);
+
+            // Move to the next interval
+            currentIntervalStart = currentIntervalEnd;
+        }
+
+        return consumptionData;
+    }
+
+
+    @Setter
+    @Getter
     static class Charge {
         double capacity;
         double currentSOC;
@@ -231,79 +319,9 @@ public class ChargingView extends Main {
             this.startTime = startTime;
         }
 
-        public double getCapacity() {
-            return capacity;
-        }
-
-        public void setCapacity(double capacity) {
-            this.capacity = capacity;
-        }
-
-        public double getCurrentSOC() {
-            return currentSOC;
-        }
-
-        public void setCurrentSOC(double currentSOC) {
-            this.currentSOC = currentSOC;
-        }
-
-        public double getTargetSOC() {
-            return targetSOC;
-        }
-
-        public void setTargetSOC(double targetSOC) {
-            this.targetSOC = targetSOC;
-        }
-
-        public int getAmperes() {
-            return amperes;
-        }
-
-        public void setAmperes(int amperes) {
-            this.amperes = amperes;
-        }
-
-        public int getPhases() {
-            return phases;
-        }
-
-        public void setPhases(int phases) {
-            this.phases = phases;
-        }
-
-        public double getChargingLoss() {
-            return chargingLoss;
-        }
-
-        public void setChargingLoss(double chargingLoss) {
-            this.chargingLoss = chargingLoss;
-        }
-
-        public LocalTime getStartTime() {
-            return startTime;
-        }
-
-        public void setStartTime(LocalTime startTime) {
-            this.startTime = startTime;
-        }
-
-        public int getVoltage() {
-            return voltage;
-        }
-
-        public void setVoltage(int voltage) {
-            this.voltage = voltage;
-        }
-
-        public CalculationTarget getCalculationTarget() {
-            return calculationTarget;
-        }
-
-        public void setCalculationTarget(CalculationTarget calculationTarget) {
-            this.calculationTarget = calculationTarget;
-        }
     }
 
+    @Getter
     enum CalculationTarget {
         CHARGING_START("Start time"),
         CHARGING_END("End time");
@@ -314,9 +332,6 @@ public class ChargingView extends Main {
             this.name = name;
         }
 
-        public String getName() {
-            return name;
-        }
     }
 
     @VaadinSessionScope
