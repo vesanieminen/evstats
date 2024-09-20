@@ -68,6 +68,7 @@ public class ChargingView extends Main {
 
     public ChargingView(PreservedState preservedState, LiukuriService liukuriService) {
         this.liukuriService = liukuriService;
+        setHeight("var(--fullscreen-height-charging)");
         final var topGrid = new GridLayout();
         batteryCapacityField = new NumberField("Battery capacity");
         batteryCapacityField.setId("batteryCapacityField");
