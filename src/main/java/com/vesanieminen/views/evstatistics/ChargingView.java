@@ -262,29 +262,34 @@ public class ChargingView extends Main {
         // Calculate the end time of the charging event
         Instant endInstant = startInstant.plusSeconds((long) (lengthHours * 3600));
 
-        Instant currentIntervalStart = startInstant;
+        // Round down the start time to the previous whole hour
+        Instant intervalStart = startInstant.truncatedTo(ChronoUnit.HOURS);
 
-        while (currentIntervalStart.isBefore(endInstant)) {
-            // Determine the end of the current interval (either after 1 hour or at the end of the charging event)
-            Instant currentIntervalEnd = currentIntervalStart.plus(1, ChronoUnit.HOURS);
-            if (currentIntervalEnd.isAfter(endInstant)) {
-                currentIntervalEnd = endInstant;
+        while (intervalStart.isBefore(endInstant)) {
+            // The end of the current interval is one hour later
+            Instant intervalEnd = intervalStart.plus(1, ChronoUnit.HOURS);
+
+            // Determine the actual start and end times within the charging event
+            Instant actualStart = intervalStart.isBefore(startInstant) ? startInstant : intervalStart;
+            Instant actualEnd = intervalEnd.isAfter(endInstant) ? endInstant : intervalEnd;
+
+            // Calculate the duration of the actual interval in hours
+            double intervalDurationHours = Duration.between(actualStart, actualEnd).toSeconds() / 3600.0;
+
+            // Skip intervals with zero duration
+            if (intervalDurationHours > 0) {
+                // Calculate the energy consumed during this interval
+                double energyConsumedKwh = chargingPowerKw * intervalDurationHours;
+
+                // Key is the start time of the interval in epoch milliseconds
+                long intervalStartEpochMilli = intervalStart.toEpochMilli();
+
+                // Store the interval's start time and energy consumed in the map
+                consumptionData.put(intervalStartEpochMilli, energyConsumedKwh);
             }
 
-            // Calculate the duration of the current interval in hours
-            double intervalDurationHours = Duration.between(currentIntervalStart, currentIntervalEnd).toSeconds() / 3600.0;
-
-            // Calculate the energy consumed during this interval
-            double energyConsumedKwh = chargingPowerKw * intervalDurationHours;
-
-            // Key is the start time of the interval in epoch milliseconds
-            long intervalStartEpochMilli = currentIntervalStart.toEpochMilli();
-
-            // Store the interval's start time and energy consumed in the map
-            consumptionData.put(intervalStartEpochMilli, energyConsumedKwh);
-
             // Move to the next interval
-            currentIntervalStart = currentIntervalEnd;
+            intervalStart = intervalEnd;
         }
 
         return consumptionData;
