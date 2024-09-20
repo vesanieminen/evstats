@@ -231,7 +231,7 @@ public class ChargingView extends Main {
 
 
         final var longDoubleLinkedHashMap = mapChargingEventToConsumptionData(chargingPowerInKilowatts, chargingStartTime, chargingTimeHours);
-        final var calculationResponse = liukuriService.performCalculation(longDoubleLinkedHashMap, 0.55d, true);
+        final var calculationResponse = liukuriService.performCalculation(longDoubleLinkedHashMap, 0, true);
         if (calculationResponse != null) {
 
             electricityCostSpan.setText("Total cost: %.2f €".formatted(calculationResponse.getTotalCost()));
