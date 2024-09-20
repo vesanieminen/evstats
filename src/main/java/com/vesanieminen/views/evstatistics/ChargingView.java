@@ -235,7 +235,7 @@ public class ChargingView extends Main {
         if (calculationResponse != null) {
 
             electricityCostSpan.setText("Total cost (inc. VAT): %.2f €".formatted(calculationResponse.getTotalCost()));
-            spotAverage.setText("Spot average: %.2f €".formatted(calculationResponse.getAveragePrice()));
+            spotAverage.setText("Spot average: %.2f c/kWh".formatted(calculationResponse.getAveragePrice()));
         }
     }
 
