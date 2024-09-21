@@ -344,8 +344,20 @@ public class ChargingView extends Main {
         WebStorage.getItem(phasesField.getId().orElseThrow(), item -> readValue(item, phasesField));
         WebStorage.getItem(voltageField.getId().orElseThrow(), item -> readValue(item, voltageField));
         WebStorage.getItem(chargingLossField.getId().orElseThrow(), item -> readValue(item, chargingLossField));
-        WebStorage.getItem(calculationTarget.getId().orElseThrow(), item -> readValue(item, calculationTarget));
         WebStorage.getItem(chargingTimeField.getId().orElseThrow(), item -> readValue(item, chargingTimeField));
+
+        WebStorage.getItem(calculationTarget.getId().orElseThrow(), item -> {
+            if (item == null) {
+                return;
+            }
+            try {
+                var value = mapper.readValue(item, new TypeReference<CalculationTarget>() {
+                });
+                calculationTarget.setValue(value);
+            } catch (IOException e) {
+                log.info("Could not read value: %s".formatted(e.toString()));
+            }
+        });
     }
 
 
@@ -360,9 +372,8 @@ public class ChargingView extends Main {
         } catch (IOException e) {
             log.info("Could not read value: %s".formatted(e.toString()));
         }
+
     }
-
-
 
     @Setter
     @Getter
