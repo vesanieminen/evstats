@@ -3,6 +3,8 @@ package com.vesanieminen.views.evstatistics;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
@@ -25,6 +27,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -64,9 +67,11 @@ public class ChargingView extends Main {
     private final LiukuriService liukuriService;
     private final Span electricityCostSpan;
     private final Span spotAverage;
+    private final ObjectMapper objectMapper;
 
-    public ChargingView(PreservedState preservedState, LiukuriService liukuriService) {
+    public ChargingView(PreservedState preservedState, LiukuriService liukuriService, ObjectMapper objectMapper) {
         this.liukuriService = liukuriService;
+        this.objectMapper = objectMapper;
 
         setHeight("var(--fullscreen-height-charging)");
         final var topGrid = new GridLayout();
@@ -318,11 +323,16 @@ public class ChargingView extends Main {
         return consumptionData;
     }
 
-    ObjectMapper mapper = new ObjectMapper();
-
+    @Bean
+    public ObjectMapper objectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // Use ISO format
+        return mapper;
+    }
     public <C extends AbstractField<C, T>, T> void saveFieldValue(AbstractField<C, T> field) {
         try {
-            WebStorage.setItem(field.getId().orElseThrow(), mapper.writeValueAsString(field.getValue()));
+            WebStorage.setItem(field.getId().orElseThrow(), objectMapper.writeValueAsString(field.getValue()));
         } catch (JsonProcessingException e) {
             log.info("Could not save value: %s".formatted(e.toString()));
         }
@@ -336,14 +346,26 @@ public class ChargingView extends Main {
         WebStorage.getItem(phasesField.getId().orElseThrow(), item -> readValue(item, phasesField));
         WebStorage.getItem(voltageField.getId().orElseThrow(), item -> readValue(item, voltageField));
         WebStorage.getItem(chargingLossField.getId().orElseThrow(), item -> readValue(item, chargingLossField));
-        WebStorage.getItem(chargingDateTimeField.getId().orElseThrow(), item -> readValue(item, chargingDateTimeField));
+
+        WebStorage.getItem(chargingDateTimeField.getId().orElseThrow(), item -> {
+            if (item == null) {
+                return;
+            }
+            try {
+                var value = objectMapper.readValue(item, new TypeReference<LocalDateTime>() {
+                });
+                chargingDateTimeField.setValue(value);
+            } catch (IOException e) {
+                log.info("Could not read value: %s".formatted(e.toString()));
+            }
+        });
 
         WebStorage.getItem(calculationTarget.getId().orElseThrow(), item -> {
             if (item == null) {
                 return;
             }
             try {
-                var value = mapper.readValue(item, new TypeReference<CalculationTarget>() {
+                var value = objectMapper.readValue(item, new TypeReference<CalculationTarget>() {
                 });
                 calculationTarget.setValue(value);
             } catch (IOException e) {
@@ -358,7 +380,7 @@ public class ChargingView extends Main {
             return;
         }
         try {
-            T value = mapper.readValue(key, new TypeReference<>() {
+            T value = objectMapper.readValue(key, new TypeReference<>() {
             });
             hasValue.setValue(value);
         } catch (IOException e) {
@@ -380,7 +402,6 @@ public class ChargingView extends Main {
         double chargingLoss;
         CalculationTarget calculationTarget;
         LocalDateTime startTime;
-
     }
 
     @Getter
