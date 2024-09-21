@@ -5,14 +5,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.page.WebStorage;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
-import com.vaadin.flow.component.timepicker.TimePicker;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -31,8 +30,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -53,8 +51,8 @@ public class ChargingView extends Main {
     private final IntegerField phasesField;
     private final IntegerField voltageField;
     private final NumberField chargingLossField;
-    private final TimePicker chargingTimeField;
-    private final TimePicker chargingResultTimeField;
+    private final DateTimePicker chargingDateTimeField;
+    private final DateTimePicker chargingResultDateTimeField;
     private final Span consumedElectricitySpan;
     private final Span lostElectricitySpan;
     private final Select<CalculationTarget> calculationTarget;
@@ -69,11 +67,6 @@ public class ChargingView extends Main {
 
     public ChargingView(PreservedState preservedState, LiukuriService liukuriService) {
         this.liukuriService = liukuriService;
-
-        final var calculationRange = liukuriService.getValidCalculationRange();
-        final var start = Instant.ofEpochMilli(calculationRange.getStart());
-        final var end = Instant.ofEpochMilli(calculationRange.getEnd());
-        Notification.show("Calculation range: %s - %s".formatted(start, end));
 
         setHeight("var(--fullscreen-height-charging)");
         final var topGrid = new GridLayout();
@@ -138,11 +131,11 @@ public class ChargingView extends Main {
         calculationTarget.setLabel("Calculate");
         topGrid.add(calculationTarget);
 
-        chargingTimeField = new TimePicker();
-        chargingTimeField.setId("chargingTimeField");
-        chargingTimeField.setStep(Duration.ofMinutes(15));
-        chargingTimeField.setLocale(Locale.of("fi", "FI"));
-        topGrid.add(chargingTimeField);
+        chargingDateTimeField = new DateTimePicker();
+        chargingDateTimeField.setId("chargingTimeField");
+        chargingDateTimeField.setStep(Duration.ofMinutes(15));
+        chargingDateTimeField.setLocale(Locale.of("fi", "FI"));
+        topGrid.add(chargingDateTimeField);
 
         final var fourthRow = new GridLayout();
         fourthRow.removeClassNames(
@@ -150,12 +143,12 @@ public class ChargingView extends Main {
                 LumoUtility.Grid.Column.COLUMNS_2
         );
         fourthRow.addClassNames(LumoUtility.Grid.Breakpoint.Small.COLUMNS_1);
-        chargingResultTimeField = new TimePicker();
+        chargingResultDateTimeField = new DateTimePicker();
         //chargingResultTimeField.addClassNames(LumoUtility.Grid.Column.COLUMN_SPAN_2);
-        chargingResultTimeField.setStep(Duration.ofMinutes(1));
-        chargingResultTimeField.setReadOnly(true);
-        chargingResultTimeField.setLocale(Locale.of("fi", "FI"));
-        fourthRow.add(chargingResultTimeField);
+        chargingResultDateTimeField.setStep(Duration.ofMinutes(1));
+        chargingResultDateTimeField.setReadOnly(true);
+        chargingResultDateTimeField.setLocale(Locale.of("fi", "FI"));
+        fourthRow.add(chargingResultDateTimeField);
         chargingLength = new Span();
         chargingLength.setClassName("text-s");
         fourthRow.add(chargingLength);
@@ -193,7 +186,7 @@ public class ChargingView extends Main {
         chargeBinder.bind(voltageField, Charge::getVoltage, Charge::setVoltage);
         chargeBinder.bind(chargingLossField, Charge::getChargingLoss, Charge::setChargingLoss);
         chargeBinder.bind(calculationTarget, Charge::getCalculationTarget, Charge::setCalculationTarget);
-        chargeBinder.bind(chargingTimeField, Charge::getStartTime, Charge::setStartTime);
+        chargeBinder.bind(chargingDateTimeField, Charge::getStartTime, Charge::setStartTime);
 
         chargeBinder.setBean(preservedState.charge);
         chargeBinder.addValueChangeListener(e -> {
@@ -203,7 +196,7 @@ public class ChargingView extends Main {
                 chargingLength.setText(null);
                 chargingSpeedSpan.setText(null);
                 chargingSpeedMinusLossSpan.setText(null);
-                chargingResultTimeField.setValue(null);
+                chargingResultDateTimeField.setValue(null);
                 consumedElectricitySpan.setText(null);
                 addedElectricitySpan.setText(null);
                 lostElectricitySpan.setText(null);
@@ -220,7 +213,13 @@ public class ChargingView extends Main {
         voltageField.addValueChangeListener(item -> saveFieldValue(voltageField));
         chargingLossField.addValueChangeListener(item -> saveFieldValue(chargingLossField));
         calculationTarget.addValueChangeListener(item -> saveFieldValue(calculationTarget));
-        chargingTimeField.addValueChangeListener(item -> saveFieldValue(chargingTimeField));
+        chargingDateTimeField.addValueChangeListener(item -> saveFieldValue(chargingDateTimeField));
+
+        final var calculationRange = liukuriService.getValidCalculationRange();
+        final var start = Instant.ofEpochMilli(calculationRange.getStart());
+        final var end = Instant.ofEpochMilli(calculationRange.getEnd());
+        chargingDateTimeField.setMin(start.atZone(fiZoneID).toLocalDateTime());
+        chargingDateTimeField.setMax(end.atZone(fiZoneID).toLocalDateTime());
     }
 
     private void doCalculation() {
@@ -233,19 +232,19 @@ public class ChargingView extends Main {
 
         Instant chargingStartTime;
         if (calculationTarget.getValue() == CalculationTarget.CHARGING_END) {
-            chargingTimeField.setLabel("Select charging start");
-            var chargingEndTime = chargingTimeField.getValue().plusSeconds(chargingTimeSeconds);
-            chargingResultTimeField.setValue(chargingEndTime);
-            chargingResultTimeField.setLabel("Calculated charging end time");
+            chargingDateTimeField.setLabel("Select charging start");
+            var chargingEndTime = chargingDateTimeField.getValue().plusSeconds(chargingTimeSeconds);
+            chargingResultDateTimeField.setValue(chargingEndTime);
+            chargingResultDateTimeField.setLabel("Calculated charging end time");
 
-            chargingStartTime = ZonedDateTime.of(getChargingLocalDate(chargingTimeField.getValue()), chargingTimeField.getValue(), fiZoneID).toInstant();
+            chargingStartTime = ZonedDateTime.of(chargingDateTimeField.getValue(), fiZoneID).toInstant();
         } else {
-            chargingTimeField.setLabel("Select charging end");
-            var chargingEndTime = chargingTimeField.getValue().minusSeconds(chargingTimeSeconds);
-            chargingResultTimeField.setValue(chargingEndTime);
-            chargingResultTimeField.setLabel("Calculated charging start time");
+            chargingDateTimeField.setLabel("Select charging end");
+            var chargingEndTime = chargingDateTimeField.getValue().minusSeconds(chargingTimeSeconds);
+            chargingResultDateTimeField.setValue(chargingEndTime);
+            chargingResultDateTimeField.setLabel("Calculated charging start time");
 
-            chargingStartTime = ZonedDateTime.of(getChargingLocalDate(chargingResultTimeField.getValue()), chargingResultTimeField.getValue(), fiZoneID).toInstant();
+            chargingStartTime = ZonedDateTime.of(chargingResultDateTimeField.getValue(), fiZoneID).toInstant();
         }
 
         chargingLength.setText("Charging length: %d h, %d min, %d sec".formatted((int) chargingTimeHours, (chargingTimeSeconds % 3600) / 60, chargingTimeSeconds % 60));
@@ -274,21 +273,6 @@ public class ChargingView extends Main {
 
             electricityCostSpan.setText("Total cost (inc. VAT): %.2f €".formatted(calculationResponse.getTotalCost()));
             spotAverage.setText("Spot average: %.2f c/kWh".formatted(calculationResponse.getAveragePrice()));
-        }
-    }
-
-    private LocalDate getChargingLocalDate(LocalTime nextChargingTime) {
-        // Current LocalTime
-        LocalTime currentTime = LocalTime.now();
-
-        // Determine the next LocalDate when the givenTime is in the future
-        LocalDate nextDate;
-        if (nextChargingTime.isAfter(currentTime)) {
-            // The given time is in the future today
-            return LocalDate.now();
-        } else {
-            // The given time has already passed today; use the next day
-            return LocalDate.now().plusDays(1);
         }
     }
 
@@ -351,7 +335,7 @@ public class ChargingView extends Main {
         WebStorage.getItem(phasesField.getId().orElseThrow(), item -> readValue(item, phasesField));
         WebStorage.getItem(voltageField.getId().orElseThrow(), item -> readValue(item, voltageField));
         WebStorage.getItem(chargingLossField.getId().orElseThrow(), item -> readValue(item, chargingLossField));
-        WebStorage.getItem(chargingTimeField.getId().orElseThrow(), item -> readValue(item, chargingTimeField));
+        WebStorage.getItem(chargingDateTimeField.getId().orElseThrow(), item -> readValue(item, chargingDateTimeField));
 
         WebStorage.getItem(calculationTarget.getId().orElseThrow(), item -> {
             if (item == null) {
@@ -394,7 +378,7 @@ public class ChargingView extends Main {
         int voltage;
         double chargingLoss;
         CalculationTarget calculationTarget;
-        LocalTime startTime;
+        LocalDateTime startTime;
 
     }
 
@@ -420,7 +404,7 @@ public class ChargingView extends Main {
                 230,
                 10,
                 CalculationTarget.CHARGING_END,
-                LocalTime.of(0, 0)
+                LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
         );
     }
 

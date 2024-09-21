@@ -20,8 +20,8 @@ import java.util.LinkedHashMap;
 public class LiukuriApiClient {
 
     private final RestTemplate restTemplate;
-    //private final String baseUrl = "https://liukuri.fi/api/";
-    private final String baseUrl = "http://localhost:8080/api/";
+    private final String baseUrl = "https://liukuri.fi/api/";
+    //private final String baseUrl = "http://localhost:8080/api/";
 
     public LiukuriApiClient() {
         this.restTemplate = new RestTemplate();
