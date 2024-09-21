@@ -7,6 +7,7 @@ import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.page.WebStorage;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -68,6 +69,12 @@ public class ChargingView extends Main {
 
     public ChargingView(PreservedState preservedState, LiukuriService liukuriService) {
         this.liukuriService = liukuriService;
+
+        final var calculationRange = liukuriService.getValidCalculationRange();
+        final var start = Instant.ofEpochMilli(calculationRange.getStart());
+        final var end = Instant.ofEpochMilli(calculationRange.getEnd());
+        Notification.show("Calculation range: %s - %s".formatted(start, end));
+
         setHeight("var(--fullscreen-height-charging)");
         final var topGrid = new GridLayout();
         batteryCapacityField = new NumberField("Battery capacity");

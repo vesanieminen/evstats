@@ -20,7 +20,8 @@ import java.util.LinkedHashMap;
 public class LiukuriApiClient {
 
     private final RestTemplate restTemplate;
-    private final String apiUrl = "https://liukuri.fi/api/calculateCost";
+    //private final String baseUrl = "https://liukuri.fi/api/";
+    private final String baseUrl = "http://localhost:8080/api/";
 
     public LiukuriApiClient() {
         this.restTemplate = new RestTemplate();
@@ -50,7 +51,7 @@ public class LiukuriApiClient {
 
             // Make the POST request
             ResponseEntity<CalculationResponse> response = restTemplate.exchange(
-                    apiUrl,
+                    baseUrl + "calculateCost",
                     HttpMethod.POST,
                     entity,
                     CalculationResponse.class
@@ -80,7 +81,7 @@ public class LiukuriApiClient {
 
             // Make the POST request
             ResponseEntity<CalculationResponse> response = restTemplate.exchange(
-                    apiUrl,
+                    baseUrl + "calculateCost",
                     HttpMethod.POST,
                     entity,
                     CalculationResponse.class
@@ -94,6 +95,28 @@ public class LiukuriApiClient {
         }
 
         return null;
+    }
+
+    public ValidCalculationRange getValidCalculationRange() {
+        String url = baseUrl + "calculationRange";
+
+        // Set the headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Create the request entity
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        // Make the POST request
+        ResponseEntity<ValidCalculationRange> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                ValidCalculationRange.class
+        );
+
+        // Return the response body
+        return response.getBody();
     }
 
     @Getter
@@ -112,6 +135,14 @@ public class LiukuriApiClient {
     public static class CalculationResponse {
         private double totalCost;
         private double averagePrice;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    public static class ValidCalculationRange {
+        private Long start;
+        private Long end;
     }
 
 }

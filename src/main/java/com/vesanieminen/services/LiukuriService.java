@@ -21,4 +21,8 @@ public class LiukuriService {
         return liukuriApiClient.calculateCost(consumptionData, margin, vat);
     }
 
+    public LiukuriApiClient.ValidCalculationRange getValidCalculationRange() {
+        return liukuriApiClient.getValidCalculationRange();
+    }
+
 }
