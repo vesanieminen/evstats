@@ -3,8 +3,6 @@ package com.vesanieminen.views.evstatistics;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
@@ -27,7 +25,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -239,15 +236,15 @@ public class ChargingView extends Main {
         Instant chargingStartTime;
         if (calculationTarget.getValue() == CalculationTarget.CHARGING_END) {
             chargingDateTimeField.setLabel("Select charging start");
-            var chargingEndTime = chargingDateTimeField.getValue().plusSeconds(chargingTimeSeconds);
-            chargingResultDateTimeField.setValue(chargingEndTime);
+            var chargingResultTime = chargingDateTimeField.getValue().plusSeconds(chargingTimeSeconds);
+            chargingResultDateTimeField.setValue(chargingResultTime);
             chargingResultDateTimeField.setLabel("Calculated charging end time");
 
             chargingStartTime = ZonedDateTime.of(chargingDateTimeField.getValue(), fiZoneID).toInstant();
         } else {
             chargingDateTimeField.setLabel("Select charging end");
-            var chargingEndTime = chargingDateTimeField.getValue().minusSeconds(chargingTimeSeconds);
-            chargingResultDateTimeField.setValue(chargingEndTime);
+            var chargingResultTime = chargingDateTimeField.getValue().minusSeconds(chargingTimeSeconds);
+            chargingResultDateTimeField.setValue(chargingResultTime);
             chargingResultDateTimeField.setLabel("Calculated charging start time");
 
             chargingStartTime = ZonedDateTime.of(chargingResultDateTimeField.getValue(), fiZoneID).toInstant();
@@ -323,13 +320,6 @@ public class ChargingView extends Main {
         return consumptionData;
     }
 
-    @Bean
-    public ObjectMapper objectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // Use ISO format
-        return mapper;
-    }
     public <C extends AbstractField<C, T>, T> void saveFieldValue(AbstractField<C, T> field) {
         try {
             WebStorage.setItem(field.getId().orElseThrow(), objectMapper.writeValueAsString(field.getValue()));
