@@ -140,18 +140,19 @@ public class ChargingView extends Main {
         chargingDateTimeField.addClassNames(LumoUtility.Grid.Column.COLUMN_SPAN_2);
         topGrid.add(chargingDateTimeField);
 
+        chargingResultDateTimeField = new DateTimePicker();
+        chargingResultDateTimeField.addClassNames(LumoUtility.Grid.Column.COLUMN_SPAN_2);
+        chargingResultDateTimeField.setStep(Duration.ofSeconds(1));
+        chargingResultDateTimeField.setReadOnly(true);
+        chargingResultDateTimeField.setLocale(Locale.of("fi", "FI"));
+        topGrid.add(chargingResultDateTimeField);
+
         final var fourthRow = new GridLayout();
         fourthRow.removeClassNames(
                 LumoUtility.Grid.Breakpoint.Large.COLUMNS_3,
                 LumoUtility.Grid.Column.COLUMNS_2
         );
         fourthRow.addClassNames(LumoUtility.Grid.Breakpoint.Small.COLUMNS_1);
-        chargingResultDateTimeField = new DateTimePicker();
-        //chargingResultTimeField.addClassNames(LumoUtility.Grid.Column.COLUMN_SPAN_2);
-        chargingResultDateTimeField.setStep(Duration.ofSeconds(1));
-        chargingResultDateTimeField.setReadOnly(true);
-        chargingResultDateTimeField.setLocale(Locale.of("fi", "FI"));
-        fourthRow.add(chargingResultDateTimeField);
         chargingLength = new Span();
         chargingLength.setClassName("text-s");
         fourthRow.add(chargingLength);
