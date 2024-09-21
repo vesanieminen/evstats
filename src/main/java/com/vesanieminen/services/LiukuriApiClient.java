@@ -98,7 +98,7 @@ public class LiukuriApiClient {
     }
 
     public ValidCalculationRange getValidCalculationRange() {
-        String url = baseUrl + "calculationRange";
+        String url = baseUrl + "validCalculationRange";
 
         // Set the headers
         HttpHeaders headers = new HttpHeaders();
