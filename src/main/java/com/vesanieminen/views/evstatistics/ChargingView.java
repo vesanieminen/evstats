@@ -137,7 +137,7 @@ public class ChargingView extends Main {
         topGrid.add(calculationTarget);
 
         chargingDateTimeField = new DateTimePicker();
-        chargingDateTimeField.setId("chargingTimeField");
+        chargingDateTimeField.setId("chargingDateTimeField");
         chargingDateTimeField.setStep(Duration.ofMinutes(15));
         chargingDateTimeField.setLocale(Locale.of("fi", "FI"));
         chargingDateTimeField.addClassNames(LumoUtility.Grid.Column.COLUMN_SPAN_2);
