@@ -148,7 +148,7 @@ public class ChargingView extends Main {
         fourthRow.addClassNames(LumoUtility.Grid.Breakpoint.Small.COLUMNS_1);
         chargingResultDateTimeField = new DateTimePicker();
         //chargingResultTimeField.addClassNames(LumoUtility.Grid.Column.COLUMN_SPAN_2);
-        chargingResultDateTimeField.setStep(Duration.ofMinutes(1));
+        chargingResultDateTimeField.setStep(Duration.ofSeconds(1));
         chargingResultDateTimeField.setReadOnly(true);
         chargingResultDateTimeField.setLocale(Locale.of("fi", "FI"));
         fourthRow.add(chargingResultDateTimeField);
