@@ -128,7 +128,7 @@ public class ChargingView extends Main {
         calculationTarget.setId("calculationTarget");
         calculationTarget.setItems(CalculationTarget.values());
         calculationTarget.setItemLabelGenerator(CalculationTarget::getName);
-        calculationTarget.setLabel("Calculation target");
+        calculationTarget.setLabel("Calculate");
         topGrid.add(calculationTarget);
 
         chargingTimeField = new TimePicker();
@@ -226,14 +226,14 @@ public class ChargingView extends Main {
 
         Instant chargingStartTime;
         if (calculationTarget.getValue() == CalculationTarget.CHARGING_END) {
-            chargingTimeField.setLabel("Charging start time");
+            chargingTimeField.setLabel("Select charging start");
             var chargingEndTime = chargingTimeField.getValue().plusSeconds(chargingTimeSeconds);
             chargingResultTimeField.setValue(chargingEndTime);
             chargingResultTimeField.setLabel("Calculated charging end time");
 
             chargingStartTime = ZonedDateTime.of(getChargingLocalDate(chargingTimeField.getValue()), chargingTimeField.getValue(), fiZoneID).toInstant();
         } else {
-            chargingTimeField.setLabel("Charging end time");
+            chargingTimeField.setLabel("Select charging end");
             var chargingEndTime = chargingTimeField.getValue().minusSeconds(chargingTimeSeconds);
             chargingResultTimeField.setValue(chargingEndTime);
             chargingResultTimeField.setLabel("Calculated charging start time");
