@@ -135,6 +135,7 @@ public class ChargingView extends Main {
         chargingDateTimeField.setId("chargingTimeField");
         chargingDateTimeField.setStep(Duration.ofMinutes(15));
         chargingDateTimeField.setLocale(Locale.of("fi", "FI"));
+        chargingDateTimeField.addClassNames(LumoUtility.Grid.Column.COLUMN_SPAN_2);
         topGrid.add(chargingDateTimeField);
 
         final var fourthRow = new GridLayout();
