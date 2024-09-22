@@ -13,14 +13,14 @@ html {
 @supports (-webkit-touch-callout: none) {
     html {
         --fullscreen-height: calc(100% - 6.5rem);
-        --fullscreen-height-charging: calc(100vh + 6rem);
+        --fullscreen-height-charging: calc(100vh + 15rem);
     }
 
     /* iOS PWA specific CSS */
     @media (display-mode: standalone) {
         html {
             --fullscreen-height: calc(100vh - 5rem);
-            --fullscreen-height-charging: calc(100vh);
+            --fullscreen-height-charging: calc(100vh + 8rem);
         }
     }
 }
