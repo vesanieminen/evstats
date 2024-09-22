@@ -64,6 +64,7 @@ public class ChargingView extends Main {
     public static final ZoneId fiZoneID = ZoneId.of("Europe/Helsinki");
     private final LiukuriService liukuriService;
     private final Span electricityCostSpan;
+    private final Span electricityCostValueSpan;
     private final Span spotAverage;
     private final Span spotAverageValue;
     private final ObjectMapper objectMapper;
@@ -175,14 +176,18 @@ public class ChargingView extends Main {
         fourthRow.add(lostElectricitySpan);
         electricityCostSpan = new Span();
         electricityCostSpan.addClassNames(LumoUtility.FontSize.SMALL);
-        fourthRow.add(electricityCostSpan);
+        electricityCostValueSpan = new Span();
+        electricityCostValueSpan.addClassNames(LumoUtility.FontSize.SMALL);
+        final var electricityCostDiv = new Div(electricityCostSpan, electricityCostValueSpan);
+        electricityCostDiv.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.AlignItems.CENTER);
+        fourthRow.add(electricityCostDiv);
         spotAverage = new Span();
         spotAverage.addClassNames(LumoUtility.FontSize.SMALL);
         spotAverageValue = new Span();
         spotAverageValue.addClassNames(LumoUtility.FontSize.SMALL);
-        final var div = new Div(spotAverage, spotAverageValue);
-        div.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.AlignItems.CENTER);
-        fourthRow.add(div);
+        final var spotAverageDiv = new Div(spotAverage, spotAverageValue);
+        spotAverageDiv.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.AlignItems.CENTER);
+        fourthRow.add(spotAverageDiv);
 
         add(fourthRow);
 
@@ -282,16 +287,21 @@ public class ChargingView extends Main {
         final var calculationResponse = liukuriService.performCalculation(longDoubleLinkedHashMap, 0, true);
         if (calculationResponse != null) {
             final var averagePrice = calculationResponse.getAveragePrice();
-            electricityCostSpan.setText("Total cost (inc. VAT): %.2f €".formatted(calculationResponse.getTotalCost()));
+            electricityCostSpan.setText("Total cost (inc. VAT): ");
+            electricityCostValueSpan.setText("%.2f €".formatted(calculationResponse.getTotalCost()));
             spotAverage.setText("Spot average: ");
             spotAverageValue.setText("%.2f c/kWh".formatted(averagePrice));
             if (averagePrice >= 10) {
+                electricityCostValueSpan.setClassName(LumoUtility.TextColor.ERROR);
                 spotAverageValue.setClassName(LumoUtility.TextColor.ERROR);
             } else if (averagePrice >= 5) {
+                electricityCostValueSpan.setClassName(LumoUtility.TextColor.PRIMARY);
                 spotAverageValue.setClassName(LumoUtility.TextColor.PRIMARY);
             } else if (averagePrice < 5) {
+                electricityCostValueSpan.setClassName(LumoUtility.TextColor.SUCCESS);
                 spotAverageValue.setClassName(LumoUtility.TextColor.SUCCESS);
             }
+            electricityCostValueSpan.addClassNames(LumoUtility.FontSize.SMALL);
             spotAverageValue.addClassNames(LumoUtility.FontSize.SMALL);
         }
     }
