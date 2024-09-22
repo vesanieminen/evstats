@@ -153,30 +153,33 @@ public class ChargingView extends Main {
         chargingResultDateTimeField.setLocale(Locale.of("fi", "FI"));
         topGrid.add(chargingResultDateTimeField);
 
-        final var fourthRow = new GridLayout();
-        fourthRow.removeClassNames(
-                LumoUtility.Grid.Breakpoint.Large.COLUMNS_3,
-                LumoUtility.Grid.Column.COLUMNS_2
+        final var resultsGrid = new Div();
+        resultsGrid.addClassNames(
+                LumoUtility.Display.GRID,
+                LumoUtility.Grid.Breakpoint.Small.COLUMNS_1,
+                LumoUtility.Grid.Breakpoint.Medium.COLUMNS_2,
+                LumoUtility.Padding.Horizontal.MEDIUM,
+                LumoUtility.Gap.Column.MEDIUM,
+                LumoUtility.Margin.Top.SMALL
         );
-        fourthRow.addClassNames(LumoUtility.Grid.Breakpoint.Small.COLUMNS_1);
         chargingLength = new Span();
         chargingLength.addClassNames(LumoUtility.FontSize.SMALL);
-        fourthRow.add(chargingLength);
+        resultsGrid.add(chargingLength);
         chargingSpeedSpan = new Span();
         chargingSpeedSpan.addClassNames(LumoUtility.FontSize.SMALL);
-        fourthRow.add(chargingSpeedSpan);
+        resultsGrid.add(chargingSpeedSpan);
         chargingSpeedMinusLossSpan = new Span();
         chargingSpeedMinusLossSpan.addClassNames(LumoUtility.FontSize.SMALL);
-        fourthRow.add(chargingSpeedMinusLossSpan);
+        resultsGrid.add(chargingSpeedMinusLossSpan);
         consumedElectricitySpan = new Span();
         consumedElectricitySpan.addClassNames(LumoUtility.FontSize.SMALL);
-        fourthRow.add(consumedElectricitySpan);
+        resultsGrid.add(consumedElectricitySpan);
         addedElectricitySpan = new Span();
         addedElectricitySpan.addClassNames(LumoUtility.FontSize.SMALL);
-        fourthRow.add(addedElectricitySpan);
+        resultsGrid.add(addedElectricitySpan);
         lostElectricitySpan = new Span();
         lostElectricitySpan.addClassNames(LumoUtility.FontSize.SMALL);
-        fourthRow.add(lostElectricitySpan);
+        resultsGrid.add(lostElectricitySpan);
         electricityCostSpan = new Span();
         electricityCostSpan.addClassNames(LumoUtility.FontSize.SMALL);
         electricityCostValueSpan = new Span();
@@ -184,7 +187,7 @@ public class ChargingView extends Main {
         electricityCostPing = new Ping("Cost");
         final var electricityCostDiv = new Div(electricityCostSpan, electricityCostValueSpan, electricityCostPing);
         electricityCostDiv.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.AlignItems.CENTER);
-        fourthRow.add(electricityCostDiv);
+        resultsGrid.add(electricityCostDiv);
         spotAverage = new Span();
         spotAverage.addClassNames(LumoUtility.FontSize.SMALL);
         spotAverageValue = new Span();
@@ -192,9 +195,9 @@ public class ChargingView extends Main {
         spotAveragePing = new Ping("Price");
         final var spotAverageDiv = new Div(spotAverage, spotAverageValue, spotAveragePing);
         spotAverageDiv.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.AlignItems.CENTER);
-        fourthRow.add(spotAverageDiv);
+        resultsGrid.add(spotAverageDiv);
 
-        add(fourthRow);
+        add(resultsGrid);
 
         final var chargeBinder = new Binder<Charge>();
         chargeBinder.bind(batteryCapacityField, Charge::getCapacity, Charge::setCapacity);
