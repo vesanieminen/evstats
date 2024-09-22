@@ -1,6 +1,5 @@
 package com.vesanieminen.services;
 
-import com.vaadin.flow.component.notification.Notification;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -72,7 +71,6 @@ public class LiukuriApiClient {
         try {
             // Prepare the request data
             CalculationRequest request = new CalculationRequest(consumptionData, margin, vat);
-            Notification.show("margin: %s, vat: %s".formatted(margin, vat));
 
             // Set the headers
             HttpHeaders headers = new HttpHeaders();
