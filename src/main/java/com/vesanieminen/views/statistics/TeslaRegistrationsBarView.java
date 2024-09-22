@@ -1,4 +1,4 @@
-package com.vesanieminen.views.evstatistics;
+package com.vesanieminen.views.statistics;
 
 
 import com.vaadin.flow.component.AttachEvent;

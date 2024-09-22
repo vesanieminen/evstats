@@ -1,11 +1,11 @@
-package com.vesanieminen.views.evstatistics;
+package com.vesanieminen.views.statistics;
 
 
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.charts.Chart;
-import com.vaadin.flow.component.charts.model.ChartType;
 import com.vaadin.flow.component.charts.model.DataSeries;
 import com.vaadin.flow.component.charts.model.DataSeriesItem;
+import com.vaadin.flow.component.charts.model.Labels;
 import com.vaadin.flow.component.charts.model.Marker;
 import com.vaadin.flow.component.charts.model.PlotOptionsLine;
 import com.vaadin.flow.component.charts.model.Tooltip;
@@ -19,11 +19,11 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.ZoneOffset;
 
-@PageTitle("Tesla registrations")
-@Route(value = "tesla-registrations", layout = MainLayout.class)
-public class TeslaRegistrationsView extends Main {
+@PageTitle("New EV registration percentage")
+@Route(value = "adoption", layout = MainLayout.class)
+public class EVAdoptionRateView extends Main {
 
-    public TeslaRegistrationsView() {
+    public EVAdoptionRateView() {
     }
 
     @Override
@@ -35,7 +35,7 @@ public class TeslaRegistrationsView extends Main {
             }
         });
         try {
-            final var evStats = AUT_FI_Service.loadTeslaDataFromFile();
+            final var evStats = AUT_FI_Service.loadDataFromFile();
             if (evStats.isEmpty()) {
                 return;
             }
@@ -43,20 +43,30 @@ public class TeslaRegistrationsView extends Main {
             chart.setTimeline(true);
             chart.setHeightFull();
             final var configuration = chart.getConfiguration();
-            final var evRegistrations = new DataSeries("Tesla registrations");
-            for (AUT_FI_Service.TeslaStats stat : evStats.get()) {
-                evRegistrations.add(new DataSeriesItem(stat.date().atStartOfDay().toInstant(ZoneOffset.UTC), stat.amount()));
+            final var evRegistrations = new DataSeries("BEV");
+            final var otherRegistrations = new DataSeries("Other (incl. PHEV etc.)");
+            for (AUT_FI_Service.EVStats stat : evStats.get()) {
+                evRegistrations.add(new DataSeriesItem(stat.date().atStartOfDay().toInstant(ZoneOffset.UTC), (double) stat.evAmount() / stat.totalAmount() * 100.0));
+                otherRegistrations.add(new DataSeriesItem(stat.date().atStartOfDay().toInstant(ZoneOffset.UTC), (double) stat.otherAmount() / stat.totalAmount() * 100.0));
             }
-            configuration.getChart().setType(ChartType.COLUMN);
             configuration.getChart().setStyledMode(true);
             configuration.getLegend().setEnabled(true);
             configuration.getNavigator().setEnabled(false);
             configuration.getScrollbar().setEnabled(false);
             final var yAxis = configuration.getyAxis();
+            yAxis.setMax(100);
+            yAxis.setTickInterval(10);
             yAxis.setMin(0);
-            yAxis.setTickInterval(250);
             yAxis.setOpposite(false);
+            var labels = new Labels();
+            labels.setFormatter("return this.value +'%'");
+            yAxis.setLabels(labels);
             configuration.addSeries(evRegistrations);
+            configuration.addSeries(otherRegistrations);
+
+            final var otherPlotOptions = new PlotOptionsLine();
+            otherPlotOptions.setColorIndex(2);
+            otherRegistrations.setPlotOptions(otherPlotOptions);
 
             final var plotOptionsLine = new PlotOptionsLine();
             plotOptionsLine.setAnimation(false);
@@ -64,7 +74,8 @@ public class TeslaRegistrationsView extends Main {
             plotOptionsLine.setMarker(new Marker(false));
             chart.getConfiguration().setPlotOptions(plotOptionsLine);
             final var tooltip = new Tooltip();
-            tooltip.setShared(true);
+            tooltip.setValueDecimals(2);
+            tooltip.setValueSuffix("%");
             configuration.setTooltip(tooltip);
 
             add(chart);

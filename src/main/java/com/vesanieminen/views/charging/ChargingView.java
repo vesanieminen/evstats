@@ -1,10 +1,5 @@
-package com.vesanieminen.views.evstatistics;
+package com.vesanieminen.views.charging;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vaadin.flow.component.AbstractField;
-import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.html.Div;
@@ -23,14 +18,15 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vesanieminen.components.GridLayout;
 import com.vesanieminen.components.Ping;
 import com.vesanieminen.services.LiukuriService;
+import com.vesanieminen.services.ObjectMapperService;
 import com.vesanieminen.views.MainLayout;
+import com.vesanieminen.views.SettingsView;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -69,7 +65,7 @@ public class ChargingView extends Main {
     private final Span electricityCostValueSpan;
     private final Span spotAverage;
     private final Span spotAverageValue;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapperService mapperService;
     private final Ping electricityCostPing;
     private final Ping spotAveragePing;
     private final Span chargingLengthResult;
@@ -78,10 +74,36 @@ public class ChargingView extends Main {
     private final Span consumedElectricityResultSpan;
     private final Span addedElectricityResultSpan;
     private final Span lostElectricityResultSpan;
+    private final SettingsView.SettingsState settingsState;
 
-    public ChargingView(PreservedState preservedState, LiukuriService liukuriService, ObjectMapper objectMapper) {
+    public ChargingView(PreservedState preservedState, LiukuriService liukuriService, ObjectMapperService mapperService, SettingsView.SettingsState settingsState) {
         this.liukuriService = liukuriService;
-        this.objectMapper = objectMapper;
+        this.mapperService = mapperService;
+        this.settingsState = settingsState;
+
+        //final var objectMapper = new ObjectMapper();
+        //WebStorage.getItem(SettingsView.margin, item -> {
+        //    if (item == null) {
+        //        return;
+        //    }
+        //    try {
+        //        margin = objectMapper.readValue(item, new TypeReference<>() {
+        //        });
+        //    } catch (IOException e) {
+        //        log.info("Could not read value: %s".formatted(e.toString()));
+        //    }
+        //});
+        //WebStorage.getItem(SettingsView.vat, item -> {
+        //    if (item == null) {
+        //        return;
+        //    }
+        //    try {
+        //        vat = objectMapper.readValue(item, new TypeReference<>() {
+        //        });
+        //    } catch (IOException e) {
+        //        log.info("Could not read value: %s".formatted(e.toString()));
+        //    }
+        //});
 
         setHeight("var(--fullscreen-height-charging)");
         final var topGrid = new GridLayout();
@@ -238,15 +260,15 @@ public class ChargingView extends Main {
         doCalculation();
         readFieldValues();
 
-        batteryCapacityField.addValueChangeListener(item -> saveFieldValue(batteryCapacityField));
-        currentSocField.addValueChangeListener(item -> saveFieldValue(currentSocField));
-        targetSocField.addValueChangeListener(item -> saveFieldValue(targetSocField));
-        amperesField.addValueChangeListener(item -> saveFieldValue(amperesField));
-        phasesField.addValueChangeListener(item -> saveFieldValue(phasesField));
-        voltageField.addValueChangeListener(item -> saveFieldValue(voltageField));
-        chargingLossField.addValueChangeListener(item -> saveFieldValue(chargingLossField));
-        calculationTarget.addValueChangeListener(item -> saveFieldValue(calculationTarget));
-        chargingDateTimeField.addValueChangeListener(item -> saveFieldValue(chargingDateTimeField));
+        batteryCapacityField.addValueChangeListener(item -> mapperService.saveFieldValue(batteryCapacityField));
+        currentSocField.addValueChangeListener(item -> mapperService.saveFieldValue(currentSocField));
+        targetSocField.addValueChangeListener(item -> mapperService.saveFieldValue(targetSocField));
+        amperesField.addValueChangeListener(item -> mapperService.saveFieldValue(amperesField));
+        phasesField.addValueChangeListener(item -> mapperService.saveFieldValue(phasesField));
+        voltageField.addValueChangeListener(item -> mapperService.saveFieldValue(voltageField));
+        chargingLossField.addValueChangeListener(item -> mapperService.saveFieldValue(chargingLossField));
+        calculationTarget.addValueChangeListener(item -> mapperService.saveFieldValue(calculationTarget));
+        chargingDateTimeField.addValueChangeListener(item -> mapperService.saveFieldValue(chargingDateTimeField));
 
         final var calculationRange = liukuriService.getValidCalculationRange();
         final var start = Instant.ofEpochMilli(calculationRange.getStart());
@@ -305,14 +327,15 @@ public class ChargingView extends Main {
         addedElectricitySpan.setText("Charge added to battery: ");
         addedElectricityResultSpan.setText(addedElectricityText);
 
-
         final var longDoubleLinkedHashMap = mapChargingEventToConsumptionData(chargingPowerInKilowatts, chargingStartTime, chargingTimeHours);
-        final var calculationResponse = liukuriService.performCalculation(longDoubleLinkedHashMap, 0, true);
+        final var margin = settingsState.getSettings().getMargin();
+        final var vat = settingsState.getSettings().isVat();
+        final var calculationResponse = liukuriService.performCalculation(longDoubleLinkedHashMap, margin == null ? 0 : margin, vat);
         if (calculationResponse != null) {
             final var averagePrice = calculationResponse.getAveragePrice();
-            electricityCostSpan.setText("Total cost (inc. VAT): ");
+            electricityCostSpan.setText(vat ? "Total cost (inc. VAT): " : "Total cost: ");
             electricityCostValueSpan.setText("%.2f €".formatted(calculationResponse.getTotalCost()));
-            spotAverage.setText("Spot average: ");
+            spotAverage.setText("Spot average (inc. margin): ");
             spotAverageValue.setText("%.2f c/kWh".formatted(averagePrice));
             if (averagePrice >= 10) {
                 electricityCostValueSpan.setClassName(LumoUtility.TextColor.ERROR);
@@ -374,68 +397,22 @@ public class ChargingView extends Main {
         return consumptionData;
     }
 
-    public <C extends AbstractField<C, T>, T> void saveFieldValue(AbstractField<C, T> field) {
-        try {
-            WebStorage.setItem(field.getId().orElseThrow(), objectMapper.writeValueAsString(field.getValue()));
-        } catch (JsonProcessingException e) {
-            log.info("Could not save value: %s".formatted(e.toString()));
-        }
-    }
-
     public void readFieldValues() {
-        WebStorage.getItem(batteryCapacityField.getId().orElseThrow(), item -> readValue(item, batteryCapacityField));
-        WebStorage.getItem(currentSocField.getId().orElseThrow(), item -> readValue(item, currentSocField));
-        WebStorage.getItem(targetSocField.getId().orElseThrow(), item -> readValue(item, targetSocField));
-        WebStorage.getItem(amperesField.getId().orElseThrow(), item -> readValue(item, amperesField));
-        WebStorage.getItem(phasesField.getId().orElseThrow(), item -> readValue(item, phasesField));
-        WebStorage.getItem(voltageField.getId().orElseThrow(), item -> readValue(item, voltageField));
-        WebStorage.getItem(chargingLossField.getId().orElseThrow(), item -> readValue(item, chargingLossField));
-
-        WebStorage.getItem(chargingDateTimeField.getId().orElseThrow(), item -> {
-            if (item == null) {
-                return;
-            }
-            try {
-                var value = objectMapper.readValue(item, new TypeReference<LocalDateTime>() {
-                });
-                chargingDateTimeField.setValue(value);
-            } catch (IOException e) {
-                log.info("Could not read value: %s".formatted(e.toString()));
-            }
-        });
-
-        WebStorage.getItem(calculationTarget.getId().orElseThrow(), item -> {
-            if (item == null) {
-                return;
-            }
-            try {
-                var value = objectMapper.readValue(item, new TypeReference<CalculationTarget>() {
-                });
-                calculationTarget.setValue(value);
-            } catch (IOException e) {
-                log.info("Could not read value: %s".formatted(e.toString()));
-            }
-        });
-    }
-
-
-    public <C extends HasValue.ValueChangeEvent<T>, T> void readValue(String key, HasValue<C, T> hasValue) {
-        if (key == null) {
-            return;
-        }
-        try {
-            T value = objectMapper.readValue(key, new TypeReference<>() {
-            });
-            hasValue.setValue(value);
-        } catch (IOException e) {
-            log.info("Could not read value: %s".formatted(e.toString()));
-        }
-
+        WebStorage.getItem(batteryCapacityField.getId().orElseThrow(), item -> mapperService.readValue(item, batteryCapacityField));
+        WebStorage.getItem(currentSocField.getId().orElseThrow(), item -> mapperService.readValue(item, currentSocField));
+        WebStorage.getItem(targetSocField.getId().orElseThrow(), item -> mapperService.readValue(item, targetSocField));
+        WebStorage.getItem(amperesField.getId().orElseThrow(), item -> mapperService.readValue(item, amperesField));
+        WebStorage.getItem(phasesField.getId().orElseThrow(), item -> mapperService.readValue(item, phasesField));
+        WebStorage.getItem(voltageField.getId().orElseThrow(), item -> mapperService.readValue(item, voltageField));
+        WebStorage.getItem(chargingLossField.getId().orElseThrow(), item -> mapperService.readValue(item, chargingLossField));
+        WebStorage.getItem(chargingDateTimeField.getId().orElseThrow(), item -> mapperService.readLocalDateTime(item, chargingDateTimeField));
+        WebStorage.getItem(calculationTarget.getId().orElseThrow(), item -> mapperService.readCalculationTarget(item, calculationTarget));
     }
 
     @Setter
     @Getter
     @AllArgsConstructor
+    //@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
     static class Charge {
         double capacity;
         double currentSOC;
@@ -450,7 +427,8 @@ public class ChargingView extends Main {
 
     @Getter
     @AllArgsConstructor
-    enum CalculationTarget {
+    //@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
+    public enum CalculationTarget {
         CHARGING_START("Start time"),
         CHARGING_END("End time");
 

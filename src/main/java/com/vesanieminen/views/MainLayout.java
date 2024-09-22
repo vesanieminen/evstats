@@ -19,11 +19,11 @@ import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import com.vesanieminen.views.evstatistics.ChargingView;
-import com.vesanieminen.views.evstatistics.EVAdoptionRateView;
-import com.vesanieminen.views.evstatistics.EVRegistrationsView;
-import com.vesanieminen.views.evstatistics.TeslaRegistrationsBarView;
-import com.vesanieminen.views.evstatistics.TeslaRegistrationsView;
+import com.vesanieminen.views.charging.ChargingView;
+import com.vesanieminen.views.statistics.EVAdoptionRateView;
+import com.vesanieminen.views.statistics.EVRegistrationsView;
+import com.vesanieminen.views.statistics.TeslaRegistrationsBarView;
+import com.vesanieminen.views.statistics.TeslaRegistrationsView;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 
 /**
@@ -64,7 +64,7 @@ public class MainLayout extends AppLayout {
     protected void onAttach(AttachEvent attachEvent) {
     }
 
-        private void addHeaderContent() {
+    private void addHeaderContent() {
         DrawerToggle toggle = new DrawerToggle();
         toggle.getElement().setAttribute("aria-label", "Menu toggle");
 
@@ -100,6 +100,7 @@ public class MainLayout extends AppLayout {
                 new SideNavItem("New Teslas / year", TeslaRegistrationsBarView.class, LineAwesomeIcon.BARS_SOLID.create()));
         nav.addItem(
                 new SideNavItem("Charging tool", ChargingView.class, LineAwesomeIcon.CAR_BATTERY_SOLID.create()),
+                new SideNavItem("Settings", SettingsView.class, LineAwesomeIcon.COG_SOLID.create()),
                 statistics
         );
 

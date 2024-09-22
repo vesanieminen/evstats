@@ -1,4 +1,4 @@
-package com.vesanieminen.views.evstatistics;
+package com.vesanieminen.views.statistics;
 
 
 import com.vaadin.flow.component.AttachEvent;
@@ -19,11 +19,11 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.ZoneOffset;
 
-@PageTitle("New EV registrations per month")
-@Route(value = "registrations", layout = MainLayout.class)
-public class EVRegistrationsView extends Main {
+@PageTitle("Tesla registrations")
+@Route(value = "tesla-registrations", layout = MainLayout.class)
+public class TeslaRegistrationsView extends Main {
 
-    public EVRegistrationsView() {
+    public TeslaRegistrationsView() {
     }
 
     @Override
@@ -35,7 +35,7 @@ public class EVRegistrationsView extends Main {
             }
         });
         try {
-            final var evStats = AUT_FI_Service.loadDataFromFile();
+            final var evStats = AUT_FI_Service.loadTeslaDataFromFile();
             if (evStats.isEmpty()) {
                 return;
             }
@@ -43,9 +43,9 @@ public class EVRegistrationsView extends Main {
             chart.setTimeline(true);
             chart.setHeightFull();
             final var configuration = chart.getConfiguration();
-            final var evRegistrations = new DataSeries("BEV");
-            for (AUT_FI_Service.EVStats stat : evStats.get()) {
-                evRegistrations.add(new DataSeriesItem(stat.date().atStartOfDay().toInstant(ZoneOffset.UTC), stat.evAmount()));
+            final var evRegistrations = new DataSeries("Tesla registrations");
+            for (AUT_FI_Service.TeslaStats stat : evStats.get()) {
+                evRegistrations.add(new DataSeriesItem(stat.date().atStartOfDay().toInstant(ZoneOffset.UTC), stat.amount()));
             }
             configuration.getChart().setType(ChartType.COLUMN);
             configuration.getChart().setStyledMode(true);
@@ -54,7 +54,7 @@ public class EVRegistrationsView extends Main {
             configuration.getScrollbar().setEnabled(false);
             final var yAxis = configuration.getyAxis();
             yAxis.setMin(0);
-            yAxis.setTickInterval(1000);
+            yAxis.setTickInterval(250);
             yAxis.setOpposite(false);
             configuration.addSeries(evRegistrations);
 

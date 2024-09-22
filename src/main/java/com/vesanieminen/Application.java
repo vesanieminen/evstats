@@ -33,6 +33,14 @@ public class Application implements AppShellConfigurator {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // Use ISO format
+        //// Configure a PolymorphicTypeValidator to allow specific packages or classes
+        //PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
+        //        .allowIfSubType("com.vesanieminen") // Replace with your package name
+        //        .allowIfSubType("java.time")
+        //        .build();
+
+        //// Activate default typing with the validator
+        //mapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
         return mapper;
     }
 
