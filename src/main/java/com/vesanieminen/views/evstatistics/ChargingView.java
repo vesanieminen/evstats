@@ -163,35 +163,25 @@ public class ChargingView extends Main {
                 LumoUtility.Margin.Top.SMALL
         );
         chargingLength = new Span();
-        chargingLength.addClassNames(LumoUtility.FontSize.SMALL);
         resultsGrid.add(chargingLength);
         chargingSpeedSpan = new Span();
-        chargingSpeedSpan.addClassNames(LumoUtility.FontSize.SMALL);
         resultsGrid.add(chargingSpeedSpan);
         chargingSpeedMinusLossSpan = new Span();
-        chargingSpeedMinusLossSpan.addClassNames(LumoUtility.FontSize.SMALL);
         resultsGrid.add(chargingSpeedMinusLossSpan);
         consumedElectricitySpan = new Span();
-        consumedElectricitySpan.addClassNames(LumoUtility.FontSize.SMALL);
         resultsGrid.add(consumedElectricitySpan);
         addedElectricitySpan = new Span();
-        addedElectricitySpan.addClassNames(LumoUtility.FontSize.SMALL);
         resultsGrid.add(addedElectricitySpan);
         lostElectricitySpan = new Span();
-        lostElectricitySpan.addClassNames(LumoUtility.FontSize.SMALL);
         resultsGrid.add(lostElectricitySpan);
         electricityCostSpan = new Span();
-        electricityCostSpan.addClassNames(LumoUtility.FontSize.SMALL);
         electricityCostValueSpan = new Span();
-        electricityCostValueSpan.addClassNames(LumoUtility.FontSize.SMALL);
         electricityCostPing = new Ping("Cost");
         final var electricityCostDiv = new Div(electricityCostSpan, electricityCostValueSpan, electricityCostPing);
         electricityCostDiv.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.AlignItems.CENTER);
         resultsGrid.add(electricityCostDiv);
         spotAverage = new Span();
-        spotAverage.addClassNames(LumoUtility.FontSize.SMALL);
         spotAverageValue = new Span();
-        spotAverageValue.addClassNames(LumoUtility.FontSize.SMALL);
         spotAveragePing = new Ping("Price");
         final var spotAverageDiv = new Div(spotAverage, spotAverageValue, spotAveragePing);
         spotAverageDiv.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.AlignItems.CENTER);
@@ -315,8 +305,6 @@ public class ChargingView extends Main {
                 electricityCostPing.setType(Ping.Type.LOW);
                 spotAveragePing.setType(Ping.Type.LOW);
             }
-            electricityCostValueSpan.addClassNames(LumoUtility.FontSize.SMALL);
-            spotAverageValue.addClassNames(LumoUtility.FontSize.SMALL);
         }
     }
 
