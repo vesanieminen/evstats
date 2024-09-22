@@ -71,6 +71,12 @@ public class ChargingView extends Main {
     private final ObjectMapper objectMapper;
     private final Ping electricityCostPing;
     private final Ping spotAveragePing;
+    private final Span chargingLengthResult;
+    private final Span chargingSpeedResultSpan;
+    private final Span chargingSpeedMinusLossResultSpan;
+    private final Span consumedElectricityResultSpan;
+    private final Span addedElectricityResultSpan;
+    private final Span lostElectricityResultSpan;
 
     public ChargingView(PreservedState preservedState, LiukuriService liukuriService, ObjectMapper objectMapper) {
         this.liukuriService = liukuriService;
@@ -156,36 +162,43 @@ public class ChargingView extends Main {
         final var resultsGrid = new Div();
         resultsGrid.addClassNames(
                 LumoUtility.Display.GRID,
-                LumoUtility.Grid.Breakpoint.Small.COLUMNS_1,
-                LumoUtility.Grid.Breakpoint.Medium.COLUMNS_2,
+                LumoUtility.Grid.Column.COLUMNS_2,
                 LumoUtility.Padding.Horizontal.MEDIUM,
                 LumoUtility.Gap.Column.MEDIUM,
-                LumoUtility.Margin.Top.SMALL
+                LumoUtility.Margin.Top.SMALL,
+                LumoUtility.MaxWidth.SCREEN_SMALL,
+                LumoUtility.Gap.SMALL
         );
         chargingLength = new Span();
-        resultsGrid.add(chargingLength);
+        chargingLengthResult = new Span();
+        resultsGrid.add(chargingLength, chargingLengthResult);
         chargingSpeedSpan = new Span();
-        resultsGrid.add(chargingSpeedSpan);
+        chargingSpeedResultSpan = new Span();
+        resultsGrid.add(chargingSpeedSpan, chargingSpeedResultSpan);
         chargingSpeedMinusLossSpan = new Span();
-        resultsGrid.add(chargingSpeedMinusLossSpan);
+        chargingSpeedMinusLossResultSpan = new Span();
+        resultsGrid.add(chargingSpeedMinusLossSpan, chargingSpeedMinusLossResultSpan);
         consumedElectricitySpan = new Span();
-        resultsGrid.add(consumedElectricitySpan);
+        consumedElectricityResultSpan = new Span();
+        resultsGrid.add(consumedElectricitySpan, consumedElectricityResultSpan);
         addedElectricitySpan = new Span();
-        resultsGrid.add(addedElectricitySpan);
+        addedElectricityResultSpan = new Span();
+        resultsGrid.add(addedElectricitySpan, addedElectricityResultSpan);
         lostElectricitySpan = new Span();
-        resultsGrid.add(lostElectricitySpan);
+        lostElectricityResultSpan = new Span();
+        resultsGrid.add(lostElectricitySpan, lostElectricityResultSpan);
         electricityCostSpan = new Span();
         electricityCostValueSpan = new Span();
         electricityCostPing = new Ping("Cost");
-        final var electricityCostDiv = new Div(electricityCostSpan, electricityCostValueSpan, electricityCostPing);
+        final var electricityCostDiv = new Div(electricityCostValueSpan, electricityCostPing);
         electricityCostDiv.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.AlignItems.CENTER);
-        resultsGrid.add(electricityCostDiv);
+        resultsGrid.add(electricityCostSpan, electricityCostDiv);
         spotAverage = new Span();
         spotAverageValue = new Span();
         spotAveragePing = new Ping("Price");
-        final var spotAverageDiv = new Div(spotAverage, spotAverageValue, spotAveragePing);
+        final var spotAverageDiv = new Div(spotAverageValue, spotAveragePing);
         spotAverageDiv.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.AlignItems.CENTER);
-        resultsGrid.add(spotAverageDiv);
+        resultsGrid.add(spotAverage, spotAverageDiv);
 
         add(resultsGrid);
 
@@ -261,24 +274,30 @@ public class ChargingView extends Main {
             chargingStartTime = ZonedDateTime.of(chargingResultDateTimeField.getValue(), fiZoneID).toInstant();
         }
 
-        chargingLength.setText("Charging length: %d h, %d min, %d sec".formatted((int) chargingTimeHours, (chargingTimeSeconds % 3600) / 60, chargingTimeSeconds % 60));
+        chargingLength.setText("Charging length: ");
+        chargingLengthResult.setText("%d h, %d min, %d sec".formatted((int) chargingTimeHours, (chargingTimeSeconds % 3600) / 60, chargingTimeSeconds % 60));
 
         final var chargingPowerInKilowatts = chargingPowerInWatts / 1000.0;
-        chargingSpeedSpan.setText("Charging speed: %.2f kW".formatted(chargingPowerInKilowatts));
-        chargingSpeedMinusLossSpan.setText("Charging speed minus loss: %.2f kW".formatted(chargingSpeedMinusLoss / 1000.0));
+        chargingSpeedSpan.setText("Charging speed: ");
+        chargingSpeedResultSpan.setText("%.2f kW".formatted(chargingPowerInKilowatts));
+        chargingSpeedMinusLossSpan.setText("Charging speed minus loss: ");
+        chargingSpeedMinusLossResultSpan.setText("%.2f kW".formatted(chargingSpeedMinusLoss / 1000.0));
 
         var electricityConsumed = (chargingPowerInWatts / 1000.0) * chargingTimeHours;
-        final var electricityConsumedText = "Consumed electricity: %.2f kWh".formatted(electricityConsumed);
-        consumedElectricitySpan.setText(electricityConsumedText);
+        final var electricityConsumedText = "%.2f kWh".formatted(electricityConsumed);
+        consumedElectricitySpan.setText("Consumed electricity: ");
+        consumedElectricityResultSpan.setText(electricityConsumedText);
 
         final var lostPercentage = chargingLossField.getValue() / 100.0;
         final var lostElectricity = electricityConsumed * lostPercentage;
-        final var electricityLostText = "Lost electricity: %.2f kWh".formatted(lostElectricity);
-        lostElectricitySpan.setText(electricityLostText);
+        final var electricityLostText = "%.2f kWh".formatted(lostElectricity);
+        lostElectricitySpan.setText("Lost electricity: ");
+        lostElectricityResultSpan.setText(electricityLostText);
 
         var addedElectricity = electricityConsumed - lostElectricity;
-        final var addedElectricityText = "Charge added to battery: %.2f kWh".formatted(addedElectricity);
-        addedElectricitySpan.setText(addedElectricityText);
+        final var addedElectricityText = "%.2f kWh".formatted(addedElectricity);
+        addedElectricitySpan.setText("Charge added to battery: ");
+        addedElectricityResultSpan.setText(addedElectricityText);
 
 
         final var longDoubleLinkedHashMap = mapChargingEventToConsumptionData(chargingPowerInKilowatts, chargingStartTime, chargingTimeHours);
