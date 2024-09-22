@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.page.WebStorage;
@@ -64,6 +65,7 @@ public class ChargingView extends Main {
     private final LiukuriService liukuriService;
     private final Span electricityCostSpan;
     private final Span spotAverage;
+    private final Span spotAverageValue;
     private final ObjectMapper objectMapper;
 
     public ChargingView(PreservedState preservedState, LiukuriService liukuriService, ObjectMapper objectMapper) {
@@ -176,7 +178,12 @@ public class ChargingView extends Main {
         fourthRow.add(electricityCostSpan);
         spotAverage = new Span();
         spotAverage.addClassNames(LumoUtility.FontSize.SMALL);
-        fourthRow.add(spotAverage);
+        spotAverageValue = new Span();
+        spotAverageValue.addClassNames(LumoUtility.FontSize.SMALL);
+        final var div = new Div(spotAverage, spotAverageValue);
+        div.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.AlignItems.CENTER);
+        fourthRow.add(div);
+
         add(fourthRow);
 
         final var chargeBinder = new Binder<Charge>();
@@ -274,9 +281,18 @@ public class ChargingView extends Main {
         final var longDoubleLinkedHashMap = mapChargingEventToConsumptionData(chargingPowerInKilowatts, chargingStartTime, chargingTimeHours);
         final var calculationResponse = liukuriService.performCalculation(longDoubleLinkedHashMap, 0, true);
         if (calculationResponse != null) {
-
+            final var averagePrice = calculationResponse.getAveragePrice();
             electricityCostSpan.setText("Total cost (inc. VAT): %.2f €".formatted(calculationResponse.getTotalCost()));
-            spotAverage.setText("Spot average: %.2f c/kWh".formatted(calculationResponse.getAveragePrice()));
+            spotAverage.setText("Spot average: ");
+            spotAverageValue.setText("%.2f c/kWh".formatted(averagePrice));
+            if (averagePrice >= 10) {
+                spotAverageValue.setClassName(LumoUtility.TextColor.ERROR);
+            } else if (averagePrice >= 5) {
+                spotAverageValue.setClassName(LumoUtility.TextColor.PRIMARY);
+            } else if (averagePrice < 5) {
+                spotAverageValue.setClassName(LumoUtility.TextColor.SUCCESS);
+            }
+            spotAverageValue.addClassNames(LumoUtility.FontSize.SMALL);
         }
     }
 
