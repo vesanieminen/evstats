@@ -20,6 +20,7 @@ import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.spring.annotation.VaadinSessionScope;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vesanieminen.components.GridLayout;
+import com.vesanieminen.components.Ping;
 import com.vesanieminen.services.LiukuriService;
 import com.vesanieminen.views.MainLayout;
 import lombok.AllArgsConstructor;
@@ -68,6 +69,8 @@ public class ChargingView extends Main {
     private final Span spotAverage;
     private final Span spotAverageValue;
     private final ObjectMapper objectMapper;
+    private final Ping electricityCostPing;
+    private final Ping spotAveragePing;
 
     public ChargingView(PreservedState preservedState, LiukuriService liukuriService, ObjectMapper objectMapper) {
         this.liukuriService = liukuriService;
@@ -178,14 +181,16 @@ public class ChargingView extends Main {
         electricityCostSpan.addClassNames(LumoUtility.FontSize.SMALL);
         electricityCostValueSpan = new Span();
         electricityCostValueSpan.addClassNames(LumoUtility.FontSize.SMALL);
-        final var electricityCostDiv = new Div(electricityCostSpan, electricityCostValueSpan);
+        electricityCostPing = new Ping("Cost");
+        final var electricityCostDiv = new Div(electricityCostSpan, electricityCostValueSpan, electricityCostPing);
         electricityCostDiv.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.AlignItems.CENTER);
         fourthRow.add(electricityCostDiv);
         spotAverage = new Span();
         spotAverage.addClassNames(LumoUtility.FontSize.SMALL);
         spotAverageValue = new Span();
         spotAverageValue.addClassNames(LumoUtility.FontSize.SMALL);
-        final var spotAverageDiv = new Div(spotAverage, spotAverageValue);
+        spotAveragePing = new Ping("Price");
+        final var spotAverageDiv = new Div(spotAverage, spotAverageValue, spotAveragePing);
         spotAverageDiv.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.AlignItems.CENTER);
         fourthRow.add(spotAverageDiv);
 
@@ -294,12 +299,18 @@ public class ChargingView extends Main {
             if (averagePrice >= 10) {
                 electricityCostValueSpan.setClassName(LumoUtility.TextColor.ERROR);
                 spotAverageValue.setClassName(LumoUtility.TextColor.ERROR);
+                electricityCostPing.setType(Ping.Type.HIGH);
+                spotAveragePing.setType(Ping.Type.HIGH);
             } else if (averagePrice >= 5) {
                 electricityCostValueSpan.setClassName(LumoUtility.TextColor.PRIMARY);
                 spotAverageValue.setClassName(LumoUtility.TextColor.PRIMARY);
+                electricityCostPing.setType(Ping.Type.NORMAL);
+                spotAveragePing.setType(Ping.Type.NORMAL);
             } else if (averagePrice < 5) {
                 electricityCostValueSpan.setClassName(LumoUtility.TextColor.SUCCESS);
                 spotAverageValue.setClassName(LumoUtility.TextColor.SUCCESS);
+                electricityCostPing.setType(Ping.Type.LOW);
+                spotAveragePing.setType(Ping.Type.LOW);
             }
             electricityCostValueSpan.addClassNames(LumoUtility.FontSize.SMALL);
             spotAverageValue.addClassNames(LumoUtility.FontSize.SMALL);
