@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Main;
@@ -150,9 +151,14 @@ public class ChargingView extends Main {
         chargingDateTimeField.setStep(Duration.ofMinutes(15));
         chargingDateTimeField.setLocale(Locale.of("fi", "FI"));
         chargingDateTimeField.addClassNames(LumoUtility.Grid.Column.COLUMN_SPAN_2);
+        final var datePickerI18n = new DatePicker.DatePickerI18n();
+        datePickerI18n.setFirstDayOfWeek(1);
+        datePickerI18n.setDateFormat("EEE dd.MM.yy");
+        chargingDateTimeField.setDatePickerI18n(datePickerI18n);
         topGrid.add(chargingDateTimeField);
 
         chargingResultDateTimeField = new DateTimePicker();
+        chargingResultDateTimeField.setDatePickerI18n(datePickerI18n);
         chargingResultDateTimeField.addClassNames(LumoUtility.Grid.Column.COLUMN_SPAN_2);
         chargingResultDateTimeField.setStep(Duration.ofSeconds(1));
         chargingResultDateTimeField.setReadOnly(true);
