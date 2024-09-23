@@ -11,6 +11,7 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.PreserveOnRefresh;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.spring.annotation.VaadinSessionScope;
@@ -41,6 +42,7 @@ import java.util.Locale;
 @RouteAlias(value = "lataus", layout = MainLayout.class)
 @RouteAlias(value = "charging", layout = MainLayout.class)
 @Slf4j
+@PreserveOnRefresh
 public class ChargingView extends Main {
 
     private final NumberField batteryCapacityField;
@@ -175,7 +177,7 @@ public class ChargingView extends Main {
         chargingDateTimeField.addClassNames(LumoUtility.Grid.Column.COLUMN_SPAN_2);
         final var datePickerI18n = new DatePicker.DatePickerI18n();
         datePickerI18n.setFirstDayOfWeek(1);
-        datePickerI18n.setDateFormat("EEE dd.MM.yy");
+        datePickerI18n.setDateFormat("EEE dd.MM.yyyy");
         chargingDateTimeField.setDatePickerI18n(datePickerI18n);
         topGrid.add(chargingDateTimeField);
 
@@ -215,18 +217,20 @@ public class ChargingView extends Main {
         lostElectricitySpan = new Span();
         lostElectricityResultSpan = new Span();
         resultsGrid.add(lostElectricitySpan, lostElectricityResultSpan);
-        electricityCostSpan = new Span();
-        electricityCostValueSpan = new Span();
-        electricityCostPing = new Ping("Cost");
-        final var electricityCostDiv = new Div(electricityCostValueSpan, electricityCostPing);
-        electricityCostDiv.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.AlignItems.CENTER);
-        resultsGrid.add(electricityCostSpan, electricityCostDiv);
+
         spotAverage = new Span();
         spotAverageValue = new Span();
         spotAveragePing = new Ping("Price");
         final var spotAverageDiv = new Div(spotAverageValue, spotAveragePing);
         spotAverageDiv.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.AlignItems.CENTER);
         resultsGrid.add(spotAverage, spotAverageDiv);
+
+        electricityCostSpan = new Span();
+        electricityCostValueSpan = new Span();
+        electricityCostPing = new Ping("Cost");
+        final var electricityCostDiv = new Div(electricityCostValueSpan, electricityCostPing);
+        electricityCostDiv.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.AlignItems.CENTER);
+        resultsGrid.add(electricityCostSpan, electricityCostDiv);
 
         add(resultsGrid);
 
