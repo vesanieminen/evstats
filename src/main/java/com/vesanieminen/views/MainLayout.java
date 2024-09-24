@@ -18,6 +18,7 @@ import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vesanieminen.views.charging.ChargingView;
 import com.vesanieminen.views.statistics.EVAdoptionRateView;
@@ -41,6 +42,9 @@ public class MainLayout extends AppLayout {
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
         addHeaderContent();
+        final var sideNavItem = new SideNavItem(null, SettingsView.class, LineAwesomeIcon.COG_SOLID.create());
+        sideNavItem.addClassNames(LumoUtility.Width.MEDIUM);
+        final var test = new Anchor(RouteConfiguration.forSessionScope().getUrl(SettingsView.class), sideNavItem);
         Button theme = new Button(VaadinIcon.MOON_O.create());
         theme.getElement().setAttribute("aria-label", getTranslation("Switch to dark mode"));
         theme.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
@@ -58,7 +62,7 @@ public class MainLayout extends AppLayout {
         });
         final var span = new Span();
         span.addClassNames(LumoUtility.Flex.GROW);
-        addToNavbar(span, theme);
+        addToNavbar(span, test, theme);
     }
 
     protected void onAttach(AttachEvent attachEvent) {
@@ -100,7 +104,6 @@ public class MainLayout extends AppLayout {
                 new SideNavItem("New Teslas / year", TeslaRegistrationsBarView.class, LineAwesomeIcon.BARS_SOLID.create()));
         nav.addItem(
                 new SideNavItem("Charging tool", ChargingView.class, LineAwesomeIcon.CAR_BATTERY_SOLID.create()),
-                new SideNavItem("Settings", SettingsView.class, LineAwesomeIcon.COG_SOLID.create()),
                 statistics
         );
 
