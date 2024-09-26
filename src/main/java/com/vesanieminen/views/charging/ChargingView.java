@@ -79,7 +79,6 @@ public class ChargingView extends Main {
     private final Span addedElectricityResultSpan;
     private final Span lostElectricityResultSpan;
     private final SettingsView.SettingsState settingsState;
-    private int i = 0;
 
     public ChargingView(PreservedState preservedState, LiukuriService liukuriService, ObjectMapperService mapperService, SettingsView.SettingsState settingsState) {
         this.liukuriService = liukuriService;
@@ -339,7 +338,7 @@ public class ChargingView extends Main {
         final var longDoubleLinkedHashMap = mapChargingEventToConsumptionData(chargingPowerInKilowatts, chargingStartTime, chargingTimeHours);
         final var margin = settingsState.getSettings().getMargin();
         final var vat = settingsState.getSettings().getVat();
-        final var calculationResponse = liukuriService.performCalculation(longDoubleLinkedHashMap, margin == null ? 0 : margin, vat == null ? false : vat);
+        final var calculationResponse = liukuriService.performCalculation(longDoubleLinkedHashMap, margin == null ? 0 : margin, vat != null && vat);
         if (calculationResponse != null) {
             final var averagePrice = calculationResponse.getAveragePrice();
             electricityCostSpan.setText(Boolean.TRUE.equals(vat) ? "Total cost (inc. VAT): " : "Total cost: ");
