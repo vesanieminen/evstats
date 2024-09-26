@@ -146,7 +146,6 @@ public class MainLayout extends AppLayout {
         githubIcon.addClassNames(LumoUtility.IconSize.MEDIUM, LumoUtility.TextColor.PRIMARY, LumoUtility.Margin.Left.SMALL);
         layout.add(githubLink);
 
-
         return layout;
     }
 

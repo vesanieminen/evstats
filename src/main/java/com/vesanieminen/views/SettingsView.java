@@ -54,7 +54,7 @@ public class SettingsView extends Main {
 
         final var binder = new Binder<Settings>();
         binder.bind(marginField, Settings::getMargin, Settings::setMargin);
-        binder.bind(vatCheckbox, Settings::isVat, Settings::setVat);
+        binder.bind(vatCheckbox, Settings::getVat, Settings::setVat);
         binder.setBean(settingsState.settings);
 
         readFieldValues();
@@ -73,15 +73,14 @@ public class SettingsView extends Main {
     @AllArgsConstructor
     public static class Settings {
         Double margin;
-        boolean vat;
+        Boolean vat;
     }
 
     @VaadinSessionScope
     @Component
     @Getter
     public static class SettingsState {
-        Settings settings = new Settings(null, true);
+        Settings settings = new Settings(null, null);
     }
-
 
 }

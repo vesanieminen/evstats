@@ -1,5 +1,7 @@
 package com.vesanieminen.views.charging;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.html.Div;
@@ -11,7 +13,6 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.PreserveOnRefresh;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.spring.annotation.VaadinSessionScope;
@@ -28,6 +29,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -77,35 +79,38 @@ public class ChargingView extends Main {
     private final Span addedElectricityResultSpan;
     private final Span lostElectricityResultSpan;
     private final SettingsView.SettingsState settingsState;
+    private int i = 0;
 
     public ChargingView(PreservedState preservedState, LiukuriService liukuriService, ObjectMapperService mapperService, SettingsView.SettingsState settingsState) {
         this.liukuriService = liukuriService;
         this.mapperService = mapperService;
         this.settingsState = settingsState;
 
-        //final var objectMapper = new ObjectMapper();
-        //WebStorage.getItem(SettingsView.margin, item -> {
-        //    if (item == null) {
-        //        return;
-        //    }
-        //    try {
-        //        margin = objectMapper.readValue(item, new TypeReference<>() {
-        //        });
-        //    } catch (IOException e) {
-        //        log.info("Could not read value: %s".formatted(e.toString()));
-        //    }
-        //});
-        //WebStorage.getItem(SettingsView.vat, item -> {
-        //    if (item == null) {
-        //        return;
-        //    }
-        //    try {
-        //        vat = objectMapper.readValue(item, new TypeReference<>() {
-        //        });
-        //    } catch (IOException e) {
-        //        log.info("Could not read value: %s".formatted(e.toString()));
-        //    }
-        //});
+        final var objectMapper = new ObjectMapper();
+        WebStorage.getItem(SettingsView.margin, item -> {
+            if (item == null) {
+                return;
+            }
+            try {
+                final var margin = objectMapper.readValue(item, new TypeReference<Double>() {
+                });
+                settingsState.getSettings().setMargin(margin);
+            } catch (IOException e) {
+                log.info("Could not read value: %s".formatted(e.toString()));
+            }
+        });
+        WebStorage.getItem(SettingsView.vat, item -> {
+            if (item == null) {
+                return;
+            }
+            try {
+                final var vat = objectMapper.readValue(item, new TypeReference<Boolean>() {
+                });
+                settingsState.getSettings().setVat(vat);
+            } catch (IOException e) {
+                log.info("Could not read value: %s".formatted(e.toString()));
+            }
+        });
 
         setHeight("var(--fullscreen-height-charging)");
         final var topGrid = new GridLayout();
@@ -333,11 +338,11 @@ public class ChargingView extends Main {
 
         final var longDoubleLinkedHashMap = mapChargingEventToConsumptionData(chargingPowerInKilowatts, chargingStartTime, chargingTimeHours);
         final var margin = settingsState.getSettings().getMargin();
-        final var vat = settingsState.getSettings().isVat();
-        final var calculationResponse = liukuriService.performCalculation(longDoubleLinkedHashMap, margin == null ? 0 : margin, vat);
+        final var vat = settingsState.getSettings().getVat();
+        final var calculationResponse = liukuriService.performCalculation(longDoubleLinkedHashMap, margin == null ? 0 : margin, vat == null ? false : vat);
         if (calculationResponse != null) {
             final var averagePrice = calculationResponse.getAveragePrice();
-            electricityCostSpan.setText(vat ? "Total cost (inc. VAT): " : "Total cost: ");
+            electricityCostSpan.setText(Boolean.TRUE.equals(vat) ? "Total cost (inc. VAT): " : "Total cost: ");
             electricityCostValueSpan.setText("%.2f €".formatted(calculationResponse.getTotalCost()));
             spotAverage.setText("Spot average (inc. margin): ");
             spotAverageValue.setText("%.2f c/kWh".formatted(averagePrice));
