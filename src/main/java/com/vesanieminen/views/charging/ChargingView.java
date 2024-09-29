@@ -23,7 +23,7 @@ import com.vesanieminen.components.Ping;
 import com.vesanieminen.services.LiukuriService;
 import com.vesanieminen.services.ObjectMapperService;
 import com.vesanieminen.views.MainLayout;
-import com.vesanieminen.views.SettingsView;
+import com.vesanieminen.views.SettingsDialog;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -79,15 +79,15 @@ public class ChargingView extends Main {
     private final Span consumedElectricityResultSpan;
     private final Span addedElectricityResultSpan;
     private final Span lostElectricityResultSpan;
-    private final SettingsView.SettingsState settingsState;
+    private final SettingsDialog.SettingsState settingsState;
 
-    public ChargingView(PreservedState preservedState, LiukuriService liukuriService, ObjectMapperService mapperService, SettingsView.SettingsState settingsState) {
+    public ChargingView(PreservedState preservedState, LiukuriService liukuriService, ObjectMapperService mapperService, SettingsDialog.SettingsState settingsState) {
         this.liukuriService = liukuriService;
         this.mapperService = mapperService;
         this.settingsState = settingsState;
 
         final var objectMapper = new ObjectMapper();
-        WebStorage.getItem(SettingsView.margin, item -> {
+        WebStorage.getItem(SettingsDialog.margin, item -> {
             if (item == null) {
                 return;
             }
@@ -99,7 +99,7 @@ public class ChargingView extends Main {
                 log.info("Could not read value: %s".formatted(e.toString()));
             }
         });
-        WebStorage.getItem(SettingsView.vat, item -> {
+        WebStorage.getItem(SettingsDialog.vat, item -> {
             if (item == null) {
                 return;
             }

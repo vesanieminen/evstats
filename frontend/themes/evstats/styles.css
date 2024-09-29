@@ -8,6 +8,10 @@ html {
     --fullscreen-height-charging: calc(100vh - 4.5rem);
 }
 
+vaadin-button:hover {
+    cursor: pointer;
+}
+
 /* iOS specific height setting */
 @supports (-webkit-touch-callout: none) {
     html {
@@ -27,3 +31,10 @@ html {
 vaadin-app-layout::part(drawer) {
     width: 240px;
 }
+
+vaadin-dialog-overlay::part(overlay) {
+    width: 420px;
+}
+
+
+
