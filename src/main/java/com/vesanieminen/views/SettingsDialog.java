@@ -99,8 +99,6 @@ public class SettingsDialog extends Dialog {
         theme.setIcon(darkMode.create());
         theme.setText(translation);
         theme.setAriaLabel(translation);
-        //theme.setText(getTranslation(translation));
-        //theme.setAriaLabel(getTranslation(translation));
     }
 
     public void readFieldValues() {
