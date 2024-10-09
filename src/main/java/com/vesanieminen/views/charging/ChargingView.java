@@ -243,8 +243,6 @@ public class ChargingView extends Main {
         chargeBinder.bind(batteryCapacityField, Charge::getCapacity, Charge::setCapacity);
         chargeBinder.bind(currentSocField, Charge::getCurrentSOC, Charge::setCurrentSOC);
         chargeBinder.bind(targetSocField, Charge::getTargetSOC, Charge::setTargetSOC);
-        //chargeBinder.forField(currentSocField).withValidator((value, context) -> value <= charge.getTargetSOC() ? ValidationResult.ok() : ValidationResult.error("Invalid SOC target")).bind(Charge::getCurrentSOC, Charge::setCurrentSOC);
-        //chargeBinder.forField(targetSocField).withValidator((value, context) -> value >= charge.getCurrentSOC() ? ValidationResult.ok() : ValidationResult.error("Invalid SOC target")).bind(Charge::getTargetSOC, Charge::setTargetSOC);
         chargeBinder.bind(amperesField, Charge::getAmperes, Charge::setAmperes);
         chargeBinder.bind(phasesField, Charge::getPhases, Charge::setPhases);
         chargeBinder.bind(voltageField, Charge::getVoltage, Charge::setVoltage);
