@@ -40,6 +40,7 @@ public class MainLayout extends AppLayout {
 
         final var settingsButton = new Button(LineAwesomeIcon.COG_SOLID.create(), e -> settingsDialog.open());
         settingsButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        settingsButton.setId("settings-button");
 
         final var span = new Span();
         span.addClassNames(LumoUtility.Flex.GROW);
