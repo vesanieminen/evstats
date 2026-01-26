@@ -81,6 +81,8 @@ public class ChargingView extends Main {
     private final IntegerField voltageField;
     private final NumberField chargingLossField;
     private int currentAmps = 16;
+    private Div amperesSliderContainer;
+    private static final String AMPERES_STORAGE_KEY = "amperesSlider";
 
     // Schedule fields
     private final DatePicker startDatePicker;
@@ -279,10 +281,10 @@ public class ChargingView extends Main {
         speedHeader.add(headerLeft, powerValueSpan);
 
         // Amperage slider (native HTML input)
-        Div sliderContainer = new Div();
-        sliderContainer.getElement().setProperty("innerHTML",
+        amperesSliderContainer = new Div();
+        amperesSliderContainer.getElement().setProperty("innerHTML",
             "<input type='range' min='1' max='32' value='" + currentAmps + "' class='single-slider' id='amperesSlider'/>");
-        sliderContainer.getElement().executeJs(
+        amperesSliderContainer.getElement().executeJs(
                 "const input = this.querySelector('input');" +
                 "const view = $0;" +
                 "if (input) {" +
@@ -291,7 +293,7 @@ public class ChargingView extends Main {
                 "  });" +
                 "}", getElement());
 
-        amperesValueSpan = new Span("16 A");
+        amperesValueSpan = new Span(currentAmps + " A");
         amperesValueSpan.addClassName("amperage-value");
 
         // Advanced section
@@ -328,7 +330,7 @@ public class ChargingView extends Main {
         advancedSection.add(phasesField, voltageField, chargingLossField);
         advancedDetails.add(advancedSection);
 
-        chargingSpeedCard.add(speedHeader, sliderContainer, amperesValueSpan, advancedDetails);
+        chargingSpeedCard.add(speedHeader, amperesSliderContainer, amperesValueSpan, advancedDetails);
         add(chargingSpeedCard);
 
         // ===== SCHEDULE CARD =====
@@ -519,6 +521,7 @@ public class ChargingView extends Main {
         currentAmps = value;
         preservedState.charge.setAmperes(value);
         amperesValueSpan.setText(value + " A");
+        WebStorage.setItem(AMPERES_STORAGE_KEY, String.valueOf(value));
         doCalculation();
     }
 
@@ -744,6 +747,22 @@ public class ChargingView extends Main {
         WebStorage.getItem(phasesField.getId().orElseThrow(), item -> mapperService.readValue(item, phasesField));
         WebStorage.getItem(voltageField.getId().orElseThrow(), item -> mapperService.readValue(item, voltageField));
         WebStorage.getItem(chargingLossField.getId().orElseThrow(), item -> mapperService.readValue(item, chargingLossField));
+        WebStorage.getItem(AMPERES_STORAGE_KEY, item -> {
+            if (item != null && !item.isEmpty()) {
+                try {
+                    int amperes = Integer.parseInt(item);
+                    currentAmps = amperes;
+                    preservedState.charge.setAmperes(amperes);
+                    amperesValueSpan.setText(amperes + " A");
+                    // Update the slider value on the client side
+                    amperesSliderContainer.getElement().executeJs(
+                        "const input = this.querySelector('input'); if (input) input.value = $0;", amperes);
+                    doCalculation();
+                } catch (NumberFormatException e) {
+                    // Ignore invalid values
+                }
+            }
+        });
     }
 
     @Setter
