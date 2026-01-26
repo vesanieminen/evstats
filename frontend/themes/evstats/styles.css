@@ -2,6 +2,7 @@
 @import "opacity.css";
 @import url('./main-layout.css');
 @import url('./views/e-v-statistics-view.css');
+@import url('./views/charging-view.css');
 
 html {
     --fullscreen-height: 100%;

@@ -1,0 +1,386 @@
+/* Charging View Container */
+.charging-view-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumo-space-m);
+    max-width: 448px;
+    margin: 0 auto;
+    padding: var(--lumo-space-m);
+}
+
+@media (max-width: 480px) {
+    .charging-view-container {
+        padding: var(--lumo-space-s);
+        gap: var(--lumo-space-s);
+    }
+}
+
+/* Card Component */
+.charging-card {
+    background: var(--lumo-base-color);
+    border-radius: var(--lumo-border-radius-l);
+    padding: var(--lumo-space-m);
+    box-shadow: var(--lumo-box-shadow-xs);
+    border: 1px solid var(--lumo-contrast-10pct);
+}
+
+[theme~="dark"] .charging-card {
+    background: var(--lumo-contrast-5pct);
+    border-color: var(--lumo-contrast-20pct);
+}
+
+.charging-card-header {
+    color: var(--lumo-secondary-text-color);
+    font-size: var(--lumo-font-size-s);
+}
+
+/* Vehicle Section */
+.vehicle-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.vehicle-svg {
+    width: 180px;
+    height: 80px;
+    margin-bottom: var(--lumo-space-s);
+}
+
+.vehicle-name {
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-secondary-text-color);
+    margin-bottom: var(--lumo-space-m);
+}
+
+.soc-display {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--lumo-space-m);
+    width: 100%;
+    text-align: center;
+}
+
+.soc-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.soc-label {
+    font-size: var(--lumo-font-size-xs);
+    color: var(--lumo-secondary-text-color);
+}
+
+.soc-value {
+    font-size: var(--lumo-font-size-xl);
+    font-weight: 600;
+}
+
+.soc-value.accent {
+    color: var(--lumo-primary-text-color);
+}
+
+.soc-range {
+    font-size: var(--lumo-font-size-xs);
+    color: var(--lumo-secondary-text-color);
+}
+
+/* Change Vehicle Toggle */
+.change-vehicle-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--lumo-space-xs);
+    width: 100%;
+    padding: var(--lumo-space-s) 0;
+    margin-top: var(--lumo-space-s);
+    color: var(--lumo-secondary-text-color);
+    font-size: var(--lumo-font-size-s);
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.change-vehicle-toggle:hover {
+    color: var(--lumo-primary-text-color);
+}
+
+.vehicle-selection {
+    border-top: 1px solid var(--lumo-contrast-10pct);
+    padding-top: var(--lumo-space-m);
+    margin-top: var(--lumo-space-s);
+}
+
+.vehicle-custom-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--lumo-space-s);
+    margin-top: var(--lumo-space-s);
+}
+
+/* Dual Range Slider */
+.dual-slider-container {
+    position: relative;
+    height: 64px;
+    padding-top: var(--lumo-space-s);
+}
+
+.slider-track {
+    position: absolute;
+    width: 100%;
+    height: 6px;
+    background: var(--lumo-contrast-20pct);
+    border-radius: 3px;
+    top: 20px;
+}
+
+[theme~="dark"] .slider-track {
+    background: var(--lumo-contrast-30pct);
+}
+
+.slider-range {
+    position: absolute;
+    height: 6px;
+    background: var(--lumo-primary-color);
+    border-radius: 3px;
+    top: 20px;
+}
+
+.slider-thumb {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border: 2px solid var(--lumo-primary-color);
+    border-radius: 50%;
+    top: 13px;
+    cursor: grab;
+    box-shadow: var(--lumo-box-shadow-s);
+    transform: translateX(-50%);
+}
+
+.slider-thumb:active {
+    cursor: grabbing;
+}
+
+.slider-labels {
+    display: flex;
+    justify-content: space-between;
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    font-size: var(--lumo-font-size-s);
+    font-weight: 500;
+}
+
+/* Charge Level Summary */
+.charge-level-summary {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--lumo-space-m);
+    font-size: var(--lumo-font-size-s);
+}
+
+.charge-level-summary strong {
+    font-weight: 600;
+}
+
+/* Charging Speed Section */
+.charging-speed-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--lumo-space-s);
+}
+
+.charging-speed-header .power-value {
+    font-size: var(--lumo-font-size-l);
+    font-weight: 600;
+}
+
+.amperage-value {
+    display: block;
+    text-align: center;
+    font-size: var(--lumo-font-size-s);
+    color: var(--lumo-secondary-text-color);
+    margin-top: var(--lumo-space-xs);
+    width: 100%;
+}
+
+.advanced-toggle {
+    margin-top: var(--lumo-space-s);
+}
+
+.advanced-toggle summary,
+.advanced-toggle [slot="summary"] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--lumo-space-xs);
+    width: 100%;
+    padding: var(--lumo-space-s) 0;
+    color: var(--lumo-secondary-text-color);
+    font-size: var(--lumo-font-size-s);
+    cursor: pointer;
+    background: none;
+    border: none;
+    list-style: none;
+}
+
+.advanced-toggle summary::-webkit-details-marker {
+    display: none;
+}
+
+.advanced-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--lumo-space-s);
+    border-top: 1px solid var(--lumo-contrast-10pct);
+    padding-top: var(--lumo-space-m);
+    margin-top: var(--lumo-space-s);
+}
+
+.advanced-section .full-width {
+    grid-column: span 2;
+}
+
+.charging-loss-row {
+    display: flex;
+    align-items: center;
+    gap: var(--lumo-space-s);
+}
+
+/* Schedule Section */
+.schedule-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--lumo-space-s);
+}
+
+.calc-mode-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--lumo-space-s);
+    margin-top: var(--lumo-space-m);
+}
+
+.calc-mode-btn {
+    padding: var(--lumo-space-s) var(--lumo-space-m);
+    border-radius: var(--lumo-border-radius-m);
+    font-size: var(--lumo-font-size-s);
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.calc-mode-btn.active {
+    background: var(--lumo-primary-color);
+    color: var(--lumo-primary-contrast-color);
+}
+
+.calc-mode-btn.inactive {
+    background: var(--lumo-contrast-10pct);
+    color: var(--lumo-secondary-text-color);
+}
+
+[theme~="dark"] .calc-mode-btn.inactive {
+    background: var(--lumo-contrast-20pct);
+}
+
+/* Summary Section */
+.summary-rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumo-space-s);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--lumo-space-xs) 0;
+}
+
+.summary-row .label {
+    color: var(--lumo-secondary-text-color);
+    display: flex;
+    align-items: center;
+    gap: var(--lumo-space-xs);
+}
+
+.summary-row .value {
+    font-weight: 500;
+}
+
+.summary-row .value.warning {
+    color: var(--lumo-error-text-color);
+}
+
+.summary-row .value.primary {
+    color: var(--lumo-primary-text-color);
+}
+
+.total-cost-row {
+    border-top: 1px solid var(--lumo-contrast-10pct);
+    padding-top: var(--lumo-space-m);
+    margin-top: var(--lumo-space-xs);
+}
+
+.total-cost-row .label {
+    font-weight: 600;
+    color: var(--lumo-body-text-color);
+}
+
+.total-cost-row .value {
+    font-size: var(--lumo-font-size-xl);
+    font-weight: 700;
+    color: var(--lumo-primary-text-color);
+}
+
+/* Single Slider for Amperage */
+.single-slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--lumo-contrast-20pct);
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+}
+
+[theme~="dark"] .single-slider {
+    background: var(--lumo-contrast-30pct);
+}
+
+.single-slider::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--lumo-primary-color);
+    border: 3px solid white;
+    border-radius: 50%;
+    cursor: grab;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.single-slider::-webkit-slider-thumb:active {
+    cursor: grabbing;
+}
+
+.single-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--lumo-primary-color);
+    border: 3px solid white;
+    border-radius: 50%;
+    cursor: grab;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Icon colors */
+.charging-card-header vaadin-icon {
+    color: var(--lumo-primary-text-color);
+}
