@@ -6,37 +6,12 @@
     max-width: 448px;
     margin: 0 auto;
     padding: var(--lumo-space-m);
-    width: 100%;
-    box-sizing: border-box;
 }
 
-/* Tablet and larger - can show wider layout */
-@media (min-width: 768px) {
-    .charging-view-container {
-        max-width: 500px;
-        padding: var(--lumo-space-l);
-    }
-}
-
-/* Desktop - even wider with more padding */
-@media (min-width: 1024px) {
-    .charging-view-container {
-        max-width: 520px;
-    }
-}
-
-/* Mobile - reduce padding and gaps */
 @media (max-width: 480px) {
     .charging-view-container {
         padding: var(--lumo-space-s);
         gap: var(--lumo-space-s);
-    }
-}
-
-/* Very small screens */
-@media (max-width: 360px) {
-    .charging-view-container {
-        padding: var(--lumo-space-xs);
     }
 }
 
@@ -52,13 +27,6 @@
 [theme~="dark"] .charging-card {
     background: var(--lumo-contrast-5pct);
     border-color: var(--lumo-contrast-20pct);
-}
-
-@media (max-width: 360px) {
-    .charging-card {
-        padding: var(--lumo-space-s);
-        border-radius: var(--lumo-border-radius-m);
-    }
 }
 
 .charging-card-header {
@@ -92,16 +60,6 @@
     gap: var(--lumo-space-m);
     width: 100%;
     text-align: center;
-}
-
-@media (max-width: 360px) {
-    .soc-display {
-        gap: var(--lumo-space-s);
-    }
-
-    .soc-value {
-        font-size: var(--lumo-font-size-l);
-    }
 }
 
 .soc-column {
@@ -159,12 +117,6 @@
     grid-template-columns: 1fr 1fr;
     gap: var(--lumo-space-s);
     margin-top: var(--lumo-space-s);
-}
-
-@media (max-width: 360px) {
-    .vehicle-custom-fields {
-        grid-template-columns: 1fr;
-    }
 }
 
 /* Dual Range Slider */
@@ -228,18 +180,10 @@
     justify-content: space-between;
     margin-top: var(--lumo-space-m);
     font-size: var(--lumo-font-size-s);
-    flex-wrap: wrap;
-    gap: var(--lumo-space-xs);
 }
 
 .charge-level-summary strong {
     font-weight: 600;
-}
-
-@media (max-width: 360px) {
-    .charge-level-summary {
-        font-size: var(--lumo-font-size-xs);
-    }
 }
 
 /* Charging Speed Section */
@@ -301,16 +245,6 @@
     grid-column: span 2;
 }
 
-@media (max-width: 360px) {
-    .advanced-section {
-        grid-template-columns: 1fr;
-    }
-
-    .advanced-section .full-width {
-        grid-column: span 1;
-    }
-}
-
 .charging-loss-row {
     display: flex;
     align-items: center;
@@ -322,12 +256,6 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--lumo-space-s);
-}
-
-@media (max-width: 360px) {
-    .schedule-grid {
-        grid-template-columns: 1fr;
-    }
 }
 
 .calc-mode-buttons {
@@ -345,17 +273,6 @@
     cursor: pointer;
     border: none;
     transition: all 0.2s;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-@media (max-width: 360px) {
-    .calc-mode-btn {
-        padding: var(--lumo-space-xs) var(--lumo-space-s);
-        font-size: var(--lumo-font-size-xs);
-    }
 }
 
 .calc-mode-btn.active {
@@ -420,20 +337,6 @@
     font-size: var(--lumo-font-size-xl);
     font-weight: 700;
     color: var(--lumo-primary-text-color);
-}
-
-@media (max-width: 360px) {
-    .summary-row .label {
-        font-size: var(--lumo-font-size-xs);
-    }
-
-    .summary-row .value {
-        font-size: var(--lumo-font-size-s);
-    }
-
-    .total-cost-row .value {
-        font-size: var(--lumo-font-size-l);
-    }
 }
 
 /* Single Slider for Amperage */
