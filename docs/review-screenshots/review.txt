@@ -1,0 +1,23 @@
+Transcription started: 2026-01-23 15:31:01
+Backend: mlx, Model: large-v3-turbo
+----------------------------------------
+
+[15:31:14] Okay, let's see, is this working now?
+[15:31:14] Maybe.
+[15:31:25] Yeah, it's working.
+[15:31:25] So start clicking.
+[15:31:47] Start clicking that you just made and explain what's wrong with it as you're looking at it when you see a certain bug or something Take a screenshot and say that you're taking a screen but this is a review of what exactly?
+[15:31:47] What are we looking at?
+[15:31:47] Yeah, we're looking at our charging tool and the charging tool has numerous issues at the top mainly.
+[15:31:47] So there's at the top we have...
+[15:31:58] a car that says what the battery size is.
+[15:31:58] There's a drop down in the bottom right corner.
+[15:31:58] I'll take a screenshot of that.
+[15:31:58] That doesn't work.
+[15:31:58] You should have a selector for different type of cars.
+[15:32:31] which then capacity then the second item on the list is the charge level which actually doesn't work at all it's not a field so that needs to be implemented a third item is the speed that speed that works so you can go down with the speed and up and changes to amperors essentially there's an advanced tap that you can open which works pretty okay The problem here is that the loss value is duplicated.
+[15:32:31] I want it to be the only ones.
+[15:32:31] Also the loss and the speed, they have to have this slider, not just the...
+[15:32:42] number field that you can edit there.
+[15:32:53] And then the schedule part it has this ending part that is a bit wonky it's the layering is wrong there so that needs to be otherwise it's quite okay.
+[15:33:15] Alrighty so this concludes the quick review of the charging tool and and folder with the screenshots as well as this transcription for you to look at Okay, please end the transcription.
