@@ -83,6 +83,7 @@ public class ChargingView extends Main {
     private int currentAmps = 16;
     private Div amperesSliderContainer;
     private static final String AMPERES_STORAGE_KEY = "amperesSlider";
+    private static final String VEHICLE_STORAGE_KEY = "vehicleSelect";
 
     // Schedule fields
     private final DatePicker startDatePicker;
@@ -226,6 +227,7 @@ public class ChargingView extends Main {
         vehicleSelect.addValueChangeListener(e -> {
             selectedModel = e.getValue();
             vehicleName.setText(selectedModel.name());
+            WebStorage.setItem(VEHICLE_STORAGE_KEY, selectedModel.name());
             if (selectedModel.equals(EVModel.CUSTOM)) {
                 batteryCapacityField.setVisible(true);
                 consumptionField.setVisible(true);
@@ -434,7 +436,7 @@ public class ChargingView extends Main {
         Span lostToHeatLabel = new Span("Lost to heat");
         lostToHeatLabel.addClassName("label");
         lostToHeatValueSpan = new Span();
-        lostToHeatValueSpan.addClassNames("value", "warning");
+        lostToHeatValueSpan.addClassName("value");
         lostToHeatRow.add(lostToHeatLabel, lostToHeatValueSpan);
         summaryRows.add(lostToHeatRow);
 
@@ -762,6 +764,18 @@ public class ChargingView extends Main {
                 } catch (NumberFormatException e) {
                     // Ignore invalid values
                 }
+            }
+        });
+        WebStorage.getItem(VEHICLE_STORAGE_KEY, item -> {
+            if (item != null && !item.isEmpty()) {
+                // Find the matching EVModel by name
+                EVModel.PRESETS.stream()
+                    .filter(model -> model.name().equals(item))
+                    .findFirst()
+                    .ifPresent(model -> {
+                        selectedModel = model;
+                        vehicleSelect.setValue(model);
+                    });
             }
         });
     }
