@@ -352,6 +352,7 @@ public class ChargingView extends Main {
         endDatePicker.setI18n(datePickerI18n);
         endDatePicker.setLocale(Locale.of("fi", "FI"));
         endDatePicker.setValue(preservedState.charge.getStartTime().toLocalDate());
+        endDatePicker.setReadOnly(true);
 
         startTimePicker = new TimePicker("Start Time");
         startTimePicker.setId("startTimePicker");
@@ -528,14 +529,18 @@ public class ChargingView extends Main {
             calcEndButton.addClassName("active");
             calcStartButton.removeClassName("active");
             calcStartButton.addClassName("inactive");
+            startDatePicker.setReadOnly(false);
             startTimePicker.setReadOnly(false);
+            endDatePicker.setReadOnly(true);
             endTimePicker.setReadOnly(true);
         } else {
             calcStartButton.removeClassName("inactive");
             calcStartButton.addClassName("active");
             calcEndButton.removeClassName("active");
             calcEndButton.addClassName("inactive");
+            startDatePicker.setReadOnly(true);
             startTimePicker.setReadOnly(true);
+            endDatePicker.setReadOnly(false);
             endTimePicker.setReadOnly(false);
         }
         doCalculation();
