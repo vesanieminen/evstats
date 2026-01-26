@@ -15,6 +15,22 @@
         padding: var(--lumo-space-s);
         gap: var(--lumo-space-s);
     }
+
+    .vehicle-custom-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .schedule-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .advanced-section {
+        grid-template-columns: 1fr;
+    }
+
+    .advanced-section .full-width {
+        grid-column: span 1;
+    }
 }
 
 /* Card Component */
@@ -24,6 +40,8 @@
     padding: var(--lumo-space-m);
     box-shadow: var(--lumo-box-shadow-xs);
     border: 1px solid var(--lumo-contrast-10pct);
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 [theme~="dark"] .charging-card {
@@ -119,6 +137,10 @@
     grid-template-columns: 1fr 1fr;
     gap: var(--lumo-space-s);
     margin-top: var(--lumo-space-s);
+}
+
+.vehicle-custom-fields vaadin-number-field {
+    min-width: 0;
 }
 
 /* Dual Range Slider */
@@ -243,6 +265,11 @@
     margin-top: var(--lumo-space-s);
 }
 
+.advanced-section vaadin-integer-field,
+.advanced-section vaadin-number-field {
+    min-width: 0;
+}
+
 .advanced-section .full-width {
     grid-column: span 2;
 }
@@ -258,6 +285,11 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--lumo-space-s);
+}
+
+.schedule-grid vaadin-date-picker,
+.schedule-grid vaadin-time-picker {
+    min-width: 0;
 }
 
 .calc-mode-buttons {
