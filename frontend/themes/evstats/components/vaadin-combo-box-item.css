@@ -1,0 +1,13 @@
+/* Dark theme styling for combo-box items (used by time picker) */
+:host([theme~="dark"]) {
+    color: #ffffff;
+    --lumo-body-text-color: #ffffff;
+}
+
+:host([theme~="dark"]:hover) {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+:host([theme~="dark"][focused]) {
+    background: rgba(59, 130, 246, 0.3);
+}

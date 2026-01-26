@@ -1,0 +1,12 @@
+/* Dark theme styling for time picker scroller */
+:host([theme~="dark"]) {
+    background: #1f2937;
+    background-color: #1f2937;
+    --lumo-base-color: #1f2937;
+}
+
+:host {
+    --lumo-base-color: inherit;
+    background: var(--lumo-base-color, white);
+    background-color: var(--lumo-base-color, white);
+}

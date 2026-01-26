@@ -1,0 +1,1283 @@
+/* Nordic Light Theme for Charging View */
+
+.charging-view {
+    min-height: var(--fullscreen-height-charging);
+    padding: 1rem;
+    color: #1e293b;
+}
+
+/* Header */
+.charging-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.charging-header-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.charging-header-title vaadin-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #10b981;
+}
+
+.charging-header-title h1 {
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: #334155;
+    margin: 0;
+}
+
+.charging-badge {
+    font-size: 0.75rem;
+    color: #0284c7;
+    background: #e0f2fe;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+}
+
+/* Card Base */
+.charging-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    border-radius: 1.5rem;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+/* Car Card */
+.car-card {
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.car-card:hover {
+    border-color: #38bdf8;
+}
+
+.car-image {
+    height: 6rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.car-image img {
+    max-height: 100%;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+.car-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.car-name {
+    font-weight: 500;
+    font-size: 1.125rem;
+    color: #334155;
+    margin: 0;
+}
+
+.car-capacity {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+/* Stats Row */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 300;
+    margin: 0;
+}
+
+.stat-value.current {
+    color: #0284c7;
+}
+
+.stat-value.target {
+    color: #059669;
+}
+
+.stat-value.range {
+    color: #475569;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+/* Section Header */
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #64748b;
+    margin-bottom: 1rem;
+}
+
+.section-header vaadin-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+.section-header span {
+    font-size: 0.875rem;
+}
+
+/* Charge Level Bar */
+.charge-bar-container {
+    position: relative;
+    height: 3rem;
+    margin-bottom: 0.75rem;
+}
+
+.charge-bar-background {
+    position: absolute;
+    inset: 0;
+    background: #e2e8f0;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.charge-bar-current {
+    position: absolute;
+    height: 100%;
+    background: #bae6fd;
+}
+
+.charge-bar-fill {
+    position: absolute;
+    height: 100%;
+    background: linear-gradient(to right, #0ea5e9, #38bdf8);
+}
+
+.charge-marker {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: #0ea5e9;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+}
+
+.charge-marker.target {
+    background: #10b981;
+}
+
+/* Speed Section */
+.speed-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.speed-value {
+    color: #0284c7;
+    font-weight: 500;
+}
+
+.speed-slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 0.5rem;
+}
+
+.speed-slider-labels .current {
+    color: #475569;
+}
+
+/* Advanced Toggle */
+.advanced-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #0284c7;
+    margin-top: 1rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.advanced-toggle vaadin-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Advanced Section */
+.advanced-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+.advanced-row {
+    margin-bottom: 1rem;
+}
+
+.advanced-row-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: #94a3b8;
+    margin-bottom: 0.5rem;
+}
+
+.phase-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.phase-button {
+    flex: 1;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.phase-button.active {
+    background: #0ea5e9;
+    color: white;
+}
+
+.phase-button:not(.active) {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.loss-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+}
+
+.loss-row .label {
+    color: #94a3b8;
+}
+
+.loss-row .value {
+    color: #d97706;
+}
+
+/* Schedule Section */
+.schedule-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.schedule-item label {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.schedule-item input[type="time"] {
+    width: 100%;
+    background: #f1f5f9;
+    border: none;
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+    text-align: center;
+    font-size: 1.125rem;
+    color: #334155;
+}
+
+.schedule-end {
+    background: #ecfdf5;
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+    text-align: center;
+    font-size: 1.125rem;
+    color: #059669;
+}
+
+.duration-display {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.duration-value {
+    font-size: 2.5rem;
+    font-weight: 300;
+    color: #334155;
+    margin: 0;
+}
+
+.duration-label {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+/* Summary Card */
+.summary-card {
+    background: linear-gradient(to bottom right, #e0f2fe, #ecfdf5);
+    border: 1px solid #bae6fd;
+    border-radius: 1.5rem;
+    padding: 1.25rem;
+}
+
+.summary-title {
+    font-weight: 500;
+    color: #334155;
+    margin: 0 0 1rem 0;
+}
+
+.summary-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+}
+
+.summary-row .label {
+    color: #64748b;
+}
+
+.summary-row .value {
+    color: #334155;
+}
+
+.summary-row .value.lost {
+    color: #d97706;
+}
+
+.summary-divider {
+    border-top: 1px solid #bae6fd;
+    padding-top: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.summary-cost {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.summary-cost .label {
+    color: #64748b;
+}
+
+.summary-cost .value {
+    font-size: 1.875rem;
+    font-weight: 300;
+    color: #059669;
+}
+
+/* Footer */
+.charging-footer {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 1.5rem;
+}
+
+/* Vaadin Component Overrides */
+.charging-view vaadin-number-field,
+.charging-view vaadin-integer-field,
+.charging-view vaadin-select,
+.charging-view vaadin-time-picker,
+.charging-view vaadin-date-time-picker {
+    --vaadin-input-field-border-radius: 0.75rem;
+    --vaadin-input-field-background: #f1f5f9;
+}
+
+.charging-view vaadin-number-field::part(input-field),
+.charging-view vaadin-integer-field::part(input-field),
+.charging-view vaadin-select::part(input-field),
+.charging-view vaadin-time-picker::part(input-field) {
+    background: #f1f5f9;
+    border-radius: 0.75rem;
+}
+
+/* Slider styling */
+.charging-view input[type="range"] {
+    width: 100%;
+    height: 0.5rem;
+    background: #e2e8f0;
+    border-radius: 0.5rem;
+    appearance: none;
+    cursor: pointer;
+}
+
+.charging-view input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    background: #0ea5e9;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.charging-view input[type="range"]::-moz-range-thumb {
+    width: 1.25rem;
+    height: 1.25rem;
+    background: #0ea5e9;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Hide helper text on small screens to match design */
+.charging-view vaadin-number-field::part(helper-text),
+.charging-view vaadin-integer-field::part(helper-text),
+.charging-view vaadin-select::part(helper-text) {
+    display: none;
+}
+
+/* Car Selector Dropdown */
+.car-selector-dropdown {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+/* Fix car selector fields visibility */
+.car-selector-dropdown vaadin-combo-box,
+.car-selector-dropdown vaadin-integer-field {
+    --vaadin-input-field-value-color: #334155;
+    --vaadin-input-field-label-color: #64748b;
+    --lumo-contrast-60pct: #64748b;
+}
+
+.car-selector-dropdown vaadin-combo-box::part(input-field),
+.car-selector-dropdown vaadin-integer-field::part(input-field) {
+    background: #f8fafc;
+    color: #334155;
+}
+
+.car-selector-dropdown vaadin-combo-box input,
+.car-selector-dropdown vaadin-integer-field input {
+    color: #334155 !important;
+    -webkit-text-fill-color: #334155 !important;
+}
+
+.car-chevron {
+    transition: transform 0.2s ease-in-out;
+}
+
+.car-chevron.expanded {
+    transform: rotate(180deg);
+}
+
+/* SOC Sliders */
+.soc-sliders-container {
+    margin-top: 1rem;
+}
+
+.soc-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.soc-slider-label {
+    min-width: 4rem;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.soc-slider {
+    flex: 1;
+    height: 0.375rem;
+    background: #e2e8f0;
+    border-radius: 0.5rem;
+    appearance: none;
+    cursor: pointer;
+}
+
+.soc-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    background: #0ea5e9;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.soc-slider::-moz-range-thumb {
+    width: 1.25rem;
+    height: 1.25rem;
+    background: #0ea5e9;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.target-soc-slider::-webkit-slider-thumb {
+    background: #10b981;
+}
+
+.target-soc-slider::-moz-range-thumb {
+    background: #10b981;
+}
+
+/* Speed Slider */
+.speed-slider {
+    width: 100%;
+    height: 0.375rem;
+    background: #e2e8f0;
+    border-radius: 0.5rem;
+    appearance: none;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+}
+
+.speed-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    background: #0ea5e9;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.speed-slider::-moz-range-thumb {
+    width: 1.25rem;
+    height: 1.25rem;
+    background: #0ea5e9;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Voltage and Loss Sliders in Advanced Section */
+.voltage-slider,
+.loss-slider {
+    width: 100%;
+    height: 0.375rem;
+    background: #e2e8f0;
+    border-radius: 0.5rem;
+    appearance: none;
+    cursor: pointer;
+}
+
+.voltage-slider::-webkit-slider-thumb,
+.loss-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 1rem;
+    height: 1rem;
+    background: #0ea5e9;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.voltage-slider::-moz-range-thumb,
+.loss-slider::-moz-range-thumb {
+    width: 1rem;
+    height: 1rem;
+    background: #0ea5e9;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.loss-slider::-webkit-slider-thumb {
+    background: #d97706;
+}
+
+.loss-slider::-moz-range-thumb {
+    background: #d97706;
+}
+
+/* Schedule Section Fix */
+.schedule-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-bottom: 0.5rem;
+}
+
+.schedule-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.schedule-item {
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* Prevent grid blowout */
+    flex: 1;
+}
+
+/* Time display (both start and end) - base styling */
+.schedule-time-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+    border-radius: 0.75rem;
+    text-align: center;
+    font-size: 1.125rem;
+    color: #334155;
+    font-weight: 500;
+    height: 42px;
+    min-height: 42px;
+    max-height: 42px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+/* Green highlight for calculated time */
+.schedule-time-display.calculated {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+/* Time picker styling to match the display exactly */
+.schedule-item vaadin-time-picker {
+    --vaadin-input-field-border-radius: 0.75rem;
+    --vaadin-input-field-background: #f1f5f9;
+    width: 100%;
+    height: 42px;
+    padding: 0; /* Remove default Vaadin padding for labels/helpers */
+}
+
+.schedule-item vaadin-time-picker::part(input-field) {
+    background: #f1f5f9;
+    border-radius: 0.75rem;
+    min-height: 42px;
+    height: 42px;
+    max-height: 42px;
+    padding: 0 0.5rem;
+    box-sizing: border-box;
+}
+
+.schedule-item vaadin-time-picker::part(toggle-button) {
+    padding: 0;
+    margin: 0;
+    width: 1.5rem;
+    opacity: 0.5;
+}
+
+.schedule-item vaadin-time-picker input {
+    text-align: center;
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: #334155;
+}
+
+/* Legacy classes for backwards compatibility */
+.schedule-end {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ecfdf5;
+    border-radius: 0.75rem;
+    text-align: center;
+    font-size: 1.125rem;
+    color: #059669;
+    font-weight: 500;
+    height: 48px;
+    min-height: 48px;
+    max-height: 48px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.schedule-start-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ecfdf5;
+    border-radius: 0.75rem;
+    text-align: center;
+    font-size: 1.125rem;
+    color: #059669;
+    font-weight: 500;
+    height: 48px;
+    min-height: 48px;
+    max-height: 48px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+/* Schedule Toggle */
+.schedule-toggle {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+.schedule-toggle-btn {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.schedule-toggle-btn.active {
+    background: #0ea5e9;
+    color: white;
+}
+
+.schedule-toggle-btn:hover:not(.active) {
+    background: #e2e8f0;
+}
+
+/* Draggable Charge Markers */
+.charge-bar-container.interactive {
+    cursor: pointer;
+}
+
+.charge-marker.draggable {
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+}
+
+.charge-marker.draggable:active {
+    cursor: grabbing;
+}
+
+/* ============================================
+   DARK THEME STYLES
+   ============================================ */
+
+/* Main view */
+[theme~="dark"] .charging-view {
+    color: #ffffff;
+}
+
+/* Header */
+[theme~="dark"] .charging-header-title h1 {
+    color: #ffffff;
+}
+
+[theme~="dark"] .charging-header-title vaadin-icon {
+    color: #4ade80;
+}
+
+[theme~="dark"] .charging-badge {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+/* Card Base */
+[theme~="dark"] .charging-card {
+    background: rgba(31, 41, 55, 0.5);
+    border-color: rgba(55, 65, 81, 0.5);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+/* Car Card */
+[theme~="dark"] .car-card:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+[theme~="dark"] .car-name {
+    color: #ffffff;
+}
+
+[theme~="dark"] .car-capacity {
+    color: #9ca3af;
+}
+
+/* Stats Row */
+[theme~="dark"] .stats-row {
+    border-top-color: rgba(55, 65, 81, 0.5);
+}
+
+[theme~="dark"] .stat-value.current {
+    color: #60a5fa;
+}
+
+[theme~="dark"] .stat-value.target {
+    color: #4ade80;
+}
+
+[theme~="dark"] .stat-value.range {
+    color: #d1d5db;
+}
+
+[theme~="dark"] .stat-label {
+    color: #9ca3af;
+}
+
+/* Section Header */
+[theme~="dark"] .section-header {
+    color: #9ca3af;
+}
+
+/* Charge Level Bar */
+[theme~="dark"] .charge-bar-background {
+    background: rgba(55, 65, 81, 0.8);
+}
+
+[theme~="dark"] .charge-bar-current {
+    background: rgba(59, 130, 246, 0.3);
+}
+
+[theme~="dark"] .charge-bar-fill {
+    background: linear-gradient(to right, #3b82f6, #60a5fa);
+}
+
+[theme~="dark"] .charge-marker {
+    background: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+[theme~="dark"] .charge-marker.target {
+    background: #22c55e;
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
+}
+
+/* Speed Section */
+[theme~="dark"] .speed-value {
+    color: #60a5fa;
+}
+
+[theme~="dark"] .speed-slider-labels {
+    color: #9ca3af;
+}
+
+[theme~="dark"] .speed-slider-labels .current {
+    color: #d1d5db;
+}
+
+/* Advanced Toggle */
+[theme~="dark"] .advanced-toggle {
+    color: #60a5fa;
+}
+
+/* Advanced Section */
+[theme~="dark"] .advanced-section {
+    border-top-color: rgba(55, 65, 81, 0.5);
+}
+
+[theme~="dark"] .advanced-row-header {
+    color: #9ca3af;
+}
+
+[theme~="dark"] .phase-button.active {
+    background: #3b82f6;
+    color: white;
+}
+
+[theme~="dark"] .phase-button:not(.active) {
+    background: rgba(55, 65, 81, 0.8);
+    color: #9ca3af;
+}
+
+[theme~="dark"] .phase-button:not(.active):hover {
+    background: rgba(75, 85, 99, 0.8);
+}
+
+[theme~="dark"] .loss-row .label {
+    color: #9ca3af;
+}
+
+[theme~="dark"] .loss-row .value {
+    color: #fbbf24;
+}
+
+/* Schedule Section */
+[theme~="dark"] .schedule-label {
+    color: #9ca3af;
+}
+
+[theme~="dark"] .schedule-time-display {
+    background: rgba(55, 65, 81, 0.8);
+    color: #ffffff;
+}
+
+[theme~="dark"] .schedule-time-display.calculated {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+}
+
+[theme~="dark"] .schedule-end {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+}
+
+[theme~="dark"] .schedule-start-display {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+}
+
+[theme~="dark"] .duration-value {
+    color: #ffffff;
+}
+
+[theme~="dark"] .duration-label {
+    color: #9ca3af;
+}
+
+/* Summary Card */
+[theme~="dark"] .summary-card {
+    background: linear-gradient(to bottom right, rgba(30, 58, 138, 0.5), rgba(30, 64, 175, 0.3));
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+[theme~="dark"] .summary-title {
+    color: #ffffff;
+}
+
+[theme~="dark"] .summary-row .label {
+    color: #9ca3af;
+}
+
+[theme~="dark"] .summary-row .value {
+    color: #ffffff;
+}
+
+[theme~="dark"] .summary-row .value.lost {
+    color: #fbbf24;
+}
+
+[theme~="dark"] .summary-divider {
+    border-top-color: rgba(59, 130, 246, 0.3);
+}
+
+[theme~="dark"] .summary-cost .label {
+    color: #9ca3af;
+}
+
+[theme~="dark"] .summary-cost .value {
+    color: #4ade80;
+}
+
+/* Footer */
+[theme~="dark"] .charging-footer {
+    color: #6b7280;
+}
+
+/* Vaadin Component Overrides for Dark Theme */
+[theme~="dark"] .charging-view vaadin-number-field,
+[theme~="dark"] .charging-view vaadin-integer-field,
+[theme~="dark"] .charging-view vaadin-select,
+[theme~="dark"] .charging-view vaadin-time-picker,
+[theme~="dark"] .charging-view vaadin-combo-box,
+[theme~="dark"] .charging-view vaadin-date-time-picker {
+    --vaadin-input-field-background: rgba(55, 65, 81, 0.8);
+    --vaadin-input-field-value-color: #ffffff;
+    --vaadin-input-field-label-color: #9ca3af;
+    --vaadin-input-field-border-color: transparent;
+    --vaadin-input-field-border-width: 1px;
+    --_focus-ring-color: rgba(59, 130, 246, 0.5);
+    --_focus-ring-width: 2px;
+}
+
+[theme~="dark"] .charging-view vaadin-number-field::part(input-field),
+[theme~="dark"] .charging-view vaadin-integer-field::part(input-field),
+[theme~="dark"] .charging-view vaadin-select::part(input-field),
+[theme~="dark"] .charging-view vaadin-time-picker::part(input-field),
+[theme~="dark"] .charging-view vaadin-combo-box::part(input-field) {
+    background: rgba(55, 65, 81, 0.8);
+    color: #ffffff;
+    border: 1px solid transparent;
+}
+
+/* Focus state - subtle blue glow instead of white ring */
+[theme~="dark"] .charging-view vaadin-number-field[focused]::part(input-field),
+[theme~="dark"] .charging-view vaadin-integer-field[focused]::part(input-field),
+[theme~="dark"] .charging-view vaadin-select[focused]::part(input-field),
+[theme~="dark"] .charging-view vaadin-time-picker[focused]::part(input-field),
+[theme~="dark"] .charging-view vaadin-combo-box[focused]::part(input-field) {
+    border-color: rgba(59, 130, 246, 0.6);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+/* Hide default focus ring pseudo-element */
+[theme~="dark"] .charging-view vaadin-number-field::part(input-field)::after,
+[theme~="dark"] .charging-view vaadin-integer-field::part(input-field)::after,
+[theme~="dark"] .charging-view vaadin-select::part(input-field)::after,
+[theme~="dark"] .charging-view vaadin-time-picker::part(input-field)::after,
+[theme~="dark"] .charging-view vaadin-combo-box::part(input-field)::after {
+    display: none !important;
+}
+
+/* Slider styling for Dark Theme */
+[theme~="dark"] .charging-view input[type="range"] {
+    background: rgba(55, 65, 81, 0.8);
+}
+
+[theme~="dark"] .charging-view input[type="range"]::-webkit-slider-thumb {
+    background: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+[theme~="dark"] .charging-view input[type="range"]::-moz-range-thumb {
+    background: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+/* Car Selector Dropdown for Dark Theme */
+[theme~="dark"] .car-selector-dropdown {
+    border-top-color: rgba(55, 65, 81, 0.5);
+}
+
+[theme~="dark"] .car-selector-dropdown vaadin-combo-box,
+[theme~="dark"] .car-selector-dropdown vaadin-integer-field {
+    --vaadin-input-field-value-color: #ffffff;
+    --vaadin-input-field-label-color: #9ca3af;
+    --lumo-contrast-60pct: #9ca3af;
+}
+
+[theme~="dark"] .car-selector-dropdown vaadin-combo-box::part(input-field),
+[theme~="dark"] .car-selector-dropdown vaadin-integer-field::part(input-field) {
+    background: rgba(55, 65, 81, 0.8);
+    color: #ffffff;
+}
+
+[theme~="dark"] .car-selector-dropdown vaadin-combo-box input,
+[theme~="dark"] .car-selector-dropdown vaadin-integer-field input {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+/* SOC Sliders for Dark Theme */
+[theme~="dark"] .soc-slider-label {
+    color: #9ca3af;
+}
+
+[theme~="dark"] .soc-slider {
+    background: rgba(55, 65, 81, 0.8);
+}
+
+[theme~="dark"] .soc-slider::-webkit-slider-thumb {
+    background: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+[theme~="dark"] .soc-slider::-moz-range-thumb {
+    background: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+[theme~="dark"] .target-soc-slider::-webkit-slider-thumb {
+    background: #22c55e;
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
+}
+
+[theme~="dark"] .target-soc-slider::-moz-range-thumb {
+    background: #22c55e;
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
+}
+
+/* Speed Slider for Dark Theme */
+[theme~="dark"] .speed-slider {
+    background: rgba(55, 65, 81, 0.8);
+}
+
+[theme~="dark"] .speed-slider::-webkit-slider-thumb {
+    background: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+[theme~="dark"] .speed-slider::-moz-range-thumb {
+    background: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+/* Voltage and Loss Sliders for Dark Theme */
+[theme~="dark"] .voltage-slider,
+[theme~="dark"] .loss-slider {
+    background: rgba(55, 65, 81, 0.8);
+}
+
+[theme~="dark"] .voltage-slider::-webkit-slider-thumb {
+    background: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+[theme~="dark"] .voltage-slider::-moz-range-thumb {
+    background: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+[theme~="dark"] .loss-slider::-webkit-slider-thumb {
+    background: #fbbf24;
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+}
+
+[theme~="dark"] .loss-slider::-moz-range-thumb {
+    background: #fbbf24;
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+}
+
+/* Schedule Toggle for Dark Theme */
+[theme~="dark"] .schedule-toggle {
+    border-top-color: rgba(55, 65, 81, 0.5);
+}
+
+[theme~="dark"] .schedule-toggle-btn {
+    background: rgba(55, 65, 81, 0.8);
+    color: #9ca3af;
+}
+
+[theme~="dark"] .schedule-toggle-btn.active {
+    background: #3b82f6;
+    color: white;
+}
+
+[theme~="dark"] .schedule-toggle-btn:hover:not(.active) {
+    background: rgba(75, 85, 99, 0.8);
+}
+
+/* Time picker in dark theme - aggressive overrides */
+[theme~="dark"] .schedule-item vaadin-time-picker {
+    --vaadin-input-field-background: rgba(55, 65, 81, 0.8);
+    --vaadin-input-field-border-color: transparent;
+    --vaadin-input-field-focused-border-color: rgba(59, 130, 246, 0.5);
+    --vaadin-input-field-hovered-border-color: rgba(75, 85, 99, 0.8);
+    --lumo-contrast-10pct: rgba(55, 65, 81, 0.8);
+    --lumo-contrast-50pct: #9ca3af;
+    --lumo-primary-color: #3b82f6;
+    --lumo-primary-color-50pct: rgba(59, 130, 246, 0.5);
+    --_focus-ring-color: rgba(59, 130, 246, 0.5);
+    --_focus-ring-width: 0;
+    padding: 0; /* Remove default Vaadin padding for labels/helpers */
+}
+
+[theme~="dark"] .schedule-item vaadin-time-picker::part(input-field) {
+    background: rgba(55, 65, 81, 0.8) !important;
+    border: 1px solid transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+[theme~="dark"] .schedule-item vaadin-time-picker[focused]::part(input-field),
+[theme~="dark"] .schedule-item vaadin-time-picker[opened]::part(input-field) {
+    border-color: rgba(59, 130, 246, 0.5) !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+    outline: none !important;
+}
+
+[theme~="dark"] .schedule-item vaadin-time-picker input {
+    color: #ffffff;
+}
+
+/* Remove Vaadin's default focus ring in dark theme */
+[theme~="dark"] .schedule-item vaadin-time-picker::part(input-field)::after {
+    display: none !important;
+    box-shadow: none !important;
+}
+
+[theme~="dark"] .charging-view vaadin-time-picker {
+    --lumo-primary-color: #3b82f6;
+    --lumo-primary-color-50pct: rgba(59, 130, 246, 0.5);
+    --_focus-ring-color: rgba(59, 130, 246, 0.5);
+}
+
+/* Global dark theme overrides for time picker overlay */
+html[theme~="dark"] vaadin-time-picker-overlay,
+html[theme~="dark"] vaadin-time-picker-overlay::part(overlay),
+html[theme~="dark"] vaadin-time-picker-overlay::part(content) {
+    background: #1f2937 !important;
+    background-color: #1f2937 !important;
+    --lumo-base-color: #1f2937;
+    --lumo-body-text-color: #ffffff;
+    --lumo-secondary-text-color: #9ca3af;
+}
+
+/* Target the scroller inside the overlay */
+html[theme~="dark"] vaadin-time-picker-scroller {
+    background: #1f2937 !important;
+    background-color: #1f2937 !important;
+    --lumo-base-color: #1f2937;
+}
+
+html[theme~="dark"] vaadin-time-picker-item {
+    color: #ffffff !important;
+    background: #1f2937 !important;
+    --lumo-body-text-color: #ffffff;
+}
+
+html[theme~="dark"] vaadin-time-picker-item:hover {
+    background: rgba(59, 130, 246, 0.2) !important;
+}
+
+html[theme~="dark"] vaadin-time-picker-item[focused] {
+    background: rgba(59, 130, 246, 0.3) !important;
+}
+
+html[theme~="dark"] vaadin-time-picker-item[selected] {
+    background: rgba(59, 130, 246, 0.4) !important;
+}
+
+/* Global combo-box overlay styling for dark theme */
+html[theme~="dark"] vaadin-combo-box-overlay,
+html[theme~="dark"] vaadin-combo-box-overlay::part(overlay),
+html[theme~="dark"] vaadin-combo-box-overlay::part(content) {
+    background: #1f2937 !important;
+    background-color: #1f2937 !important;
+    --lumo-base-color: #1f2937;
+}
+
+html[theme~="dark"] vaadin-combo-box-overlay vaadin-combo-box-item {
+    color: #ffffff;
+    --lumo-body-text-color: #ffffff;
+}
+
+html[theme~="dark"] vaadin-combo-box-overlay vaadin-combo-box-item:hover {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+html[theme~="dark"] vaadin-combo-box-overlay vaadin-combo-box-item[focused] {
+    background: rgba(59, 130, 246, 0.3);
+}

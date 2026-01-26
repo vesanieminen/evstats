@@ -1,0 +1,10 @@
+/* Dark theme styling for combo-box overlay (used by time picker) */
+:host([theme~="dark"]) [part="overlay"] {
+    background: #1f2937;
+    background-color: #1f2937;
+}
+
+:host([theme~="dark"]) [part="content"] {
+    background: #1f2937;
+    background-color: #1f2937;
+}

@@ -48,6 +48,20 @@ public class SettingsDialog extends Dialog {
                 .then(String.class, darkMode -> {
                             if ("dark".equals(darkMode)) {
                                 setThemeButtonMode(themeButton, LineAwesomeIcon.SUN_SOLID, "Switch to light mode");
+                                // Initialize MutationObserver for dark theme overlay propagation
+                                UI.getCurrent().getPage().executeJs("""
+                                    if (!window._themeObserver) {
+                                        window._themeObserver = new MutationObserver((mutations) => {
+                                            const theme = document.documentElement.getAttribute('theme');
+                                            if (theme === 'dark') {
+                                                document.querySelectorAll('vaadin-combo-box-overlay, vaadin-time-picker-overlay, vaadin-date-picker-overlay').forEach(el => {
+                                                    if (!el.hasAttribute('theme')) el.setAttribute('theme', 'dark');
+                                                });
+                                            }
+                                        });
+                                        window._themeObserver.observe(document.body, { childList: true, subtree: true });
+                                    }
+                                """);
                             } else {
                                 setThemeButtonMode(themeButton, LineAwesomeIcon.MOON_SOLID, "Switch to dark mode");
                             }
@@ -59,10 +73,30 @@ public class SettingsDialog extends Dialog {
             ui.getPage().executeJs("return document.documentElement.getAttribute('theme');")
                     .then(String.class, darkMode -> {
                                 if ("dark".equals(darkMode)) {
-                                    ui.getPage().executeJs("document.documentElement.setAttribute('theme', '');");
+                                    ui.getPage().executeJs("""
+                                        document.documentElement.setAttribute('theme', '');
+                                        // Propagate theme to all overlay elements
+                                        document.querySelectorAll('vaadin-combo-box-overlay, vaadin-time-picker-overlay, vaadin-date-picker-overlay').forEach(el => el.removeAttribute('theme'));
+                                    """);
                                     setThemeButtonMode(themeButton, LineAwesomeIcon.MOON_SOLID, "Switch to dark mode");
                                 } else {
-                                    ui.getPage().executeJs("document.documentElement.setAttribute('theme', 'dark');");
+                                    ui.getPage().executeJs("""
+                                        document.documentElement.setAttribute('theme', 'dark');
+                                        // Propagate theme to all overlay elements
+                                        document.querySelectorAll('vaadin-combo-box-overlay, vaadin-time-picker-overlay, vaadin-date-picker-overlay').forEach(el => el.setAttribute('theme', 'dark'));
+                                        // Set up MutationObserver to propagate theme to new overlays
+                                        if (!window._themeObserver) {
+                                            window._themeObserver = new MutationObserver((mutations) => {
+                                                const theme = document.documentElement.getAttribute('theme');
+                                                if (theme === 'dark') {
+                                                    document.querySelectorAll('vaadin-combo-box-overlay, vaadin-time-picker-overlay, vaadin-date-picker-overlay').forEach(el => {
+                                                        if (!el.hasAttribute('theme')) el.setAttribute('theme', 'dark');
+                                                    });
+                                                }
+                                            });
+                                            window._themeObserver.observe(document.body, { childList: true, subtree: true });
+                                        }
+                                    """);
                                     setThemeButtonMode(themeButton, LineAwesomeIcon.SUN_SOLID, "Switch to light mode");
                                 }
                             }

@@ -1,0 +1,20 @@
+/* Dark theme styling for time picker input */
+:host([theme~="dark"]) [part="input-field"] {
+    background: rgba(55, 65, 81, 0.8);
+    border: none;
+    --_focus-ring-color: rgba(59, 130, 246, 0.5);
+}
+
+:host([theme~="dark"][focused]) [part="input-field"],
+:host([theme~="dark"][opened]) [part="input-field"] {
+    border: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+:host([theme~="dark"]) [part="input-field"]::after {
+    box-shadow: none;
+}
+
+:host([theme~="dark"]) input {
+    color: #ffffff;
+}

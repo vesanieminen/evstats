@@ -7,13 +7,13 @@ import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.page.WebStorage;
-import com.vaadin.flow.component.select.Select;
-import com.vesanieminen.views.charging.ChargingView;
+import com.vaadin.flow.component.timepicker.TimePicker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Service
 @Slf4j
@@ -59,17 +59,18 @@ public class ObjectMapperService {
         }
     }
 
-    public void readCalculationTarget(String key, Select<ChargingView.CalculationTarget> select) {
+    public void readLocalTime(String key, TimePicker timePicker) {
         if (key == null) {
             return;
         }
         try {
-            var value = objectMapper.readValue(key, new TypeReference<ChargingView.CalculationTarget>() {
+            var value = objectMapper.readValue(key, new TypeReference<LocalTime>() {
             });
-            select.setValue(value);
+            timePicker.setValue(value);
         } catch (IOException e) {
             log.info("Could not read value: %s".formatted(e.toString()));
         }
     }
+
 
 }

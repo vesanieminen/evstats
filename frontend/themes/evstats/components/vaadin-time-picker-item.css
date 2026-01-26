@@ -1,0 +1,23 @@
+/* Dark theme styling for time picker items */
+:host {
+    color: var(--lumo-body-text-color, inherit);
+    background: var(--lumo-base-color, transparent);
+}
+
+:host([theme~="dark"]) {
+    color: #ffffff;
+    --lumo-body-text-color: #ffffff;
+    background: #1f2937;
+}
+
+:host([theme~="dark"]:hover) {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+:host([theme~="dark"][focused]) {
+    background: rgba(59, 130, 246, 0.3);
+}
+
+:host([theme~="dark"][selected]) {
+    background: rgba(59, 130, 246, 0.4);
+}

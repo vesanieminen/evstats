@@ -1,0 +1,16 @@
+/* Dark theme styling for time picker overlay */
+:host([theme~="dark"]) [part="overlay"] {
+    background: #1f2937;
+    background-color: #1f2937;
+}
+
+:host([theme~="dark"]) [part="content"] {
+    background: #1f2937;
+    background-color: #1f2937;
+}
+
+:host([theme~="dark"]) {
+    --lumo-base-color: #1f2937;
+    --lumo-body-text-color: #ffffff;
+    --lumo-secondary-text-color: #9ca3af;
+}
