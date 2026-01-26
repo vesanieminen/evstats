@@ -279,15 +279,17 @@ public class ChargingView extends Main {
         speedHeader.add(headerLeft, powerValueSpan);
 
         // Amperage slider (native HTML input)
-        Html amperesSlider = new Html("<input type='range' min='1' max='32' value='16' class='single-slider' id='amperesSlider'/>");
-        amperesSlider.getElement().addEventListener("input", e -> {
-            // Value will be updated via JS
-        }).addEventData("event.target.value");
-
-        amperesSlider.getElement().executeJs(
-                "this.addEventListener('input', function(e) { " +
-                        "  $0.$server.updateAmperes(parseInt(e.target.value)); " +
-                        "});", getElement());
+        Div sliderContainer = new Div();
+        sliderContainer.getElement().setProperty("innerHTML",
+            "<input type='range' min='1' max='32' value='" + currentAmps + "' class='single-slider' id='amperesSlider'/>");
+        sliderContainer.getElement().executeJs(
+                "const input = this.querySelector('input');" +
+                "const view = $0;" +
+                "if (input) {" +
+                "  input.addEventListener('input', function(e) {" +
+                "    view.$server.updateAmperes(parseInt(e.target.value));" +
+                "  });" +
+                "}", getElement());
 
         amperesValueSpan = new Span("16 A");
         amperesValueSpan.addClassName("amperage-value");
@@ -326,7 +328,7 @@ public class ChargingView extends Main {
         advancedSection.add(phasesField, voltageField, chargingLossField);
         advancedDetails.add(advancedSection);
 
-        chargingSpeedCard.add(speedHeader, amperesSlider, amperesValueSpan, advancedDetails);
+        chargingSpeedCard.add(speedHeader, sliderContainer, amperesValueSpan, advancedDetails);
         add(chargingSpeedCard);
 
         // ===== SCHEDULE CARD =====

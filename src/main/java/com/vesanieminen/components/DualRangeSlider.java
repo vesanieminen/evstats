@@ -38,12 +38,16 @@ public class DualRangeSlider extends Component implements HasValue<HasValue.Valu
         // Listen for changes from the client
         lowValueListener = getElement().addEventListener("low-value-changed", event -> {
             double newLowValue = event.getEventData().getNumber("event.detail.value");
+            // Update server-side property to stay in sync
+            getElement().setProperty("lowValue", newLowValue);
             DualRangeValue newValue = new DualRangeValue(newLowValue, getHighValue());
             fireValueChangeEvent(newValue, true);
         }).addEventData("event.detail.value");
 
         highValueListener = getElement().addEventListener("high-value-changed", event -> {
             double newHighValue = event.getEventData().getNumber("event.detail.value");
+            // Update server-side property to stay in sync
+            getElement().setProperty("highValue", newHighValue);
             DualRangeValue newValue = new DualRangeValue(getLowValue(), newHighValue);
             fireValueChangeEvent(newValue, true);
         }).addEventData("event.detail.value");
