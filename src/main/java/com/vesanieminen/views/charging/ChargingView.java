@@ -133,8 +133,10 @@ public class ChargingView extends Main {
         vehicleSection.addClassName("vehicle-section");
 
         // SVG Car
-        Html carSvg = createCarSvg();
-        vehicleSection.add(carSvg);
+        Div carSvgContainer = new Div();
+        carSvgContainer.addClassName("car-svg-container");
+        carSvgContainer.getElement().setProperty("innerHTML", getCarSvgString());
+        vehicleSection.add(carSvgContainer);
 
         // Vehicle name
         Span vehicleName = new Span(selectedModel.name());
@@ -549,30 +551,29 @@ public class ChargingView extends Main {
         doCalculation();
     }
 
-    private Html createCarSvg() {
-        String svg = """
-                <svg viewBox="0 0 200 80" class="vehicle-svg" style="width: 180px; height: 80px;">
+    private String getCarSvgString() {
+        return """
+                <svg viewBox="0 0 200 80" style="width: 180px; height: 80px; display: block; margin: 0 auto;">
                     <defs>
                         <linearGradient id="carGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color: var(--lumo-contrast-60pct)"/>
-                            <stop offset="100%" style="stop-color: var(--lumo-contrast-70pct)"/>
+                            <stop offset="0%" stop-color="#6b7280"></stop>
+                            <stop offset="100%" stop-color="#4b5563"></stop>
                         </linearGradient>
                         <linearGradient id="windowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" style="stop-color: var(--lumo-primary-color-50pct)"/>
-                            <stop offset="100%" style="stop-color: var(--lumo-primary-color)"/>
+                            <stop offset="0%" stop-color="#60a5fa"></stop>
+                            <stop offset="100%" stop-color="#2563eb"></stop>
                         </linearGradient>
                     </defs>
-                    <ellipse cx="45" cy="65" rx="18" ry="18" fill="var(--lumo-contrast-90pct)"/>
-                    <ellipse cx="45" cy="65" rx="12" ry="12" fill="var(--lumo-contrast-50pct)"/>
-                    <ellipse cx="155" cy="65" rx="18" ry="18" fill="var(--lumo-contrast-90pct)"/>
-                    <ellipse cx="155" cy="65" rx="12" ry="12" fill="var(--lumo-contrast-50pct)"/>
-                    <path d="M20 50 Q25 25 60 20 L140 20 Q175 25 180 50 L180 55 Q180 60 175 60 L25 60 Q20 60 20 55 Z" fill="url(#carGrad)"/>
-                    <path d="M55 22 Q60 12 80 10 L120 10 Q140 12 145 22 L140 20 L60 20 Z" fill="url(#windowGrad)" opacity="0.9"/>
-                    <rect x="5" y="48" width="15" height="6" rx="2" fill="#fbbf24" opacity="0.8"/>
-                    <rect x="180" y="48" width="15" height="6" rx="2" fill="#ef4444" opacity="0.8"/>
+                    <ellipse cx="45" cy="65" rx="18" ry="18" fill="#1f2937"></ellipse>
+                    <ellipse cx="45" cy="65" rx="12" ry="12" fill="#6b7280"></ellipse>
+                    <ellipse cx="155" cy="65" rx="18" ry="18" fill="#1f2937"></ellipse>
+                    <ellipse cx="155" cy="65" rx="12" ry="12" fill="#6b7280"></ellipse>
+                    <path d="M20 50 Q25 25 60 20 L140 20 Q175 25 180 50 L180 55 Q180 60 175 60 L25 60 Q20 60 20 55 Z" fill="url(#carGrad)"></path>
+                    <path d="M55 22 Q60 12 80 10 L120 10 Q140 12 145 22 L140 20 L60 20 Z" fill="url(#windowGrad)" opacity="0.9"></path>
+                    <rect x="5" y="48" width="15" height="6" rx="2" fill="#fbbf24" opacity="0.9"></rect>
+                    <rect x="180" y="48" width="15" height="6" rx="2" fill="#ef4444" opacity="0.9"></rect>
                 </svg>
                 """;
-        return new Html(svg);
     }
 
     private void loadSettingsFromStorage() {
