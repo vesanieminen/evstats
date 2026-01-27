@@ -11,16 +11,25 @@ export class DualRangeSlider extends LitElement {
 
   @state() private dragging: 'low' | 'high' | null = null;
 
+  // Track values at drag start to know if we need to dispatch on drag end
+  private dragStartLowValue: number = 0;
+  private dragStartHighValue: number = 0;
+
   static styles = css`
     :host {
       display: block;
       position: relative;
-      height: 64px;
-      padding-top: 8px;
       --slider-track-color: var(--lumo-contrast-20pct, #e0e0e0);
       --slider-range-color: var(--lumo-primary-color, #1976d2);
       --slider-thumb-color: white;
       --slider-thumb-border: var(--lumo-primary-color, #1976d2);
+    }
+
+    .slider-container {
+      position: relative;
+      height: 24px;
+      display: flex;
+      align-items: center;
     }
 
     .track {
@@ -29,7 +38,6 @@ export class DualRangeSlider extends LitElement {
       height: 6px;
       background: var(--slider-track-color);
       border-radius: 3px;
-      top: 20px;
       cursor: pointer;
     }
 
@@ -38,7 +46,6 @@ export class DualRangeSlider extends LitElement {
       height: 6px;
       background: var(--slider-range-color);
       border-radius: 3px;
-      top: 20px;
       pointer-events: none;
     }
 
@@ -49,7 +56,6 @@ export class DualRangeSlider extends LitElement {
       background: var(--lumo-primary-color, #1976d2);
       border: 3px solid white;
       border-radius: 50%;
-      top: 14px;
       cursor: grab;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
       transform: translateX(-50%);
@@ -78,11 +84,27 @@ export class DualRangeSlider extends LitElement {
     .labels {
       display: flex;
       justify-content: space-between;
-      position: absolute;
       width: 100%;
-      bottom: 0;
-      font-size: var(--lumo-font-size-s, 14px);
-      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .label-column {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .label-column:last-child {
+      align-items: flex-end;
+    }
+
+    .label-text {
+      font-size: var(--lumo-font-size-xs, 12px);
+      color: var(--lumo-secondary-text-color, #6b7280);
+    }
+
+    .label-value {
+      font-size: var(--lumo-font-size-l, 18px);
+      font-weight: 600;
       color: var(--lumo-body-text-color, #333);
     }
   `;
@@ -92,26 +114,34 @@ export class DualRangeSlider extends LitElement {
     const highPercent = this.valueToPercent(this.highValue);
 
     return html`
-      <div class="track" @click=${this.handleTrackClick}></div>
-      <div
-        class="range"
-        style="left: ${lowPercent}%; width: ${highPercent - lowPercent}%"
-      ></div>
-      <div
-        class="thumb low ${this.dragging === 'low' ? 'dragging' : ''}"
-        style="left: ${lowPercent}%"
-        @mousedown=${(e: MouseEvent) => this.startDrag(e, 'low')}
-        @touchstart=${(e: TouchEvent) => this.startDrag(e, 'low')}
-      ></div>
-      <div
-        class="thumb high ${this.dragging === 'high' ? 'dragging' : ''}"
-        style="left: ${highPercent}%"
-        @mousedown=${(e: MouseEvent) => this.startDrag(e, 'high')}
-        @touchstart=${(e: TouchEvent) => this.startDrag(e, 'high')}
-      ></div>
       <div class="labels">
-        <span>${this.lowValue}%</span>
-        <span>${this.highValue}%</span>
+        <div class="label-column">
+          <span class="label-text">Current</span>
+          <span class="label-value">${this.lowValue}%</span>
+        </div>
+        <div class="label-column">
+          <span class="label-text">Target</span>
+          <span class="label-value">${this.highValue}%</span>
+        </div>
+      </div>
+      <div class="slider-container">
+        <div class="track" @click=${this.handleTrackClick}></div>
+        <div
+          class="range"
+          style="left: ${lowPercent}%; width: ${highPercent - lowPercent}%"
+        ></div>
+        <div
+          class="thumb low ${this.dragging === 'low' ? 'dragging' : ''}"
+          style="left: ${lowPercent}%"
+          @mousedown=${(e: MouseEvent) => this.startDrag(e, 'low')}
+          @touchstart=${(e: TouchEvent) => this.startDrag(e, 'low')}
+        ></div>
+        <div
+          class="thumb high ${this.dragging === 'high' ? 'dragging' : ''}"
+          style="left: ${highPercent}%"
+          @mousedown=${(e: MouseEvent) => this.startDrag(e, 'high')}
+          @touchstart=${(e: TouchEvent) => this.startDrag(e, 'high')}
+        ></div>
       </div>
     `;
   }
@@ -144,6 +174,10 @@ export class DualRangeSlider extends LitElement {
     e.preventDefault();
     this.dragging = thumb;
 
+    // Store initial values to compare on drag end
+    this.dragStartLowValue = this.lowValue;
+    this.dragStartHighValue = this.highValue;
+
     const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
       const clientX =
         moveEvent instanceof MouseEvent
@@ -160,10 +194,11 @@ export class DualRangeSlider extends LitElement {
       );
       const value = this.percentToValue(percent);
 
+      // Update UI only (no server dispatch) during drag
       if (thumb === 'low') {
-        this.setLowValue(Math.min(value, this.highValue - this.step * 5));
+        this.updateLowValueUI(Math.min(value, this.highValue - this.step * 5));
       } else {
-        this.setHighValue(Math.max(value, this.lowValue + this.step * 5));
+        this.updateHighValueUI(Math.max(value, this.lowValue + this.step * 5));
       }
     };
 
@@ -173,6 +208,14 @@ export class DualRangeSlider extends LitElement {
       document.removeEventListener('mouseup', handleEnd);
       document.removeEventListener('touchmove', handleMove);
       document.removeEventListener('touchend', handleEnd);
+
+      // Dispatch events only on drag end if values changed
+      if (this.lowValue !== this.dragStartLowValue) {
+        this.dispatchLowValueChanged();
+      }
+      if (this.highValue !== this.dragStartHighValue) {
+        this.dispatchHighValueChanged();
+      }
     };
 
     document.addEventListener('mousemove', handleMove);
@@ -181,31 +224,59 @@ export class DualRangeSlider extends LitElement {
     document.addEventListener('touchend', handleEnd);
   }
 
+  // Update UI only without dispatching to server (used during drag)
+  private updateLowValueUI(value: number) {
+    const clampedValue = Math.max(this.min, Math.min(value, this.max));
+    if (clampedValue !== this.lowValue) {
+      this.lowValue = clampedValue;
+    }
+  }
+
+  // Update UI only without dispatching to server (used during drag)
+  private updateHighValueUI(value: number) {
+    const clampedValue = Math.max(this.min, Math.min(value, this.max));
+    if (clampedValue !== this.highValue) {
+      this.highValue = clampedValue;
+    }
+  }
+
+  // Dispatch low value changed event to server
+  private dispatchLowValueChanged() {
+    this.dispatchEvent(
+      new CustomEvent('low-value-changed', {
+        detail: { value: this.lowValue },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  // Dispatch high value changed event to server
+  private dispatchHighValueChanged() {
+    this.dispatchEvent(
+      new CustomEvent('high-value-changed', {
+        detail: { value: this.highValue },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  // Set low value and immediately dispatch to server (used for track clicks)
   private setLowValue(value: number) {
     const clampedValue = Math.max(this.min, Math.min(value, this.max));
     if (clampedValue !== this.lowValue) {
       this.lowValue = clampedValue;
-      this.dispatchEvent(
-        new CustomEvent('low-value-changed', {
-          detail: { value: this.lowValue },
-          bubbles: true,
-          composed: true,
-        })
-      );
+      this.dispatchLowValueChanged();
     }
   }
 
+  // Set high value and immediately dispatch to server (used for track clicks)
   private setHighValue(value: number) {
     const clampedValue = Math.max(this.min, Math.min(value, this.max));
     if (clampedValue !== this.highValue) {
       this.highValue = clampedValue;
-      this.dispatchEvent(
-        new CustomEvent('high-value-changed', {
-          detail: { value: this.highValue },
-          bubbles: true,
-          composed: true,
-        })
-      );
+      this.dispatchHighValueChanged();
     }
   }
 }
