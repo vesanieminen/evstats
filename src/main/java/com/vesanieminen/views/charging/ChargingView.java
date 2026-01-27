@@ -27,6 +27,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vesanieminen.components.Card;
 import com.vesanieminen.components.DualRangeSlider;
 import com.vesanieminen.components.Ping;
+import com.vesanieminen.components.SingleRangeSlider;
 import com.vesanieminen.model.EVModel;
 import com.vesanieminen.services.LiukuriService;
 import com.vesanieminen.services.ObjectMapperService;
@@ -76,11 +77,10 @@ public class ChargingView extends Main {
 
     // Charging speed fields
     private final Span powerValueSpan;
+    private final SingleRangeSlider amperesSlider;
     private final IntegerField phasesField;
     private final IntegerField voltageField;
     private final NumberField chargingLossField;
-    private int currentAmps = 16;
-    private Div amperesSliderContainer;
     private static final String AMPERES_STORAGE_KEY = "amperesSlider";
     private static final String VEHICLE_STORAGE_KEY = "vehicleSelect";
 
@@ -283,25 +283,15 @@ public class ChargingView extends Main {
 
         speedHeader.add(headerLeft, powerValueSpan);
 
-        // Amperage slider (native HTML input with label above)
-        amperesSliderContainer = new Div();
-        amperesSliderContainer.addClassName("amperage-slider-container");
-        amperesSliderContainer.getElement().setProperty("innerHTML",
-            "<div class='amperage-label'>" +
-            "  <span class='amperage-value' id='amperesValue'>" + currentAmps + " A</span>" +
-            "</div>" +
-            "<input type='range' min='1' max='32' value='" + currentAmps + "' class='single-slider' id='amperesSlider'/>");
-        amperesSliderContainer.getElement().executeJs(
-                "const input = this.querySelector('input');" +
-                "const valueSpan = this.querySelector('#amperesValue');" +
-                "const view = $0;" +
-                "if (input) {" +
-                "  input.addEventListener('input', function(e) {" +
-                "    const val = parseInt(e.target.value);" +
-                "    if (valueSpan) valueSpan.textContent = val + ' A';" +
-                "    view.$server.updateAmperes(val);" +
-                "  });" +
-                "}", getElement());
+        // Amperage slider
+        amperesSlider = new SingleRangeSlider(1, 32, preservedState.charge.getAmperes());
+        amperesSlider.setUnit("A");
+        amperesSlider.setWidthFull();
+        amperesSlider.addValueChangeListener(e -> {
+            preservedState.charge.setAmperes(e.getValue());
+            WebStorage.setItem(AMPERES_STORAGE_KEY, String.valueOf(e.getValue()));
+            doCalculation();
+        });
 
         // Advanced section
         Details advancedDetails = new Details("Advanced");
@@ -337,7 +327,7 @@ public class ChargingView extends Main {
         advancedSection.add(phasesField, voltageField, chargingLossField);
         advancedDetails.add(advancedSection);
 
-        chargingSpeedCard.add(speedHeader, amperesSliderContainer, advancedDetails);
+        chargingSpeedCard.add(speedHeader, amperesSlider, advancedDetails);
         add(chargingSpeedCard);
 
         // ===== SCHEDULE CARD =====
@@ -523,14 +513,6 @@ public class ChargingView extends Main {
         doCalculation();
     }
 
-    @com.vaadin.flow.component.ClientCallable
-    public void updateAmperes(int value) {
-        currentAmps = value;
-        preservedState.charge.setAmperes(value);
-        WebStorage.setItem(AMPERES_STORAGE_KEY, String.valueOf(value));
-        doCalculation();
-    }
-
     private void setCalculationMode(CalculationTarget mode) {
         preservedState.charge.setCalculationTarget(mode);
         if (mode == CalculationTarget.CHARGING_END) {
@@ -608,7 +590,7 @@ public class ChargingView extends Main {
         double targetSoc = socSlider.getHighValue();
         double capacity = batteryCapacityField.getValue() != null ? batteryCapacityField.getValue() : 75;
         double consumption = consumptionField.getValue() != null ? consumptionField.getValue() : 17;
-        int amperes = currentAmps;
+        int amperes = amperesSlider.getValue();
         int phases = phasesField.getValue() != null ? phasesField.getValue() : 3;
         int voltage = voltageField.getValue() != null ? voltageField.getValue() : 230;
         double chargingLoss = chargingLossField.getValue() != null ? chargingLossField.getValue() : 10;
@@ -756,14 +738,8 @@ public class ChargingView extends Main {
             if (item != null && !item.isEmpty()) {
                 try {
                     int amperes = Integer.parseInt(item);
-                    currentAmps = amperes;
+                    amperesSlider.setValue(amperes);
                     preservedState.charge.setAmperes(amperes);
-                    // Update both the slider and value span on the client side
-                    amperesSliderContainer.getElement().executeJs(
-                        "const input = this.querySelector('input');" +
-                        "const valueSpan = this.querySelector('#amperesValue');" +
-                        "if (input) input.value = $0;" +
-                        "if (valueSpan) valueSpan.textContent = $0 + ' A';", amperes);
                     doCalculation();
                 } catch (NumberFormatException e) {
                     // Ignore invalid values
