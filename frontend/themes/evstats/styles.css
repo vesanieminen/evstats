@@ -16,14 +16,14 @@ vaadin-button:hover {
 @supports (-webkit-touch-callout: none) {
     html {
         --fullscreen-height: calc(100% - 6.5rem);
-        --fullscreen-height-charging: calc(100vh + 65rem);
+        --fullscreen-height-charging-updated: calc(100vh + 80rem);
     }
 
     /* iOS PWA specific CSS */
     @media (display-mode: standalone) {
         html {
             --fullscreen-height: calc(100vh - 5rem);
-            --fullscreen-height-charging: calc(100vh + 58rem);
+            --fullscreen-height-charging-updated: calc(100vh + 73rem);
         }
     }
 }

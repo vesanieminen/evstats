@@ -129,7 +129,7 @@ public class ChargingView extends Main {
         this.mapperService = mapperService;
         this.settingsState = settingsState;
 
-        setHeight("var(--fullscreen-height-charging)");
+        setHeight("var(--fullscreen-height-charging-updated)");
 
         loadSettingsFromStorage();
 
