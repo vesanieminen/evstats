@@ -11,6 +11,10 @@ export class DualRangeSlider extends LitElement {
 
   @state() private dragging: 'low' | 'high' | null = null;
 
+  // Track values at drag start to know if we need to dispatch on drag end
+  private dragStartLowValue: number = 0;
+  private dragStartHighValue: number = 0;
+
   static styles = css`
     :host {
       display: block;
@@ -170,6 +174,10 @@ export class DualRangeSlider extends LitElement {
     e.preventDefault();
     this.dragging = thumb;
 
+    // Store initial values to compare on drag end
+    this.dragStartLowValue = this.lowValue;
+    this.dragStartHighValue = this.highValue;
+
     const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
       const clientX =
         moveEvent instanceof MouseEvent
@@ -186,10 +194,11 @@ export class DualRangeSlider extends LitElement {
       );
       const value = this.percentToValue(percent);
 
+      // Update UI only (no server dispatch) during drag
       if (thumb === 'low') {
-        this.setLowValue(Math.min(value, this.highValue - this.step * 5));
+        this.updateLowValueUI(Math.min(value, this.highValue - this.step * 5));
       } else {
-        this.setHighValue(Math.max(value, this.lowValue + this.step * 5));
+        this.updateHighValueUI(Math.max(value, this.lowValue + this.step * 5));
       }
     };
 
@@ -199,6 +208,14 @@ export class DualRangeSlider extends LitElement {
       document.removeEventListener('mouseup', handleEnd);
       document.removeEventListener('touchmove', handleMove);
       document.removeEventListener('touchend', handleEnd);
+
+      // Dispatch events only on drag end if values changed
+      if (this.lowValue !== this.dragStartLowValue) {
+        this.dispatchLowValueChanged();
+      }
+      if (this.highValue !== this.dragStartHighValue) {
+        this.dispatchHighValueChanged();
+      }
     };
 
     document.addEventListener('mousemove', handleMove);
@@ -207,31 +224,59 @@ export class DualRangeSlider extends LitElement {
     document.addEventListener('touchend', handleEnd);
   }
 
+  // Update UI only without dispatching to server (used during drag)
+  private updateLowValueUI(value: number) {
+    const clampedValue = Math.max(this.min, Math.min(value, this.max));
+    if (clampedValue !== this.lowValue) {
+      this.lowValue = clampedValue;
+    }
+  }
+
+  // Update UI only without dispatching to server (used during drag)
+  private updateHighValueUI(value: number) {
+    const clampedValue = Math.max(this.min, Math.min(value, this.max));
+    if (clampedValue !== this.highValue) {
+      this.highValue = clampedValue;
+    }
+  }
+
+  // Dispatch low value changed event to server
+  private dispatchLowValueChanged() {
+    this.dispatchEvent(
+      new CustomEvent('low-value-changed', {
+        detail: { value: this.lowValue },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  // Dispatch high value changed event to server
+  private dispatchHighValueChanged() {
+    this.dispatchEvent(
+      new CustomEvent('high-value-changed', {
+        detail: { value: this.highValue },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  // Set low value and immediately dispatch to server (used for track clicks)
   private setLowValue(value: number) {
     const clampedValue = Math.max(this.min, Math.min(value, this.max));
     if (clampedValue !== this.lowValue) {
       this.lowValue = clampedValue;
-      this.dispatchEvent(
-        new CustomEvent('low-value-changed', {
-          detail: { value: this.lowValue },
-          bubbles: true,
-          composed: true,
-        })
-      );
+      this.dispatchLowValueChanged();
     }
   }
 
+  // Set high value and immediately dispatch to server (used for track clicks)
   private setHighValue(value: number) {
     const clampedValue = Math.max(this.min, Math.min(value, this.max));
     if (clampedValue !== this.highValue) {
       this.highValue = clampedValue;
-      this.dispatchEvent(
-        new CustomEvent('high-value-changed', {
-          detail: { value: this.highValue },
-          bubbles: true,
-          composed: true,
-        })
-      );
+      this.dispatchHighValueChanged();
     }
   }
 }
