@@ -288,7 +288,6 @@ public class ChargingView extends Main {
         amperesSliderContainer.addClassName("amperage-slider-container");
         amperesSliderContainer.getElement().setProperty("innerHTML",
             "<div class='amperage-label'>" +
-            "  <span class='amperage-label-text'>Amperes</span>" +
             "  <span class='amperage-value' id='amperesValue'>" + currentAmps + " A</span>" +
             "</div>" +
             "<input type='range' min='1' max='32' value='" + currentAmps + "' class='single-slider' id='amperesSlider'/>");
