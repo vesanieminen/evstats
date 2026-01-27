@@ -8,15 +8,22 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.page.WebStorage;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.timepicker.TimePicker;
+import com.vaadin.flow.component.upload.Upload;
+import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
+import elemental.json.Json;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.PreserveOnRefresh;
@@ -40,6 +47,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Base64;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -83,6 +92,9 @@ public class ChargingView extends Main {
     private final NumberField chargingLossField;
     private static final String AMPERES_STORAGE_KEY = "amperesSlider";
     private static final String VEHICLE_STORAGE_KEY = "vehicleSelect";
+    private static final String CAR_IMAGE_STORAGE_KEY = "carImage";
+    private static final int MAX_IMAGE_SIZE_BYTES = 100 * 1024; // 100KB max
+    private Div carImageContainer;
 
     // Schedule fields
     private final DatePicker startDatePicker;
@@ -132,11 +144,11 @@ public class ChargingView extends Main {
         Div vehicleSection = new Div();
         vehicleSection.addClassName("vehicle-section");
 
-        // SVG Car
-        Div carSvgContainer = new Div();
-        carSvgContainer.addClassName("car-svg-container");
-        carSvgContainer.getElement().setProperty("innerHTML", getCarSvgString());
-        vehicleSection.add(carSvgContainer);
+        // Car image container
+        carImageContainer = new Div();
+        carImageContainer.addClassName("car-svg-container");
+        carImageContainer.getElement().setProperty("innerHTML", getCarSvgString());
+        vehicleSection.add(carImageContainer);
 
         // Vehicle name
         Span vehicleName = new Span(selectedModel.name());
@@ -240,7 +252,94 @@ public class ChargingView extends Main {
         });
 
         customFieldsDiv.add(batteryCapacityField, consumptionField);
-        vehicleSelectionDiv.add(vehicleSelect, customFieldsDiv);
+
+        // Car image change section
+        Div imageChangeSection = new Div();
+        imageChangeSection.addClassName("image-change-section");
+
+        Span imageLabel = new Span("Vehicle Image");
+        imageLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.TextColor.SECONDARY);
+
+        // File upload
+        MemoryBuffer buffer = new MemoryBuffer();
+        Upload upload = new Upload(buffer);
+        upload.setAcceptedFileTypes("image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml");
+        upload.setMaxFileSize(MAX_IMAGE_SIZE_BYTES);
+        upload.setDropAllowed(true);
+        upload.setWidthFull();
+
+        Div uploadLabel = new Div();
+        uploadLabel.setText("Upload image (max 100KB, recommended 180×80px)");
+        uploadLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.TextColor.SECONDARY);
+        upload.setDropLabelIcon(new Icon(VaadinIcon.UPLOAD));
+
+        upload.addSucceededListener(event -> {
+            try {
+                String mimeType = event.getMIMEType();
+                InputStream inputStream = buffer.getInputStream();
+                byte[] bytes = inputStream.readAllBytes();
+
+                if (bytes.length > MAX_IMAGE_SIZE_BYTES) {
+                    Notification.show("Image too large. Maximum size is 100KB.", 3000, Notification.Position.MIDDLE)
+                            .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    return;
+                }
+
+                String base64 = Base64.getEncoder().encodeToString(bytes);
+                String dataUrl = "data:" + mimeType + ";base64," + base64;
+                setCarImage(dataUrl);
+                WebStorage.setItem(CAR_IMAGE_STORAGE_KEY, dataUrl);
+                Notification.show("Image updated!", 2000, Notification.Position.MIDDLE)
+                        .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+            } catch (IOException ex) {
+                Notification.show("Failed to read image", 3000, Notification.Position.MIDDLE)
+                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
+
+        upload.addFileRejectedListener(event -> {
+            Notification.show(event.getErrorMessage(), 3000, Notification.Position.MIDDLE)
+                    .addThemeVariants(NotificationVariant.LUMO_ERROR);
+        });
+
+        // URL input
+        TextField imageUrlField = new TextField("Or enter image URL");
+        imageUrlField.setWidthFull();
+        imageUrlField.setPlaceholder("https://example.com/car.png");
+        imageUrlField.setClearButtonVisible(true);
+
+        Button loadUrlBtn = new Button("Load", new Icon(VaadinIcon.DOWNLOAD));
+        loadUrlBtn.addClickListener(e -> {
+            String url = imageUrlField.getValue();
+            if (url != null && !url.isBlank()) {
+                // Validate URL format
+                if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                    Notification.show("Please enter a valid URL starting with http:// or https://", 3000, Notification.Position.MIDDLE)
+                            .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                    return;
+                }
+                setCarImage(url);
+                WebStorage.setItem(CAR_IMAGE_STORAGE_KEY, url);
+                Notification.show("Image updated!", 2000, Notification.Position.MIDDLE)
+                        .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                imageUrlField.clear();
+            }
+        });
+
+        Div urlRow = new Div(imageUrlField, loadUrlBtn);
+        urlRow.addClassName("image-url-row");
+
+        // Reset button
+        Button resetImageBtn = new Button("Reset to Default", new Icon(VaadinIcon.REFRESH));
+        resetImageBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
+        resetImageBtn.addClickListener(e -> {
+            carImageContainer.getElement().setProperty("innerHTML", getCarSvgString());
+            WebStorage.removeItem(CAR_IMAGE_STORAGE_KEY);
+            Notification.show("Image reset to default", 2000, Notification.Position.MIDDLE);
+        });
+
+        imageChangeSection.add(imageLabel, upload, uploadLabel, urlRow, resetImageBtn);
+        vehicleSelectionDiv.add(vehicleSelect, customFieldsDiv, imageChangeSection);
 
         vehicleCard.add(vehicleSection, changeVehicleBtn, vehicleSelectionDiv);
         add(vehicleCard);
@@ -537,6 +636,19 @@ public class ChargingView extends Main {
         doCalculation();
     }
 
+    private void setCarImage(String imageSource) {
+        if (imageSource.startsWith("data:") || imageSource.startsWith("http")) {
+            // It's a data URL or external URL - use an img tag
+            String imgHtml = "<img src=\"" + imageSource.replace("\"", "&quot;") + "\" " +
+                    "style=\"width: 180px; height: 80px; object-fit: contain; display: block; margin: 0 auto;\" " +
+                    "alt=\"Vehicle\" onerror=\"this.style.display='none'\" />";
+            carImageContainer.getElement().setProperty("innerHTML", imgHtml);
+        } else {
+            // Fallback to default SVG
+            carImageContainer.getElement().setProperty("innerHTML", getCarSvgString());
+        }
+    }
+
     private String getCarSvgString() {
         return """
                 <svg viewBox="0 0 200 80" style="width: 180px; height: 80px; display: block; margin: 0 auto;">
@@ -756,6 +868,11 @@ public class ChargingView extends Main {
                         selectedModel = model;
                         vehicleSelect.setValue(model);
                     });
+            }
+        });
+        WebStorage.getItem(CAR_IMAGE_STORAGE_KEY, item -> {
+            if (item != null && !item.isEmpty()) {
+                setCarImage(item);
             }
         });
     }
