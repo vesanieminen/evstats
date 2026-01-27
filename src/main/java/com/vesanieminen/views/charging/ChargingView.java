@@ -2,13 +2,11 @@ package com.vesanieminen.views.charging;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
@@ -23,7 +21,6 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.timepicker.TimePicker;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
-import elemental.json.Json;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.PreserveOnRefresh;
@@ -48,7 +45,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Base64;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -57,6 +53,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 
@@ -131,6 +128,8 @@ public class ChargingView extends Main {
         this.liukuriService = liukuriService;
         this.mapperService = mapperService;
         this.settingsState = settingsState;
+
+        setHeight("var(--fullscreen-height-charging)");
 
         loadSettingsFromStorage();
 
