@@ -1,5 +1,5 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import {css, html, LitElement} from 'lit';
+import {customElement, property, state} from 'lit/decorators.js';
 
 @customElement('single-range-slider')
 export class SingleRangeSlider extends LitElement {
@@ -73,7 +73,7 @@ export class SingleRangeSlider extends LitElement {
       cursor: grab;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
       transform: translateX(-50%);
-      z-index: 2;
+      z-index: 1;
       touch-action: none;
     }
 
