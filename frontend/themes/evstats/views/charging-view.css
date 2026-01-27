@@ -7,7 +7,25 @@
     width: 100%;
     margin: 0 auto;
     padding: var(--lumo-space-m);
+    padding-bottom: var(--lumo-space-m);
     box-sizing: border-box;
+}
+
+/* iOS Safari scroll fix - extra bottom space to prevent scroll cutoff */
+@supports (-webkit-touch-callout: none) {
+    .charging-view-container {
+        /* Extra padding to account for iOS Safari dynamic toolbar */
+        padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Invisible spacer to force iOS Safari to allow scrolling to true end */
+    .charging-view-container::after {
+        content: '';
+        display: block;
+        height: 1px;
+        width: 100%;
+        flex-shrink: 0;
+    }
 }
 
 @media (max-width: 480px) {

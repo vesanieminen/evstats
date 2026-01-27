@@ -6,7 +6,6 @@
 
 html {
     --fullscreen-height: 100%;
-    --fullscreen-height-charging: calc(100vh - 4.5rem);
 }
 
 vaadin-button:hover {
@@ -17,14 +16,12 @@ vaadin-button:hover {
 @supports (-webkit-touch-callout: none) {
     html {
         --fullscreen-height: calc(100% - 6.5rem);
-        --fullscreen-height-charging: calc(100vh + 15rem);
     }
 
     /* iOS PWA specific CSS */
     @media (display-mode: standalone) {
         html {
             --fullscreen-height: calc(100vh - 5rem);
-            --fullscreen-height-charging: calc(100vh + 8rem);
         }
     }
 }
@@ -35,6 +32,24 @@ vaadin-app-layout::part(drawer) {
 
 vaadin-dialog-overlay::part(overlay) {
     width: 420px;
+}
+
+/* iOS Safari scrolling fixes */
+@supports (-webkit-touch-callout: none) {
+    /* Fix momentum scrolling cutoff on iOS Safari */
+    html, body {
+        overscroll-behavior-y: none;
+    }
+
+    vaadin-app-layout {
+        /* Prevent rubber-banding interference */
+        overscroll-behavior: contain;
+    }
+
+    vaadin-app-layout::part(content) {
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: auto;
+    }
 }
 
 
