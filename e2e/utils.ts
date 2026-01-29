@@ -15,7 +15,7 @@ export async function closeSettingsDialogIfOpen(page: Page) {
 
 export async function waitForChargingToolReady(page: Page) {
   await page.getByRole('heading', { name: 'Charging tool' }).waitFor();
-  await page.getByLabel('Battery capacity').waitFor({ state: 'visible' });
+  await page.getByText('Charging Summary').waitFor({ state: 'visible' });
 }
 
 export async function setFieldByLabel(page: Page, label: string, value: string) {
@@ -24,10 +24,4 @@ export async function setFieldByLabel(page: Page, label: string, value: string) 
   await field.fill(value);
   await field.press('Enter');
   await field.blur();
-}
-
-export async function selectVaadinSelectValue(page: Page, value: string) {
-  const selectButton = page.locator('vaadin-select').getByRole('button');
-  await selectButton.click();
-  await page.getByRole('option', { name: value }).click();
 }
