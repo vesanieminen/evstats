@@ -4,8 +4,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.details.Details;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.Span;
@@ -19,8 +21,6 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.timepicker.TimePicker;
-import com.vaadin.flow.component.upload.Upload;
-import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.PreserveOnRefresh;
@@ -33,6 +33,7 @@ import com.vesanieminen.components.DualRangeSlider;
 import com.vesanieminen.components.Ping;
 import com.vesanieminen.components.SingleRangeSlider;
 import com.vesanieminen.model.EVModel;
+import com.vesanieminen.model.SavedCar;
 import com.vesanieminen.services.LiukuriService;
 import com.vesanieminen.services.ObjectMapperService;
 import com.vesanieminen.views.MainLayout;
@@ -44,7 +45,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -53,8 +53,9 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Base64;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 
 @PageTitle("Charging tool")
@@ -90,8 +91,14 @@ public class ChargingView extends Main {
     private static final String AMPERES_STORAGE_KEY = "amperesSlider";
     private static final String VEHICLE_STORAGE_KEY = "vehicleSelect";
     private static final String CAR_IMAGE_STORAGE_KEY = "carImage";
+    private static final String SAVED_CARS_STORAGE_KEY = "savedCars";
+    private static final String SELECTED_SAVED_CAR_KEY = "selectedSavedCar";
     private static final int MAX_IMAGE_SIZE_BYTES = 100 * 1024; // 100KB max
     private Div carImageContainer;
+    private final List<SavedCar> savedCars = new ArrayList<>();
+    private SavedCar selectedSavedCar = null;
+    private Div myCarsQuickSelect;
+    private Span vehicleNameSpan;
 
     // Schedule fields
     private final DatePicker startDatePicker;
@@ -119,9 +126,6 @@ public class ChargingView extends Main {
     private final Binder<Charge> chargeBinder;
     private final PreservedState preservedState;
 
-    // Vehicle selection expandable section
-    private Div vehicleSelectionDiv;
-    private boolean vehicleSelectionVisible = false;
 
     public ChargingView(PreservedState preservedState, LiukuriService liukuriService, ObjectMapperService mapperService, SettingsDialog.SettingsState settingsState) {
         this.preservedState = preservedState;
@@ -139,7 +143,11 @@ public class ChargingView extends Main {
         Card vehicleCard = new Card();
         vehicleCard.addClassName("vehicle-card");
 
-        // Vehicle visualization section
+        // Car selector at the top - visual cards for each saved car
+        myCarsQuickSelect = new Div();
+        myCarsQuickSelect.addClassName("car-selector");
+
+        // Vehicle visualization section (shows selected car)
         Div vehicleSection = new Div();
         vehicleSection.addClassName("vehicle-section");
 
@@ -150,9 +158,9 @@ public class ChargingView extends Main {
         vehicleSection.add(carImageContainer);
 
         // Vehicle name
-        Span vehicleName = new Span(selectedModel.name());
-        vehicleName.addClassName("vehicle-name");
-        vehicleSection.add(vehicleName);
+        vehicleNameSpan = new Span(selectedModel.name());
+        vehicleNameSpan.addClassName("vehicle-name");
+        vehicleSection.add(vehicleNameSpan);
 
         // SOC Display (Current | Range + | Target)
         Div socDisplay = new Div();
@@ -194,153 +202,27 @@ public class ChargingView extends Main {
         socDisplay.add(currentColumn, rangeColumn, targetColumn);
         vehicleSection.add(socDisplay);
 
-        // Change Vehicle toggle
-        Button changeVehicleBtn = new Button("Change Vehicle");
-        changeVehicleBtn.addClassName("change-vehicle-toggle");
-        changeVehicleBtn.setIcon(new Icon(VaadinIcon.CAR));
-        Icon chevron = new Icon(VaadinIcon.CHEVRON_DOWN);
-        changeVehicleBtn.setIconAfterText(true);
-        changeVehicleBtn.addClickListener(e -> {
-            vehicleSelectionVisible = !vehicleSelectionVisible;
-            vehicleSelectionDiv.setVisible(vehicleSelectionVisible);
-            chevron.getElement().setAttribute("icon", vehicleSelectionVisible ? "vaadin:chevron-up" : "vaadin:chevron-down");
-        });
-
-        // Vehicle selection section (hidden by default)
-        vehicleSelectionDiv = new Div();
-        vehicleSelectionDiv.addClassName("vehicle-selection");
-        vehicleSelectionDiv.setVisible(false);
-
-        // Custom vehicle fields - initialize before vehicleSelect listener
-        Div customFieldsDiv = new Div();
-        customFieldsDiv.addClassName("vehicle-custom-fields");
-
+        // Initialize fields needed for dialogs (hidden, used in add car dialog)
         batteryCapacityField = new NumberField("Battery Capacity (kWh)");
         batteryCapacityField.setId("batteryCapacityField");
         batteryCapacityField.setValue((double) selectedModel.capacity());
         batteryCapacityField.setStepButtonsVisible(true);
-        batteryCapacityField.setVisible(false);
 
         consumptionField = new NumberField("Consumption (kWh/100km)");
         consumptionField.setId("consumptionField");
         consumptionField.setValue(selectedModel.efficiency());
         consumptionField.setStepButtonsVisible(true);
         consumptionField.setStep(0.1);
-        consumptionField.setVisible(false);
 
+        // Hidden select for internal use
         vehicleSelect = new Select<>();
         vehicleSelect.setId("vehicleSelect");
         vehicleSelect.setItems(EVModel.PRESETS);
         vehicleSelect.setItemLabelGenerator(EVModel::getDisplayName);
         vehicleSelect.setValue(selectedModel);
-        vehicleSelect.setWidthFull();
-        vehicleSelect.addValueChangeListener(e -> {
-            selectedModel = e.getValue();
-            vehicleName.setText(selectedModel.name());
-            WebStorage.setItem(VEHICLE_STORAGE_KEY, selectedModel.name());
-            if (selectedModel.equals(EVModel.CUSTOM)) {
-                batteryCapacityField.setVisible(true);
-                consumptionField.setVisible(true);
-            } else {
-                batteryCapacityField.setVisible(false);
-                consumptionField.setVisible(false);
-                batteryCapacityField.setValue((double) selectedModel.capacity());
-                consumptionField.setValue(selectedModel.efficiency());
-            }
-            doCalculation();
-        });
+        vehicleSelect.setVisible(false);
 
-        customFieldsDiv.add(batteryCapacityField, consumptionField);
-
-        // Car image change section
-        Div imageChangeSection = new Div();
-        imageChangeSection.addClassName("image-change-section");
-
-        Span imageLabel = new Span("Vehicle Image");
-        imageLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.TextColor.SECONDARY);
-
-        // File upload
-        MemoryBuffer buffer = new MemoryBuffer();
-        Upload upload = new Upload(buffer);
-        upload.setAcceptedFileTypes("image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml");
-        upload.setMaxFileSize(MAX_IMAGE_SIZE_BYTES);
-        upload.setDropAllowed(true);
-        upload.setWidthFull();
-
-        Div uploadLabel = new Div();
-        uploadLabel.setText("Upload image (max 100KB, recommended 180×80px)");
-        uploadLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.TextColor.SECONDARY);
-        upload.setDropLabelIcon(new Icon(VaadinIcon.UPLOAD));
-
-        upload.addSucceededListener(event -> {
-            try {
-                String mimeType = event.getMIMEType();
-                InputStream inputStream = buffer.getInputStream();
-                byte[] bytes = inputStream.readAllBytes();
-
-                if (bytes.length > MAX_IMAGE_SIZE_BYTES) {
-                    Notification.show("Image too large. Maximum size is 100KB.", 3000, Notification.Position.MIDDLE)
-                            .addThemeVariants(NotificationVariant.LUMO_ERROR);
-                    return;
-                }
-
-                String base64 = Base64.getEncoder().encodeToString(bytes);
-                String dataUrl = "data:" + mimeType + ";base64," + base64;
-                setCarImage(dataUrl);
-                WebStorage.setItem(CAR_IMAGE_STORAGE_KEY, dataUrl);
-                Notification.show("Image updated!", 2000, Notification.Position.MIDDLE)
-                        .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-            } catch (IOException ex) {
-                Notification.show("Failed to read image", 3000, Notification.Position.MIDDLE)
-                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
-            }
-        });
-
-        upload.addFileRejectedListener(event -> {
-            Notification.show(event.getErrorMessage(), 3000, Notification.Position.MIDDLE)
-                    .addThemeVariants(NotificationVariant.LUMO_ERROR);
-        });
-
-        // URL input
-        TextField imageUrlField = new TextField("Or enter image URL");
-        imageUrlField.setWidthFull();
-        imageUrlField.setPlaceholder("https://example.com/car.png");
-        imageUrlField.setClearButtonVisible(true);
-
-        Button loadUrlBtn = new Button("Load", new Icon(VaadinIcon.DOWNLOAD));
-        loadUrlBtn.addClickListener(e -> {
-            String url = imageUrlField.getValue();
-            if (url != null && !url.isBlank()) {
-                // Validate URL format
-                if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                    Notification.show("Please enter a valid URL starting with http:// or https://", 3000, Notification.Position.MIDDLE)
-                            .addThemeVariants(NotificationVariant.LUMO_ERROR);
-                    return;
-                }
-                setCarImage(url);
-                WebStorage.setItem(CAR_IMAGE_STORAGE_KEY, url);
-                Notification.show("Image updated!", 2000, Notification.Position.MIDDLE)
-                        .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-                imageUrlField.clear();
-            }
-        });
-
-        Div urlRow = new Div(imageUrlField, loadUrlBtn);
-        urlRow.addClassName("image-url-row");
-
-        // Reset button
-        Button resetImageBtn = new Button("Reset to Default", new Icon(VaadinIcon.REFRESH));
-        resetImageBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
-        resetImageBtn.addClickListener(e -> {
-            carImageContainer.getElement().setProperty("innerHTML", getCarSvgString());
-            WebStorage.removeItem(CAR_IMAGE_STORAGE_KEY);
-            Notification.show("Image reset to default", 2000, Notification.Position.MIDDLE);
-        });
-
-        imageChangeSection.add(imageLabel, upload, uploadLabel, urlRow, resetImageBtn);
-        vehicleSelectionDiv.add(vehicleSelect, customFieldsDiv, imageChangeSection);
-
-        vehicleCard.add(vehicleSection, changeVehicleBtn, vehicleSelectionDiv);
+        vehicleCard.add(myCarsQuickSelect, vehicleSection);
         add(vehicleCard);
 
         // ===== CHARGE LEVEL CARD =====
@@ -608,6 +490,8 @@ public class ChargingView extends Main {
         startTimePicker.setMax(LocalTime.of(23, 45));
 
         readFieldValues();
+        renderMyCarsQuickSelect(); // Show "Add Car" button immediately
+        loadCarsFromStorage(); // Then load saved cars from storage (async)
         doCalculation();
     }
 
@@ -838,6 +722,447 @@ public class ChargingView extends Main {
             intervalStart = intervalEnd;
         }
         return consumptionData;
+    }
+
+    private void selectSavedCar(SavedCar car) {
+        selectedSavedCar = car;
+        selectedModel = car.toEVModel();
+
+        // Update UI
+        vehicleSelect.setValue(EVModel.CUSTOM);
+        batteryCapacityField.setValue((double) car.capacity());
+        consumptionField.setValue(car.efficiency());
+
+        // Update vehicle name display
+        vehicleNameSpan.setText(car.name());
+
+        // Load car image if available
+        if (car.imageUrl() != null && !car.imageUrl().isBlank()) {
+            setCarImage(car.imageUrl());
+        } else {
+            // Reset to default SVG if no image
+            carImageContainer.getElement().setProperty("innerHTML", getCarSvgString());
+        }
+
+        // Save selection
+        WebStorage.setItem(SELECTED_SAVED_CAR_KEY, car.id());
+
+        updateMyCarsSelection();
+        doCalculation();
+    }
+
+    private void updateMyCarsSelection() {
+        renderMyCarsQuickSelect();
+    }
+
+    private void renderMyCarsQuickSelect() {
+        myCarsQuickSelect.removeAll();
+
+        // Render each saved car as a visual card
+        for (SavedCar car : savedCars) {
+            Div carCard = new Div();
+            carCard.addClassName("car-card");
+
+            boolean isSelected = selectedSavedCar != null && selectedSavedCar.id().equals(car.id());
+            if (isSelected) {
+                carCard.addClassName("selected");
+            }
+
+            // Car thumbnail/icon
+            Div carThumb = new Div();
+            carThumb.addClassName("car-card-thumb");
+            if (car.imageUrl() != null && !car.imageUrl().isBlank()) {
+                carThumb.getElement().setProperty("innerHTML",
+                        "<img src=\"" + car.imageUrl().replace("\"", "&quot;") + "\" alt=\"\" />");
+            } else {
+                carThumb.getElement().setProperty("innerHTML", getSmallCarSvg());
+            }
+
+            // Car info
+            Div carInfo = new Div();
+            carInfo.addClassName("car-card-info");
+
+            Span carName = new Span(car.name());
+            carName.addClassName("car-card-name");
+
+            Span carSpecs = new Span(car.capacity() + " kWh");
+            carSpecs.addClassName("car-card-specs");
+
+            carInfo.add(carName, carSpecs);
+
+            // Action buttons container
+            Div cardActions = new Div();
+            cardActions.addClassName("car-card-actions");
+
+            // Edit button
+            Button editBtn = new Button(new Icon(VaadinIcon.EDIT));
+            editBtn.addClassName("car-card-edit");
+            editBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_SMALL);
+            editBtn.getElement().setAttribute("title", "Edit car");
+            editBtn.addClickListener(e -> {
+                e.getSource().getElement().executeJs("event.stopPropagation()");
+                showEditCarDialog(car);
+            });
+
+            // Delete button
+            Button deleteBtn = new Button(new Icon(VaadinIcon.CLOSE_SMALL));
+            deleteBtn.addClassName("car-card-delete");
+            deleteBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_SMALL);
+            deleteBtn.getElement().setAttribute("title", "Remove car");
+            deleteBtn.addClickListener(e -> {
+                e.getSource().getElement().executeJs("event.stopPropagation()");
+                confirmDeleteCar(car);
+            });
+
+            cardActions.add(editBtn, deleteBtn);
+            carCard.add(cardActions, carThumb, carInfo);
+            carCard.addClickListener(e -> selectSavedCar(car));
+
+            myCarsQuickSelect.add(carCard);
+        }
+
+        // Add car button - styled like a car card with silhouette
+        Div addCarCard = new Div();
+        addCarCard.addClassName("car-card");
+        addCarCard.addClassName("add-car-card");
+
+        // Car silhouette with plus overlay
+        Div addCarThumb = new Div();
+        addCarThumb.addClassName("car-card-thumb");
+        addCarThumb.addClassName("add-car-thumb");
+        addCarThumb.getElement().setProperty("innerHTML", getAddCarSvg());
+
+        // Label
+        Div addCarInfo = new Div();
+        addCarInfo.addClassName("car-card-info");
+
+        Span addLabel = new Span("Add Car");
+        addLabel.addClassName("car-card-name");
+
+        Span addHint = new Span("Click to add");
+        addHint.addClassName("car-card-specs");
+
+        addCarInfo.add(addLabel, addHint);
+
+        addCarCard.add(addCarThumb, addCarInfo);
+        addCarCard.addClickListener(e -> showAddCarDialog());
+
+        myCarsQuickSelect.add(addCarCard);
+    }
+
+    private String getAddCarSvg() {
+        return """
+                <svg viewBox="0 0 40 20" style="width: 100%; height: 100%;">
+                    <defs>
+                        <mask id="carMask">
+                            <rect width="40" height="20" fill="white"/>
+                            <circle cx="20" cy="10" r="6" fill="black"/>
+                        </mask>
+                    </defs>
+                    <g opacity="0.4" mask="url(#carMask)">
+                        <ellipse cx="8" cy="16" rx="4" ry="4" fill="currentColor"></ellipse>
+                        <ellipse cx="32" cy="16" rx="4" ry="4" fill="currentColor"></ellipse>
+                        <path d="M4 12 Q6 6 12 5 L28 5 Q34 6 36 12 L36 14 L4 14 Z" fill="currentColor"></path>
+                        <path d="M11 5.5 Q12 2 16 1.5 L24 1.5 Q28 2 29 5.5 Z" fill="currentColor"></path>
+                    </g>
+                    <circle cx="20" cy="10" r="5" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>
+                    <line x1="20" y1="7" x2="20" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+                    <line x1="17" y1="10" x2="23" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+                </svg>
+                """;
+    }
+
+    private String getSmallCarSvg() {
+        return """
+                <svg viewBox="0 0 40 20" style="width: 100%; height: 100%;">
+                    <ellipse cx="8" cy="16" rx="4" ry="4" fill="#6b7280"></ellipse>
+                    <ellipse cx="32" cy="16" rx="4" ry="4" fill="#6b7280"></ellipse>
+                    <path d="M4 12 Q6 6 12 5 L28 5 Q34 6 36 12 L36 14 L4 14 Z" fill="#9ca3af"></path>
+                    <path d="M11 5.5 Q12 2 16 1.5 L24 1.5 Q28 2 29 5.5 Z" fill="#60a5fa" opacity="0.8"></path>
+                </svg>
+                """;
+    }
+
+    private void showAddCarDialog() {
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Add Car");
+        dialog.setWidth("350px");
+
+        // Preset selection
+        Select<EVModel> presetSelect = new Select<>();
+        presetSelect.setLabel("Choose a car model");
+        presetSelect.setItems(EVModel.PRESETS.stream().filter(m -> !m.equals(EVModel.CUSTOM)).toList());
+        presetSelect.setItemLabelGenerator(EVModel::getDisplayName);
+        presetSelect.setWidthFull();
+
+        // Custom name field
+        TextField nameField = new TextField("Car name");
+        nameField.setWidthFull();
+        nameField.setPlaceholder("e.g., My Tesla");
+
+        // Custom specs (shown when preset is selected or for custom)
+        NumberField capacityField = new NumberField("Battery (kWh)");
+        capacityField.setStepButtonsVisible(true);
+        capacityField.setMin(1);
+        capacityField.setMax(300);
+
+        NumberField efficiencyField = new NumberField("Consumption (kWh/100km)");
+        efficiencyField.setStepButtonsVisible(true);
+        efficiencyField.setStep(0.1);
+        efficiencyField.setMin(5);
+        efficiencyField.setMax(50);
+
+        Div specsRow = new Div(capacityField, efficiencyField);
+        specsRow.addClassName("add-car-specs-row");
+
+        // Image URL field
+        TextField imageUrlField = new TextField("Image URL (optional)");
+        imageUrlField.setWidthFull();
+        imageUrlField.setPlaceholder("https://example.com/car.png");
+        imageUrlField.setClearButtonVisible(true);
+
+        // Update fields when preset changes
+        presetSelect.addValueChangeListener(e -> {
+            EVModel selected = e.getValue();
+            if (selected != null) {
+                nameField.setValue(selected.name());
+                capacityField.setValue((double) selected.capacity());
+                efficiencyField.setValue(selected.efficiency());
+            }
+        });
+
+        // Set default values
+        EVModel defaultModel = EVModel.PRESETS.get(0);
+        presetSelect.setValue(defaultModel);
+
+        Div content = new Div(presetSelect, nameField, specsRow, imageUrlField);
+        content.addClassName("add-car-dialog-content");
+        dialog.add(content);
+
+        Button saveBtn = new Button("Add", e -> {
+            String name = nameField.getValue();
+            if (name == null || name.isBlank()) {
+                nameField.setInvalid(true);
+                nameField.setErrorMessage("Please enter a name");
+                return;
+            }
+
+            Double capacity = capacityField.getValue();
+            Double efficiency = efficiencyField.getValue();
+            if (capacity == null || efficiency == null) {
+                Notification.show("Please fill in all fields", 2000, Notification.Position.MIDDLE)
+                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                return;
+            }
+
+            String imageUrl = imageUrlField.getValue();
+            if (imageUrl != null && !imageUrl.isBlank() && !imageUrl.startsWith("http")) {
+                imageUrlField.setInvalid(true);
+                imageUrlField.setErrorMessage("Please enter a valid URL");
+                return;
+            }
+
+            SavedCar newCar = new SavedCar(
+                    name.trim(),
+                    capacity.intValue(),
+                    efficiency,
+                    imageUrl != null && !imageUrl.isBlank() ? imageUrl.trim() : null
+            );
+            savedCars.add(newCar);
+            saveCarsToStorage();
+            selectSavedCar(newCar);
+            dialog.close();
+            Notification.show("Car added: " + name, 2000, Notification.Position.MIDDLE)
+                    .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        });
+        saveBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        Button cancelBtn = new Button("Cancel", e -> dialog.close());
+
+        dialog.getFooter().add(cancelBtn, saveBtn);
+        dialog.open();
+    }
+
+    private void showEditCarDialog(SavedCar car) {
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Edit Car");
+        dialog.setWidth("350px");
+
+        // Name field
+        TextField nameField = new TextField("Car name");
+        nameField.setWidthFull();
+        nameField.setValue(car.name());
+
+        // Specs fields
+        NumberField capacityField = new NumberField("Battery (kWh)");
+        capacityField.setStepButtonsVisible(true);
+        capacityField.setMin(1);
+        capacityField.setMax(300);
+        capacityField.setValue((double) car.capacity());
+
+        NumberField efficiencyField = new NumberField("Consumption (kWh/100km)");
+        efficiencyField.setStepButtonsVisible(true);
+        efficiencyField.setStep(0.1);
+        efficiencyField.setMin(5);
+        efficiencyField.setMax(50);
+        efficiencyField.setValue(car.efficiency());
+
+        Div specsRow = new Div(capacityField, efficiencyField);
+        specsRow.addClassName("add-car-specs-row");
+
+        // Image URL field
+        TextField imageUrlField = new TextField("Image URL");
+        imageUrlField.setWidthFull();
+        imageUrlField.setPlaceholder("https://example.com/car.png");
+        imageUrlField.setClearButtonVisible(true);
+        if (car.imageUrl() != null) {
+            imageUrlField.setValue(car.imageUrl());
+        }
+
+        // Image preview
+        Div imagePreview = new Div();
+        imagePreview.addClassName("edit-car-image-preview");
+        updateImagePreview(imagePreview, car.imageUrl());
+
+        imageUrlField.addValueChangeListener(e -> updateImagePreview(imagePreview, e.getValue()));
+
+        Div content = new Div(nameField, specsRow, imageUrlField, imagePreview);
+        content.addClassName("add-car-dialog-content");
+        dialog.add(content);
+
+        Button saveBtn = new Button("Save", e -> {
+            String name = nameField.getValue();
+            if (name == null || name.isBlank()) {
+                nameField.setInvalid(true);
+                nameField.setErrorMessage("Please enter a name");
+                return;
+            }
+
+            Double capacity = capacityField.getValue();
+            Double efficiency = efficiencyField.getValue();
+            if (capacity == null || efficiency == null) {
+                Notification.show("Please fill in all fields", 2000, Notification.Position.MIDDLE)
+                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                return;
+            }
+
+            String imageUrl = imageUrlField.getValue();
+            if (imageUrl != null && !imageUrl.isBlank() && !imageUrl.startsWith("http")) {
+                imageUrlField.setInvalid(true);
+                imageUrlField.setErrorMessage("Please enter a valid URL");
+                return;
+            }
+
+            // Create updated car with same ID
+            SavedCar updatedCar = new SavedCar(
+                    car.id(),
+                    name.trim(),
+                    capacity.intValue(),
+                    efficiency,
+                    imageUrl != null && !imageUrl.isBlank() ? imageUrl.trim() : null
+            );
+
+            // Replace in list
+            int index = savedCars.indexOf(car);
+            if (index >= 0) {
+                savedCars.set(index, updatedCar);
+            }
+            saveCarsToStorage();
+
+            // Update selection if this was the selected car
+            if (selectedSavedCar != null && selectedSavedCar.id().equals(car.id())) {
+                selectSavedCar(updatedCar);
+            } else {
+                renderMyCarsQuickSelect();
+            }
+
+            dialog.close();
+            Notification.show("Car updated", 2000, Notification.Position.MIDDLE)
+                    .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        });
+        saveBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        Button cancelBtn = new Button("Cancel", e -> dialog.close());
+
+        dialog.getFooter().add(cancelBtn, saveBtn);
+        dialog.open();
+    }
+
+    private void updateImagePreview(Div preview, String imageUrl) {
+        preview.removeAll();
+        if (imageUrl != null && !imageUrl.isBlank() && imageUrl.startsWith("http")) {
+            preview.getElement().setProperty("innerHTML",
+                    "<img src=\"" + imageUrl.replace("\"", "&quot;") + "\" alt=\"Preview\" " +
+                    "style=\"max-width: 100%; max-height: 60px; object-fit: contain;\" " +
+                    "onerror=\"this.style.display='none'\" />");
+        } else {
+            Span placeholder = new Span("No image");
+            placeholder.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.TextColor.TERTIARY);
+            preview.add(placeholder);
+        }
+    }
+
+    private void confirmDeleteCar(SavedCar car) {
+        ConfirmDialog dialog = new ConfirmDialog();
+        dialog.setHeader("Delete Car");
+        dialog.setText("Are you sure you want to delete \"" + car.name() + "\"?");
+        dialog.setCancelable(true);
+        dialog.setConfirmText("Delete");
+        dialog.setConfirmButtonTheme("error primary");
+        dialog.addConfirmListener(e -> deleteSavedCar(car));
+        dialog.open();
+    }
+
+    private void deleteSavedCar(SavedCar car) {
+        savedCars.removeIf(c -> c.id().equals(car.id()));
+        saveCarsToStorage();
+
+        // If the deleted car was selected, clear selection
+        if (selectedSavedCar != null && selectedSavedCar.id().equals(car.id())) {
+            selectedSavedCar = null;
+            WebStorage.removeItem(SELECTED_SAVED_CAR_KEY);
+        }
+
+        renderMyCarsQuickSelect();
+        Notification.show("Car deleted", 2000, Notification.Position.MIDDLE);
+    }
+
+    private void saveCarsToStorage() {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(savedCars);
+            WebStorage.setItem(SAVED_CARS_STORAGE_KEY, json);
+        } catch (IOException e) {
+            log.error("Failed to save cars to storage", e);
+        }
+    }
+
+    private void loadCarsFromStorage() {
+        WebStorage.getItem(SAVED_CARS_STORAGE_KEY, item -> {
+            if (item != null && !item.isBlank()) {
+                try {
+                    ObjectMapper mapper = new ObjectMapper();
+                    List<SavedCar> loaded = mapper.readValue(item, new TypeReference<List<SavedCar>>() {});
+                    savedCars.clear();
+                    savedCars.addAll(loaded);
+                    renderMyCarsQuickSelect();
+
+                    // Check if a saved car was previously selected
+                    WebStorage.getItem(SELECTED_SAVED_CAR_KEY, selectedId -> {
+                        if (selectedId != null && !selectedId.isBlank()) {
+                            savedCars.stream()
+                                    .filter(c -> c.id().equals(selectedId))
+                                    .findFirst()
+                                    .ifPresent(this::selectSavedCar);
+                        }
+                    });
+                } catch (IOException e) {
+                    log.error("Failed to load cars from storage", e);
+                }
+            } else {
+                renderMyCarsQuickSelect();
+            }
+        });
     }
 
     public void readFieldValues() {
