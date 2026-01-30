@@ -472,150 +472,6 @@
 }
 
 
-/* Car Selector - Visual grid of car cards */
-.car-selector {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--lumo-space-s);
-    justify-content: center;
-    padding-bottom: var(--lumo-space-m);
-    margin-bottom: var(--lumo-space-s);
-    border-bottom: 1px solid var(--lumo-contrast-10pct);
-}
-
-.car-card {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 90px;
-    height: 80px;
-    padding: var(--lumo-space-xs);
-    border-radius: var(--lumo-border-radius-m);
-    background: var(--lumo-contrast-5pct);
-    border: 2px solid transparent;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    box-sizing: border-box;
-}
-
-.car-card:hover {
-    background: var(--lumo-contrast-10pct);
-    border-color: var(--lumo-contrast-30pct);
-}
-
-.car-card.selected {
-    border-color: var(--lumo-primary-color);
-    background: var(--lumo-primary-color-10pct);
-}
-
-.car-card-actions {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    display: flex;
-    gap: 2px;
-    opacity: 0;
-    transition: opacity 0.15s ease;
-}
-
-.car-card:hover .car-card-actions {
-    opacity: 1;
-}
-
-.car-card-edit,
-.car-card-delete {
-    padding: 0;
-    min-width: 18px;
-    min-height: 18px;
-    width: 18px;
-    height: 18px;
-    opacity: 0.6;
-}
-
-.car-card-edit:hover,
-.car-card-delete:hover {
-    opacity: 1;
-}
-
-.car-card-edit {
-    color: var(--lumo-primary-text-color);
-}
-
-.car-card-delete {
-    color: var(--lumo-error-text-color);
-}
-
-.car-card-thumb {
-    width: 50px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: var(--lumo-space-xs);
-}
-
-.car-card-thumb img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-}
-
-.car-card-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 1px;
-    overflow: hidden;
-    width: 100%;
-}
-
-.car-card-name {
-    font-size: var(--lumo-font-size-xxs);
-    font-weight: 500;
-    line-height: 1.2;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.car-card-specs {
-    font-size: 10px;
-    color: var(--lumo-secondary-text-color);
-}
-
-/* Add Car Card */
-.add-car-card {
-    background: var(--lumo-contrast-5pct);
-    border: 2px dashed var(--lumo-contrast-20pct);
-    color: var(--lumo-secondary-text-color);
-}
-
-.add-car-card:hover {
-    border-color: var(--lumo-primary-color);
-    color: var(--lumo-primary-text-color);
-    background: var(--lumo-primary-color-10pct);
-}
-
-.add-car-card .car-card-name {
-    color: var(--lumo-secondary-text-color);
-}
-
-.add-car-card:hover .car-card-name {
-    color: var(--lumo-primary-text-color);
-}
-
-.add-car-thumb {
-    color: var(--lumo-contrast-50pct);
-}
-
-.add-car-card:hover .add-car-thumb {
-    color: var(--lumo-primary-color);
-}
-
 /* Add Car Dialog */
 .add-car-dialog-content {
     display: flex;
@@ -642,4 +498,137 @@
     background: var(--lumo-contrast-5pct);
     border-radius: var(--lumo-border-radius-m);
     padding: var(--lumo-space-s);
+}
+
+/* Clickable Car Display Area */
+.car-display-area {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: var(--lumo-space-s);
+    border-radius: var(--lumo-border-radius-m);
+    transition: background-color 0.15s ease;
+}
+
+.car-display-area:hover {
+    background-color: var(--lumo-contrast-5pct);
+}
+
+.car-edit-overlay {
+    position: absolute;
+    top: var(--lumo-space-xs);
+    right: var(--lumo-space-xs);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--lumo-contrast-10pct);
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    color: var(--lumo-secondary-text-color);
+}
+
+.car-display-area:hover .car-edit-overlay {
+    opacity: 1;
+}
+
+.car-display-area:hover .car-edit-overlay:hover {
+    background: var(--lumo-primary-color-10pct);
+    color: var(--lumo-primary-text-color);
+}
+
+/* Car Management Dialog */
+.car-management-dialog-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumo-space-m);
+}
+
+.car-management-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumo-space-s);
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.car-management-row {
+    display: flex;
+    align-items: center;
+    gap: var(--lumo-space-s);
+    padding: var(--lumo-space-s);
+    border-radius: var(--lumo-border-radius-m);
+    background: var(--lumo-contrast-5pct);
+    transition: all 0.15s ease;
+}
+
+.car-management-row:not(.selected) .car-management-thumb,
+.car-management-row:not(.selected) .car-management-info {
+    cursor: pointer;
+}
+
+.car-management-row:hover {
+    background: var(--lumo-contrast-10pct);
+}
+
+.car-management-row.selected {
+    background: var(--lumo-primary-color-10pct);
+    border: 1px solid var(--lumo-primary-color-50pct);
+}
+
+.car-management-thumb {
+    width: 50px;
+    height: 28px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.car-management-thumb img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.car-management-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.car-management-name {
+    font-weight: 500;
+    font-size: var(--lumo-font-size-s);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.car-management-specs {
+    font-size: var(--lumo-font-size-xs);
+    color: var(--lumo-secondary-text-color);
+}
+
+.car-selected-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--lumo-primary-text-color);
+    background: var(--lumo-primary-color-10pct);
+    padding: 2px 6px;
+    border-radius: var(--lumo-border-radius-s);
+    width: fit-content;
+}
+
+.car-management-actions {
+    display: flex;
+    gap: var(--lumo-space-xs);
+    flex-shrink: 0;
 }

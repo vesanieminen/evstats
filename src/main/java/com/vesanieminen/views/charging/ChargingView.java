@@ -97,8 +97,8 @@ public class ChargingView extends Main {
     private Div carImageContainer;
     private final List<SavedCar> savedCars = new ArrayList<>();
     private SavedCar selectedSavedCar = null;
-    private Div myCarsQuickSelect;
     private Span vehicleNameSpan;
+    private boolean isCalculating = false;
 
     // Schedule fields
     private final DatePicker startDatePicker;
@@ -143,24 +143,35 @@ public class ChargingView extends Main {
         Card vehicleCard = new Card();
         vehicleCard.addClassName("vehicle-card");
 
-        // Car selector at the top - visual cards for each saved car
-        myCarsQuickSelect = new Div();
-        myCarsQuickSelect.addClassName("car-selector");
-
-        // Vehicle visualization section (shows selected car)
+        // Vehicle visualization section (shows selected car - clickable to change)
         Div vehicleSection = new Div();
         vehicleSection.addClassName("vehicle-section");
+
+        // Clickable car display area
+        Div carDisplayArea = new Div();
+        carDisplayArea.addClassName("car-display-area");
+        carDisplayArea.addClickListener(e -> showCarManagementDialog());
 
         // Car image container
         carImageContainer = new Div();
         carImageContainer.addClassName("car-svg-container");
         carImageContainer.getElement().setProperty("innerHTML", getCarSvgString());
-        vehicleSection.add(carImageContainer);
+        carDisplayArea.add(carImageContainer);
+
+        // Edit overlay icon
+        Div editOverlay = new Div();
+        editOverlay.addClassName("car-edit-overlay");
+        Icon editIcon = new Icon(VaadinIcon.EDIT);
+        editIcon.setSize("16px");
+        editOverlay.add(editIcon);
+        carDisplayArea.add(editOverlay);
 
         // Vehicle name
         vehicleNameSpan = new Span(selectedModel.name());
         vehicleNameSpan.addClassName("vehicle-name");
-        vehicleSection.add(vehicleNameSpan);
+        carDisplayArea.add(vehicleNameSpan);
+
+        vehicleSection.add(carDisplayArea);
 
         // SOC Display (Current | Range + | Target)
         Div socDisplay = new Div();
@@ -222,7 +233,7 @@ public class ChargingView extends Main {
         vehicleSelect.setValue(selectedModel);
         vehicleSelect.setVisible(false);
 
-        vehicleCard.add(myCarsQuickSelect, vehicleSection);
+        vehicleCard.add(vehicleSection);
         add(vehicleCard);
 
         // ===== CHARGE LEVEL CARD =====
@@ -471,9 +482,21 @@ public class ChargingView extends Main {
             mapperService.saveFieldValue(chargingLossField);
             doCalculation();
         });
-        startDatePicker.addValueChangeListener(e -> doCalculation());
-        startTimePicker.addValueChangeListener(e -> doCalculation());
-        endDatePicker.addValueChangeListener(e -> doCalculation());
+        startDatePicker.addValueChangeListener(e -> {
+            if (!startDatePicker.isReadOnly()) {
+                doCalculation();
+            }
+        });
+        startTimePicker.addValueChangeListener(e -> {
+            if (!startTimePicker.isReadOnly()) {
+                doCalculation();
+            }
+        });
+        endDatePicker.addValueChangeListener(e -> {
+            if (!endDatePicker.isReadOnly()) {
+                doCalculation();
+            }
+        });
         endTimePicker.addValueChangeListener(e -> {
             if (!endTimePicker.isReadOnly()) {
                 doCalculation();
@@ -490,8 +513,7 @@ public class ChargingView extends Main {
         startTimePicker.setMax(LocalTime.of(23, 45));
 
         readFieldValues();
-        renderMyCarsQuickSelect(); // Show "Add Car" button immediately
-        loadCarsFromStorage(); // Then load saved cars from storage (async)
+        loadCarsFromStorage(); // Load saved cars from storage (async) - will set default if none
         doCalculation();
     }
 
@@ -580,6 +602,19 @@ public class ChargingView extends Main {
     }
 
     private void doCalculation() {
+        // Prevent re-entrant calls
+        if (isCalculating) {
+            return;
+        }
+        isCalculating = true;
+        try {
+            doCalculationInternal();
+        } finally {
+            isCalculating = false;
+        }
+    }
+
+    private void doCalculationInternal() {
         // Get values from slider and fields
         double currentSoc = socSlider.getLowValue();
         double targetSoc = socSlider.getHighValue();
@@ -747,129 +782,133 @@ public class ChargingView extends Main {
         // Save selection
         WebStorage.setItem(SELECTED_SAVED_CAR_KEY, car.id());
 
-        updateMyCarsSelection();
         doCalculation();
     }
 
-    private void updateMyCarsSelection() {
-        renderMyCarsQuickSelect();
+    private void showCarManagementDialog() {
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("My Cars");
+        dialog.setWidth("400px");
+        dialog.setMaxHeight("80vh");
+
+        Div content = new Div();
+        content.addClassName("car-management-dialog-content");
+
+        // Car list
+        Div carList = new Div();
+        carList.addClassName("car-management-list");
+
+        Runnable refreshList = () -> {
+            carList.removeAll();
+            for (SavedCar car : savedCars) {
+                Div carRow = createCarManagementRow(car, dialog);
+                carList.add(carRow);
+            }
+        };
+
+        refreshList.run();
+
+        // Add new car button
+        Button addCarBtn = new Button("Add New Car", new Icon(VaadinIcon.PLUS));
+        addCarBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        addCarBtn.setWidthFull();
+        addCarBtn.addClickListener(e -> {
+            dialog.close();
+            showAddCarDialog();
+        });
+
+        content.add(carList, addCarBtn);
+        dialog.add(content);
+
+        Button closeBtn = new Button("Close", e -> dialog.close());
+        dialog.getFooter().add(closeBtn);
+        dialog.open();
     }
 
-    private void renderMyCarsQuickSelect() {
-        myCarsQuickSelect.removeAll();
+    private Div createCarManagementRow(SavedCar car, Dialog parentDialog) {
+        Div row = new Div();
+        row.addClassName("car-management-row");
 
-        // Render each saved car as a visual card
-        for (SavedCar car : savedCars) {
-            Div carCard = new Div();
-            carCard.addClassName("car-card");
-
-            boolean isSelected = selectedSavedCar != null && selectedSavedCar.id().equals(car.id());
-            if (isSelected) {
-                carCard.addClassName("selected");
-            }
-
-            // Car thumbnail/icon
-            Div carThumb = new Div();
-            carThumb.addClassName("car-card-thumb");
-            if (car.imageUrl() != null && !car.imageUrl().isBlank()) {
-                carThumb.getElement().setProperty("innerHTML",
-                        "<img src=\"" + car.imageUrl().replace("\"", "&quot;") + "\" alt=\"\" />");
-            } else {
-                carThumb.getElement().setProperty("innerHTML", getSmallCarSvg());
-            }
-
-            // Car info
-            Div carInfo = new Div();
-            carInfo.addClassName("car-card-info");
-
-            Span carName = new Span(car.name());
-            carName.addClassName("car-card-name");
-
-            Span carSpecs = new Span(car.capacity() + " kWh");
-            carSpecs.addClassName("car-card-specs");
-
-            carInfo.add(carName, carSpecs);
-
-            // Action buttons container
-            Div cardActions = new Div();
-            cardActions.addClassName("car-card-actions");
-
-            // Edit button
-            Button editBtn = new Button(new Icon(VaadinIcon.EDIT));
-            editBtn.addClassName("car-card-edit");
-            editBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_SMALL);
-            editBtn.getElement().setAttribute("title", "Edit car");
-            editBtn.addClickListener(e -> {
-                e.getSource().getElement().executeJs("event.stopPropagation()");
-                showEditCarDialog(car);
-            });
-
-            // Delete button
-            Button deleteBtn = new Button(new Icon(VaadinIcon.CLOSE_SMALL));
-            deleteBtn.addClassName("car-card-delete");
-            deleteBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_SMALL);
-            deleteBtn.getElement().setAttribute("title", "Remove car");
-            deleteBtn.addClickListener(e -> {
-                e.getSource().getElement().executeJs("event.stopPropagation()");
-                confirmDeleteCar(car);
-            });
-
-            cardActions.add(editBtn, deleteBtn);
-            carCard.add(cardActions, carThumb, carInfo);
-            carCard.addClickListener(e -> selectSavedCar(car));
-
-            myCarsQuickSelect.add(carCard);
+        boolean isSelected = selectedSavedCar != null && selectedSavedCar.id().equals(car.id());
+        if (isSelected) {
+            row.addClassName("selected");
         }
 
-        // Add car button - styled like a car card with silhouette
-        Div addCarCard = new Div();
-        addCarCard.addClassName("car-card");
-        addCarCard.addClassName("add-car-card");
+        // Car thumbnail
+        Div thumb = new Div();
+        thumb.addClassName("car-management-thumb");
+        if (car.imageUrl() != null && !car.imageUrl().isBlank()) {
+            thumb.getElement().setProperty("innerHTML",
+                    "<img src=\"" + car.imageUrl().replace("\"", "&quot;") + "\" alt=\"\" />");
+        } else {
+            thumb.getElement().setProperty("innerHTML", getSmallCarSvg());
+        }
 
-        // Car silhouette with plus overlay
-        Div addCarThumb = new Div();
-        addCarThumb.addClassName("car-card-thumb");
-        addCarThumb.addClassName("add-car-thumb");
-        addCarThumb.getElement().setProperty("innerHTML", getAddCarSvg());
+        // Car info
+        Div info = new Div();
+        info.addClassName("car-management-info");
 
-        // Label
-        Div addCarInfo = new Div();
-        addCarInfo.addClassName("car-card-info");
+        Span name = new Span(car.name());
+        name.addClassName("car-management-name");
 
-        Span addLabel = new Span("Add Car");
-        addLabel.addClassName("car-card-name");
+        Span specs = new Span(car.capacity() + " kWh · " + car.efficiency() + " kWh/100km");
+        specs.addClassName("car-management-specs");
 
-        Span addHint = new Span("Click to add");
-        addHint.addClassName("car-card-specs");
+        if (isSelected) {
+            Span selectedBadge = new Span("Selected");
+            selectedBadge.addClassName("car-selected-badge");
+            info.add(name, specs, selectedBadge);
+        } else {
+            info.add(name, specs);
+        }
 
-        addCarInfo.add(addLabel, addHint);
+        // Actions
+        Div actions = new Div();
+        actions.addClassName("car-management-actions");
 
-        addCarCard.add(addCarThumb, addCarInfo);
-        addCarCard.addClickListener(e -> showAddCarDialog());
+        if (!isSelected) {
+            Button selectBtn = new Button("Select");
+            selectBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_PRIMARY);
+            selectBtn.addClickListener(e -> {
+                selectSavedCar(car);
+                parentDialog.close();
+            });
+            actions.add(selectBtn);
+        }
 
-        myCarsQuickSelect.add(addCarCard);
-    }
+        Button editBtn = new Button(new Icon(VaadinIcon.EDIT));
+        editBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+        editBtn.getElement().setAttribute("title", "Edit");
+        editBtn.addClickListener(e -> {
+            parentDialog.close();
+            showEditCarDialog(car);
+        });
 
-    private String getAddCarSvg() {
-        return """
-                <svg viewBox="0 0 40 20" style="width: 100%; height: 100%;">
-                    <defs>
-                        <mask id="carMask">
-                            <rect width="40" height="20" fill="white"/>
-                            <circle cx="20" cy="10" r="6" fill="black"/>
-                        </mask>
-                    </defs>
-                    <g opacity="0.4" mask="url(#carMask)">
-                        <ellipse cx="8" cy="16" rx="4" ry="4" fill="currentColor"></ellipse>
-                        <ellipse cx="32" cy="16" rx="4" ry="4" fill="currentColor"></ellipse>
-                        <path d="M4 12 Q6 6 12 5 L28 5 Q34 6 36 12 L36 14 L4 14 Z" fill="currentColor"></path>
-                        <path d="M11 5.5 Q12 2 16 1.5 L24 1.5 Q28 2 29 5.5 Z" fill="currentColor"></path>
-                    </g>
-                    <circle cx="20" cy="10" r="5" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>
-                    <line x1="20" y1="7" x2="20" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
-                    <line x1="17" y1="10" x2="23" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
-                </svg>
-                """;
+        Button deleteBtn = new Button(new Icon(VaadinIcon.TRASH));
+        deleteBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+        deleteBtn.getElement().setAttribute("title", "Delete");
+        deleteBtn.addClickListener(e -> {
+            parentDialog.close();
+            confirmDeleteCar(car);
+        });
+
+        actions.add(editBtn, deleteBtn);
+
+        row.add(thumb, info, actions);
+
+        // Add click listener only to non-button areas (thumb and info)
+        if (!isSelected) {
+            thumb.addClickListener(e -> {
+                selectSavedCar(car);
+                parentDialog.close();
+            });
+            info.addClickListener(e -> {
+                selectSavedCar(car);
+                parentDialog.close();
+            });
+        }
+
+        return row;
     }
 
     private String getSmallCarSvg() {
@@ -1072,8 +1111,6 @@ public class ChargingView extends Main {
             // Update selection if this was the selected car
             if (selectedSavedCar != null && selectedSavedCar.id().equals(car.id())) {
                 selectSavedCar(updatedCar);
-            } else {
-                renderMyCarsQuickSelect();
             }
 
             dialog.close();
@@ -1117,13 +1154,19 @@ public class ChargingView extends Main {
         savedCars.removeIf(c -> c.id().equals(car.id()));
         saveCarsToStorage();
 
-        // If the deleted car was selected, clear selection
+        // If the deleted car was selected, select another car or initialize default
         if (selectedSavedCar != null && selectedSavedCar.id().equals(car.id())) {
             selectedSavedCar = null;
             WebStorage.removeItem(SELECTED_SAVED_CAR_KEY);
+
+            if (!savedCars.isEmpty()) {
+                selectSavedCar(savedCars.get(0));
+            } else {
+                // No cars left - initialize with default
+                initializeDefaultCar();
+            }
         }
 
-        renderMyCarsQuickSelect();
         Notification.show("Car deleted", 2000, Notification.Position.MIDDLE);
     }
 
@@ -1145,7 +1188,6 @@ public class ChargingView extends Main {
                     List<SavedCar> loaded = mapper.readValue(item, new TypeReference<List<SavedCar>>() {});
                     savedCars.clear();
                     savedCars.addAll(loaded);
-                    renderMyCarsQuickSelect();
 
                     // Check if a saved car was previously selected
                     WebStorage.getItem(SELECTED_SAVED_CAR_KEY, selectedId -> {
@@ -1154,15 +1196,33 @@ public class ChargingView extends Main {
                                     .filter(c -> c.id().equals(selectedId))
                                     .findFirst()
                                     .ifPresent(this::selectSavedCar);
+                        } else if (!savedCars.isEmpty()) {
+                            // Select first car if none was previously selected
+                            selectSavedCar(savedCars.get(0));
                         }
                     });
                 } catch (IOException e) {
                     log.error("Failed to load cars from storage", e);
+                    initializeDefaultCar();
                 }
             } else {
-                renderMyCarsQuickSelect();
+                // No saved cars - initialize with default car
+                initializeDefaultCar();
             }
         });
+    }
+
+    private void initializeDefaultCar() {
+        // Create a default car for new users based on Tesla Model 3
+        SavedCar defaultCar = new SavedCar(
+                "Tesla Model 3",
+                75,
+                14.7,
+                null
+        );
+        savedCars.add(defaultCar);
+        saveCarsToStorage();
+        selectSavedCar(defaultCar);
     }
 
     public void readFieldValues() {
