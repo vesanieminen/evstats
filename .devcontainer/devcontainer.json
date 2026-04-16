@@ -1,22 +1,31 @@
 {
   "name": "Java Agents",
   "image": "mcr.microsoft.com/devcontainers/java:21",
-
   "features": {
-  //  "ghcr.io/devcontainers/features/java:1": {
-  //    "version": "none",
-  //    "installMaven": "true"
-  //  },
+    //  "ghcr.io/devcontainers/features/java:1": {
+    //    "version": "none",
+    //    "installMaven": "true"
+    //  },
     "ghcr.io/devcontainers/features/node:1": {
       "version": "lts"
     }
   },
-
-  //"postCreateCommand": "curl -fsSL https://claude.ai/install.sh | bash && npm install -g @openai/codex",
-  "postCreateCommand": "curl -fsSL https://claude.ai/install.sh | bash && npm install -g @openai/codex @playwright/cli@latest && playwright-cli install --skills && claude mcp add vaadin --transport http https://mcp.vaadin.com/docs",
-
+  "postCreateCommand": "curl -fsSL https://claude.ai/install.sh | bash && npm install -g @openai/codex @playwright/cli@latest && playwright-cli install --skills && ~/.local/bin/claude mcp add vaadin --transport http https://mcp.vaadin.com/docs",
   "remoteEnv": {
     "PATH": "${containerEnv:HOME}/.local/bin:${containerEnv:PATH}"
   },
-
+  "forwardPorts": [
+    8080,
+    35729
+  ],
+  "portsAttributes": {
+    "8080": {
+      "label": "evstats (Spring Boot)",
+      "onAutoForward": "notify"
+    },
+    "35729": {
+      "label": "LiveReload",
+      "onAutoForward": "silent"
+    }
+  }
 }
