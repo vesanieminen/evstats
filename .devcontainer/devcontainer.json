@@ -2,10 +2,6 @@
   "name": "Java Agents",
   "image": "mcr.microsoft.com/devcontainers/java:21",
   "features": {
-    //  "ghcr.io/devcontainers/features/java:1": {
-    //    "version": "none",
-    //    "installMaven": "true"
-    //  },
     "ghcr.io/devcontainers/features/node:1": {
       "version": "lts"
     }
@@ -14,18 +10,8 @@
   "remoteEnv": {
     "PATH": "${containerEnv:HOME}/.local/bin:${containerEnv:PATH}"
   },
-  "forwardPorts": [
-    8080,
-    35729
-  ],
-  "portsAttributes": {
-    "8080": {
-      "label": "evstats (Spring Boot)",
-      "onAutoForward": "notify"
-    },
-    "35729": {
-      "label": "LiveReload",
-      "onAutoForward": "silent"
-    }
-  }
+  "appPort": [
+    "8080:8080",
+    "35729:35729"
+  ]
 }
