@@ -6,7 +6,7 @@
       "version": "lts"
     }
   },
-  "postCreateCommand": "curl -fsSL https://claude.ai/install.sh | bash && npm install -g @openai/codex @playwright/cli@latest && playwright-cli install --skills && ~/.local/bin/claude mcp add vaadin --transport http https://mcp.vaadin.com/docs",
+  "postCreateCommand": "curl -fsSL https://claude.ai/install.sh | bash && npm install -g @openai/codex @playwright/cli@latest && playwright-cli install --skills && ~/.local/bin/claude mcp add vaadin --transport http https://mcp.vaadin.com/docs && npm install && npx playwright install --with-deps",
   "remoteEnv": {
     "PATH": "${containerEnv:HOME}/.local/bin:${containerEnv:PATH}"
   },
