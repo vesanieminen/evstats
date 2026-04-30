@@ -22,7 +22,6 @@ import com.vaadin.flow.component.timepicker.TimePicker;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.PreserveOnRefresh;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
@@ -32,6 +31,7 @@ import com.vesanieminen.components.Card;
 import com.vesanieminen.components.DualRangeSlider;
 import com.vesanieminen.components.Ping;
 import com.vesanieminen.components.SingleRangeSlider;
+import com.vesanieminen.i18n.T;
 import com.vesanieminen.model.EVModel;
 import com.vesanieminen.services.LiukuriService;
 import com.vesanieminen.services.ObjectMapperService;
@@ -57,13 +57,17 @@ import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 
-@PageTitle("Charging tool")
 @Route(value = "", layout = MainLayout.class)
 @RouteAlias(value = "lataus", layout = MainLayout.class)
 @RouteAlias(value = "charging", layout = MainLayout.class)
 @Slf4j
 @PreserveOnRefresh
-public class ChargingView extends Main {
+public class ChargingView extends Main implements com.vaadin.flow.router.HasDynamicTitle {
+
+    @Override
+    public String getPageTitle() {
+        return T.tr("charging.title");
+    }
 
     // Vehicle section fields
     private final Select<EVModel> vehicleSelect;
@@ -161,7 +165,7 @@ public class ChargingView extends Main {
         // Current column
         Div currentColumn = new Div();
         currentColumn.addClassName("soc-column");
-        Span currentLabel = new Span("Current");
+        Span currentLabel = new Span(T.tr("charging.current"));
         currentLabel.addClassName("soc-label");
         currentSocValueSpan = new Span("20%");
         currentSocValueSpan.addClassName("soc-value");
@@ -172,18 +176,18 @@ public class ChargingView extends Main {
         // Range added column
         Div rangeColumn = new Div();
         rangeColumn.addClassName("soc-column");
-        Span rangeLabel = new Span("Range +");
+        Span rangeLabel = new Span(T.tr("charging.range"));
         rangeLabel.addClassName("soc-label");
         rangeAddedSpan = new Span("155 km");
         rangeAddedSpan.addClassNames("soc-value", "accent");
-        Span addedLabel = new Span("added");
+        Span addedLabel = new Span(T.tr("charging.added"));
         addedLabel.addClassName("soc-range");
         rangeColumn.add(rangeLabel, rangeAddedSpan, addedLabel);
 
         // Target column
         Div targetColumn = new Div();
         targetColumn.addClassName("soc-column");
-        Span targetLabel = new Span("Target");
+        Span targetLabel = new Span(T.tr("charging.target"));
         targetLabel.addClassName("soc-label");
         targetSocValueSpan = new Span("50%");
         targetSocValueSpan.addClassName("soc-value");
@@ -195,7 +199,7 @@ public class ChargingView extends Main {
         vehicleSection.add(socDisplay);
 
         // Change Vehicle toggle
-        Button changeVehicleBtn = new Button("Change Vehicle");
+        Button changeVehicleBtn = new Button(T.tr("charging.changeVehicle"));
         changeVehicleBtn.addClassName("change-vehicle-toggle");
         changeVehicleBtn.setIcon(new Icon(VaadinIcon.CAR));
         Icon chevron = new Icon(VaadinIcon.CHEVRON_DOWN);
@@ -215,13 +219,13 @@ public class ChargingView extends Main {
         Div customFieldsDiv = new Div();
         customFieldsDiv.addClassName("vehicle-custom-fields");
 
-        batteryCapacityField = new NumberField("Battery Capacity (kWh)");
+        batteryCapacityField = new NumberField(T.tr("charging.batteryCapacity"));
         batteryCapacityField.setId("batteryCapacityField");
         batteryCapacityField.setValue((double) selectedModel.capacity());
         batteryCapacityField.setStepButtonsVisible(true);
         batteryCapacityField.setVisible(false);
 
-        consumptionField = new NumberField("Consumption (kWh/100km)");
+        consumptionField = new NumberField(T.tr("charging.consumption"));
         consumptionField.setId("consumptionField");
         consumptionField.setValue(selectedModel.efficiency());
         consumptionField.setStepButtonsVisible(true);
@@ -256,7 +260,7 @@ public class ChargingView extends Main {
         Div imageChangeSection = new Div();
         imageChangeSection.addClassName("image-change-section");
 
-        Span imageLabel = new Span("Vehicle Image");
+        Span imageLabel = new Span(T.tr("charging.image.title"));
         imageLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.TextColor.SECONDARY);
 
         // File upload
@@ -268,7 +272,7 @@ public class ChargingView extends Main {
         upload.setWidthFull();
 
         Div uploadLabel = new Div();
-        uploadLabel.setText("Upload image (max 100KB, recommended 180×80px)");
+        uploadLabel.setText(T.tr("charging.image.uploadLabel"));
         uploadLabel.addClassNames(LumoUtility.FontSize.SMALL, LumoUtility.TextColor.SECONDARY);
         upload.setDropLabelIcon(new Icon(VaadinIcon.UPLOAD));
 
@@ -279,7 +283,7 @@ public class ChargingView extends Main {
                 byte[] bytes = inputStream.readAllBytes();
 
                 if (bytes.length > MAX_IMAGE_SIZE_BYTES) {
-                    Notification.show("Image too large. Maximum size is 100KB.", 3000, Notification.Position.MIDDLE)
+                    Notification.show(T.tr("charging.image.tooLarge"), 3000, Notification.Position.MIDDLE)
                             .addThemeVariants(NotificationVariant.LUMO_ERROR);
                     return;
                 }
@@ -288,10 +292,10 @@ public class ChargingView extends Main {
                 String dataUrl = "data:" + mimeType + ";base64," + base64;
                 setCarImage(dataUrl);
                 WebStorage.setItem(CAR_IMAGE_STORAGE_KEY, dataUrl);
-                Notification.show("Image updated!", 2000, Notification.Position.MIDDLE)
+                Notification.show(T.tr("charging.image.updated"), 2000, Notification.Position.MIDDLE)
                         .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
             } catch (IOException ex) {
-                Notification.show("Failed to read image", 3000, Notification.Position.MIDDLE)
+                Notification.show(T.tr("charging.image.failed"), 3000, Notification.Position.MIDDLE)
                         .addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
         });
@@ -302,24 +306,24 @@ public class ChargingView extends Main {
         });
 
         // URL input
-        TextField imageUrlField = new TextField("Or enter image URL");
+        TextField imageUrlField = new TextField(T.tr("charging.image.upload"));
         imageUrlField.setWidthFull();
         imageUrlField.setPlaceholder("https://example.com/car.png");
         imageUrlField.setClearButtonVisible(true);
 
-        Button loadUrlBtn = new Button("Load", new Icon(VaadinIcon.DOWNLOAD));
+        Button loadUrlBtn = new Button(T.tr("charging.summary.load"), new Icon(VaadinIcon.DOWNLOAD));
         loadUrlBtn.addClickListener(e -> {
             String url = imageUrlField.getValue();
             if (url != null && !url.isBlank()) {
                 // Validate URL format
                 if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                    Notification.show("Please enter a valid URL starting with http:// or https://", 3000, Notification.Position.MIDDLE)
+                    Notification.show(T.tr("charging.image.invalidUrl"), 3000, Notification.Position.MIDDLE)
                             .addThemeVariants(NotificationVariant.LUMO_ERROR);
                     return;
                 }
                 setCarImage(url);
                 WebStorage.setItem(CAR_IMAGE_STORAGE_KEY, url);
-                Notification.show("Image updated!", 2000, Notification.Position.MIDDLE)
+                Notification.show(T.tr("charging.image.updated"), 2000, Notification.Position.MIDDLE)
                         .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
                 imageUrlField.clear();
             }
@@ -329,12 +333,12 @@ public class ChargingView extends Main {
         urlRow.addClassName("image-url-row");
 
         // Reset button
-        Button resetImageBtn = new Button("Reset to Default", new Icon(VaadinIcon.REFRESH));
+        Button resetImageBtn = new Button(T.tr("charging.image.reset"), new Icon(VaadinIcon.REFRESH));
         resetImageBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
         resetImageBtn.addClickListener(e -> {
             carImageContainer.getElement().setProperty("innerHTML", getCarSvgString());
             WebStorage.removeItem(CAR_IMAGE_STORAGE_KEY);
-            Notification.show("Image reset to default", 2000, Notification.Position.MIDDLE);
+            Notification.show(T.tr("charging.image.resetDone"), 2000, Notification.Position.MIDDLE);
         });
 
         imageChangeSection.add(imageLabel, upload, uploadLabel, urlRow, resetImageBtn);
@@ -344,7 +348,7 @@ public class ChargingView extends Main {
         add(vehicleCard);
 
         // ===== CHARGE LEVEL CARD =====
-        Card chargeLevelCard = new Card(new Icon(VaadinIcon.PLUG), "Charge Level");
+        Card chargeLevelCard = new Card(new Icon(VaadinIcon.PLUG), T.tr("charging.section.chargeLevel"));
 
         socSlider = new DualRangeSlider(0, 100, preservedState.charge.getCurrentSOC(), preservedState.charge.getTargetSOC());
         socSlider.setWidthFull();
@@ -371,7 +375,7 @@ public class ChargingView extends Main {
         Icon zapIcon = new Icon(VaadinIcon.FLASH);
         zapIcon.addClassName(LumoUtility.TextColor.PRIMARY);
         zapIcon.setSize("18px");
-        Span speedLabel = new Span("Charging Speed");
+        Span speedLabel = new Span(T.tr("charging.charger.power"));
         speedLabel.addClassName(LumoUtility.TextColor.SECONDARY);
         speedLabel.getStyle().set("font-size", "var(--lumo-font-size-s)");
         headerLeft.add(zapIcon, speedLabel);
@@ -392,20 +396,20 @@ public class ChargingView extends Main {
         });
 
         // Advanced section
-        Details advancedDetails = new Details("Advanced");
+        Details advancedDetails = new Details(T.tr("charging.section.advanced"));
         advancedDetails.addClassName("advanced-toggle");
 
         Div advancedSection = new Div();
         advancedSection.addClassName("advanced-section");
 
-        phasesField = new IntegerField("Phases");
+        phasesField = new IntegerField(T.tr("charging.charger.phases"));
         phasesField.setId("phasesField");
         phasesField.setMin(1);
         phasesField.setMax(3);
         phasesField.setValue(preservedState.charge.getPhases());
         phasesField.setStepButtonsVisible(true);
 
-        voltageField = new IntegerField("Voltage");
+        voltageField = new IntegerField(T.tr("charging.charger.voltage"));
         voltageField.setId("voltageField");
         voltageField.setSuffixComponent(new Span("V"));
         voltageField.setMin(1);
@@ -413,7 +417,7 @@ public class ChargingView extends Main {
         voltageField.setValue(preservedState.charge.getVoltage());
         voltageField.setStepButtonsVisible(true);
 
-        chargingLossField = new NumberField("Charging Loss");
+        chargingLossField = new NumberField(T.tr("charging.charger.loss"));
         chargingLossField.setId("chargingLossField");
         chargingLossField.setSuffixComponent(new Span("%"));
         chargingLossField.setMin(0);
@@ -429,7 +433,7 @@ public class ChargingView extends Main {
         add(chargingSpeedCard);
 
         // ===== SCHEDULE CARD =====
-        Card scheduleCard = new Card(new Icon(VaadinIcon.CALENDAR), "Schedule");
+        Card scheduleCard = new Card(new Icon(VaadinIcon.CALENDAR), T.tr("charging.section.schedule"));
 
         Div scheduleGrid = new Div();
         scheduleGrid.addClassName("schedule-grid");
@@ -438,26 +442,26 @@ public class ChargingView extends Main {
         datePickerI18n.setFirstDayOfWeek(1);
         datePickerI18n.setDateFormat("dd.MM.yyyy");
 
-        startDatePicker = new DatePicker("Start Date");
+        startDatePicker = new DatePicker(T.tr("charging.startDate"));
         startDatePicker.setId("startDatePicker");
         startDatePicker.setI18n(datePickerI18n);
         startDatePicker.setLocale(Locale.of("fi", "FI"));
         startDatePicker.setValue(preservedState.charge.getStartTime().toLocalDate());
 
-        endDatePicker = new DatePicker("End Date");
+        endDatePicker = new DatePicker(T.tr("charging.endDate"));
         endDatePicker.setId("endDatePicker");
         endDatePicker.setI18n(datePickerI18n);
         endDatePicker.setLocale(Locale.of("fi", "FI"));
         endDatePicker.setValue(preservedState.charge.getStartTime().toLocalDate());
         endDatePicker.setReadOnly(true);
 
-        startTimePicker = new TimePicker("Start Time");
+        startTimePicker = new TimePicker(T.tr("charging.startTime"));
         startTimePicker.setId("startTimePicker");
         startTimePicker.setStep(Duration.ofMinutes(15));
         startTimePicker.setLocale(Locale.of("fi", "FI"));
         startTimePicker.setValue(preservedState.charge.getStartTime().toLocalTime());
 
-        endTimePicker = new TimePicker("End Time");
+        endTimePicker = new TimePicker(T.tr("charging.endTime"));
         endTimePicker.setId("endTimePicker");
         endTimePicker.setStep(Duration.ofMinutes(15));
         endTimePicker.setLocale(Locale.of("fi", "FI"));
@@ -469,11 +473,11 @@ public class ChargingView extends Main {
         Div calcModeButtons = new Div();
         calcModeButtons.addClassName("calc-mode-buttons");
 
-        calcEndButton = new Button("Calculate End");
+        calcEndButton = new Button(T.tr("charging.calculateEnd"));
         calcEndButton.addClassNames("calc-mode-btn", "active");
         calcEndButton.addClickListener(e -> setCalculationMode(CalculationTarget.CHARGING_END));
 
-        calcStartButton = new Button("Calculate Start");
+        calcStartButton = new Button(T.tr("charging.calculateStart"));
         calcStartButton.addClassNames("calc-mode-btn", "inactive");
         calcStartButton.addClickListener(e -> setCalculationMode(CalculationTarget.CHARGING_START));
 
@@ -483,7 +487,7 @@ public class ChargingView extends Main {
         add(scheduleCard);
 
         // ===== CHARGING SUMMARY CARD =====
-        Card summaryCard = new Card(new Icon(VaadinIcon.EURO), "Charging Summary");
+        Card summaryCard = new Card(new Icon(VaadinIcon.EURO), T.tr("charging.section.summary"));
 
         Div summaryRows = new Div();
         summaryRows.addClassName("summary-rows");
@@ -495,7 +499,7 @@ public class ChargingView extends Main {
         durationLabelSpan.addClassName("label");
         Icon clockIcon = new Icon(VaadinIcon.CLOCK);
         clockIcon.setSize("14px");
-        durationLabelSpan.add(clockIcon, new Span("Duration"));
+        durationLabelSpan.add(clockIcon, new Span(T.tr("charging.summary.duration")));
         durationValueSpan = new Span();
         durationValueSpan.addClassName("value");
         durationRow.add(durationLabelSpan, durationValueSpan);
@@ -504,7 +508,7 @@ public class ChargingView extends Main {
         // Energy consumed row
         Div energyConsumedRow = new Div();
         energyConsumedRow.addClassName("summary-row");
-        Span energyConsumedLabel = new Span("Energy consumed");
+        Span energyConsumedLabel = new Span(T.tr("charging.summary.energy"));
         energyConsumedLabel.addClassName("label");
         energyConsumedValueSpan = new Span();
         energyConsumedValueSpan.addClassName("value");
@@ -514,7 +518,7 @@ public class ChargingView extends Main {
         // Added to battery row
         Div addedToBatteryRow = new Div();
         addedToBatteryRow.addClassName("summary-row");
-        Span addedToBatteryLabel = new Span("Added to battery");
+        Span addedToBatteryLabel = new Span(T.tr("charging.summary.added"));
         addedToBatteryLabel.addClassName("label");
         addedToBatteryValueSpan = new Span();
         addedToBatteryValueSpan.addClassName("value");
@@ -524,7 +528,7 @@ public class ChargingView extends Main {
         // Lost to heat row
         Div lostToHeatRow = new Div();
         lostToHeatRow.addClassName("summary-row");
-        Span lostToHeatLabel = new Span("Lost to heat");
+        Span lostToHeatLabel = new Span(T.tr("charging.summary.lost"));
         lostToHeatLabel.addClassName("label");
         lostToHeatValueSpan = new Span();
         lostToHeatValueSpan.addClassName("value");
@@ -534,11 +538,11 @@ public class ChargingView extends Main {
         // Spot price row
         Div spotPriceRow = new Div();
         spotPriceRow.addClassName("summary-row");
-        Span spotPriceLabel = new Span("Spot price");
+        Span spotPriceLabel = new Span(T.tr("charging.summary.spot"));
         spotPriceLabel.addClassName("label");
         spotPriceValueSpan = new Span();
         spotPriceValueSpan.addClassName("value");
-        spotAveragePing = new Ping("Price");
+        spotAveragePing = new Ping(T.tr("charging.summary.price"));
         Div spotValueDiv = new Div(spotPriceValueSpan, spotAveragePing);
         spotValueDiv.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.AlignItems.CENTER);
         spotPriceRow.add(spotPriceLabel, spotValueDiv);
@@ -547,11 +551,11 @@ public class ChargingView extends Main {
         // Total cost row
         Div totalCostRow = new Div();
         totalCostRow.addClassNames("summary-row", "total-cost-row");
-        Span totalCostLabel = new Span("Total Cost");
+        Span totalCostLabel = new Span(T.tr("charging.summary.total"));
         totalCostLabel.addClassName("label");
         totalCostValueSpan = new Span("0.00 €");
         totalCostValueSpan.addClassName("value");
-        electricityCostPing = new Ping("Cost");
+        electricityCostPing = new Ping(T.tr("charging.summary.cost"));
         Div totalValueDiv = new Div(totalCostValueSpan, electricityCostPing);
         totalValueDiv.addClassNames(LumoUtility.Display.FLEX, LumoUtility.Gap.SMALL, LumoUtility.AlignItems.CENTER);
         totalCostRow.add(totalCostLabel, totalValueDiv);
@@ -730,8 +734,8 @@ public class ChargingView extends Main {
         Span boldKwh = new Span(String.format("%.1f kWh", capacityIncrease));
         boldKwh.getStyle().set("font-weight", "600");
         addingKwhSpan.removeAll();
-        addingKwhSpan.add(new Span("Adding: "), boldKwh);
-        batteryCapacitySpan.setText(String.format("%.0f kWh battery", capacity));
+        addingKwhSpan.add(new Span(T.tr("charging.adding") + " "), boldKwh);
+        batteryCapacitySpan.setText(T.tr("charging.batteryShort", String.format("%.0f", capacity)));
 
         // Calculate charging power
         double chargingPowerInWatts = amperes * phases * voltage;
