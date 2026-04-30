@@ -9,8 +9,10 @@ import com.vaadin.flow.component.charts.model.Marker;
 import com.vaadin.flow.component.charts.model.PlotOptionsLine;
 import com.vaadin.flow.component.charts.model.Tooltip;
 import com.vaadin.flow.component.html.Main;
-import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
+import com.vesanieminen.components.ChartExport;
+import com.vesanieminen.i18n.T;
 import com.vesanieminen.services.AUT_FI_Service;
 import com.vesanieminen.views.MainLayout;
 
@@ -20,13 +22,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-@PageTitle("Cumulative BEV Registrations per Year")
 @Route(value = "bev-registrations-by-year", layout = MainLayout.class)
-public class CumulativeBEVRegistrationsView extends Main {
+public class CumulativeBEVRegistrationsView extends Main implements HasDynamicTitle {
 
     private static volatile Map<Integer, Number[]> cumulativeCache;
 
     public CumulativeBEVRegistrationsView() {
+    }
+
+    @Override
+    public String getPageTitle() {
+        return T.tr("statistics.bevPerYear.title");
     }
 
     @Override
@@ -57,8 +63,10 @@ public class CumulativeBEVRegistrationsView extends Main {
             configuration.getChart().setStyledMode(true);
             configuration.getLegend().setEnabled(true);
             configuration.getxAxis().setCategories(
-                    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+                    T.tr("month.short.jan"), T.tr("month.short.feb"), T.tr("month.short.mar"),
+                    T.tr("month.short.apr"), T.tr("month.short.may"), T.tr("month.short.jun"),
+                    T.tr("month.short.jul"), T.tr("month.short.aug"), T.tr("month.short.sep"),
+                    T.tr("month.short.oct"), T.tr("month.short.nov"), T.tr("month.short.dec")
             );
             final var yAxis = configuration.getyAxis();
             yAxis.setMin(0);
@@ -77,6 +85,8 @@ public class CumulativeBEVRegistrationsView extends Main {
             tooltip.setPointFormat("<span class=\"highcharts-color-{series.colorIndex}\">●</span> "
                     + "<b>{series.name}</b>: {point.y:,.0f}<br/>");
             configuration.setTooltip(tooltip);
+
+            ChartExport.configure(chart, "bev-registrations-by-year");
 
             add(chart);
         } catch (IOException | URISyntaxException e) {

@@ -10,9 +10,10 @@ import com.vaadin.flow.component.charts.model.Marker;
 import com.vaadin.flow.component.charts.model.PlotOptionsLine;
 import com.vaadin.flow.component.charts.model.Tooltip;
 import com.vaadin.flow.component.html.Main;
-import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
 import com.vesanieminen.components.ChartExport;
+import com.vesanieminen.i18n.T;
 import com.vesanieminen.services.AUT_FI_Service;
 import com.vesanieminen.views.MainLayout;
 
@@ -20,11 +21,15 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.ZoneOffset;
 
-@PageTitle("Tesla registrations")
 @Route(value = "tesla-registrations", layout = MainLayout.class)
-public class TeslaRegistrationsView extends Main {
+public class TeslaRegistrationsView extends Main implements HasDynamicTitle {
 
     public TeslaRegistrationsView() {
+    }
+
+    @Override
+    public String getPageTitle() {
+        return T.tr("statistics.teslaRegistrations.title");
     }
 
     @Override
@@ -44,7 +49,7 @@ public class TeslaRegistrationsView extends Main {
             chart.setTimeline(true);
             chart.setHeightFull();
             final var configuration = chart.getConfiguration();
-            final var evRegistrations = new DataSeries("Tesla registrations");
+            final var evRegistrations = new DataSeries(T.tr("statistics.teslaRegistrations.series"));
             for (AUT_FI_Service.TeslaStats stat : evStats.get()) {
                 evRegistrations.add(new DataSeriesItem(stat.date().atStartOfDay().toInstant(ZoneOffset.UTC), stat.amount()));
             }

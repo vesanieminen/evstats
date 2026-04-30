@@ -10,20 +10,25 @@ import com.vaadin.flow.component.charts.model.PlotOptionsBar;
 import com.vaadin.flow.component.charts.model.Stacking;
 import com.vaadin.flow.component.charts.model.Tooltip;
 import com.vaadin.flow.component.html.Main;
-import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
 import com.vesanieminen.components.ChartExport;
+import com.vesanieminen.i18n.T;
 import com.vesanieminen.services.AUT_FI_Service;
 import com.vesanieminen.views.MainLayout;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-@PageTitle("Tesla Sales in Finland per Year and Month")
 @Route(value = "tesla-registrations-bar", layout = MainLayout.class)
-public class TeslaRegistrationsBarView extends Main {
+public class TeslaRegistrationsBarView extends Main implements HasDynamicTitle {
 
     public TeslaRegistrationsBarView() {
+    }
+
+    @Override
+    public String getPageTitle() {
+        return T.tr("statistics.teslaPerYear.title");
     }
 
     @Override
@@ -43,22 +48,14 @@ public class TeslaRegistrationsBarView extends Main {
             chart.setHeightFull();
             final var configuration = chart.getConfiguration();
             final var teslaStats = evStats.get();
+            final String[] monthKeys = {
+                    "month.long.jan", "month.long.feb", "month.long.mar", "month.long.apr",
+                    "month.long.may", "month.long.jun", "month.long.jul", "month.long.aug",
+                    "month.long.sep", "month.long.oct", "month.long.nov", "month.long.dec"
+            };
             for (int month = 11; month >= 0; --month) {
                 final var series = new ListSeries();
-                switch (month) {
-                    case 0 -> series.setName("January");
-                    case 1 -> series.setName("February");
-                    case 2 -> series.setName("March");
-                    case 3 -> series.setName("April");
-                    case 4 -> series.setName("May");
-                    case 5 -> series.setName("June");
-                    case 6 -> series.setName("July");
-                    case 7 -> series.setName("August");
-                    case 8 -> series.setName("September");
-                    case 9 -> series.setName("October");
-                    case 10 -> series.setName("November");
-                    case 11 -> series.setName("December");
-                }
+                series.setName(T.tr(monthKeys[month]));
                 for (int year = 0; year < 8; ++year) {
                     try {
                         final var stat = teslaStats.get(month + year * 12);

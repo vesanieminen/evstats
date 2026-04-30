@@ -16,8 +16,8 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
-import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import com.vesanieminen.i18n.T;
 import com.vesanieminen.views.charging.ChargingView;
 import com.vesanieminen.views.statistics.CumulativeBEVRegistrationsView;
 import com.vesanieminen.views.statistics.EVAdoptionRateView;
@@ -48,6 +48,7 @@ public class MainLayout extends AppLayout {
         addToNavbar(span, settingsButton);
     }
 
+    @Override
     protected void onAttach(AttachEvent attachEvent) {
     }
 
@@ -62,7 +63,7 @@ public class MainLayout extends AppLayout {
     }
 
     private void addDrawerContent() {
-        H1 appName = new H1("Auto Liukuri");
+        H1 appName = new H1(T.tr("app.name"));
         appName.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
         final var header = new Header(appName);
 
@@ -78,16 +79,16 @@ public class MainLayout extends AppLayout {
         // These changes are likely to cause some breaking change to the custom css
         // applied to the component.
         SideNav nav = new SideNav();
-        final var statistics = new SideNavItem("Statistics");
+        final var statistics = new SideNavItem(T.tr("nav.statistics"));
         statistics.setExpanded(true);
         statistics.addItem(
-                new SideNavItem("Adoption curve", EVAdoptionRateView.class, LineAwesomeIcon.CHART_AREA_SOLID.create()),
-                new SideNavItem("New cars", EVRegistrationsView.class, LineAwesomeIcon.CHART_BAR_SOLID.create()),
-                new SideNavItem("BEV registrations / year", CumulativeBEVRegistrationsView.class, LineAwesomeIcon.CHART_LINE_SOLID.create()),
-                new SideNavItem("Tesla registrations", TeslaRegistrationsView.class, LineAwesomeIcon.CHART_BAR_SOLID.create()),
-                new SideNavItem("New Teslas / year", TeslaRegistrationsBarView.class, LineAwesomeIcon.BARS_SOLID.create()));
+                new SideNavItem(T.tr("nav.statistics.adoption"), EVAdoptionRateView.class, LineAwesomeIcon.CHART_AREA_SOLID.create()),
+                new SideNavItem(T.tr("nav.statistics.newCars"), EVRegistrationsView.class, LineAwesomeIcon.CHART_BAR_SOLID.create()),
+                new SideNavItem(T.tr("nav.statistics.bevPerYear"), CumulativeBEVRegistrationsView.class, LineAwesomeIcon.CHART_LINE_SOLID.create()),
+                new SideNavItem(T.tr("nav.statistics.teslaRegistrations"), TeslaRegistrationsView.class, LineAwesomeIcon.CHART_BAR_SOLID.create()),
+                new SideNavItem(T.tr("nav.statistics.teslaPerYear"), TeslaRegistrationsBarView.class, LineAwesomeIcon.BARS_SOLID.create()));
         nav.addItem(
-                new SideNavItem("Charging tool", ChargingView.class, LineAwesomeIcon.CAR_BATTERY_SOLID.create()),
+                new SideNavItem(T.tr("nav.charging"), ChargingView.class, LineAwesomeIcon.CAR_BATTERY_SOLID.create()),
                 statistics
         );
 
@@ -98,7 +99,7 @@ public class MainLayout extends AppLayout {
         Footer layout = new Footer();
         layout.addClassNames(LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
-        final var sourceSpan = new Span("Source: ");
+        final var sourceSpan = new Span(T.tr("footer.source") + " ");
         final var link = new Anchor("https://www.aut.fi/tilastot/ensirekisteroinnit/ensirekisteroinnit_kayttovoimittain/henkiloautojen_kayttovoimatilastot", "aut.fi");
         final var footer = new Div(sourceSpan, link);
         footer.addClassNames(LumoUtility.Display.FLEX, LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.SMALL, LumoUtility.Margin.Bottom.XSMALL, LumoUtility.Gap.XSMALL);
@@ -106,7 +107,7 @@ public class MainLayout extends AppLayout {
 
         final var vaadinIcon = VaadinIcon.VAADIN_H.create();
         vaadinIcon.addClassNames(LumoUtility.IconSize.SMALL);
-        final var vaadinLink = new Anchor("http://vaadin.com", "Built with Vaadin");
+        final var vaadinLink = new Anchor("http://vaadin.com", T.tr("footer.builtWithVaadin"));
         vaadinLink.addClassNames(
                 LumoUtility.AlignItems.CENTER,
                 LumoUtility.BorderRadius.LARGE,
@@ -124,7 +125,7 @@ public class MainLayout extends AppLayout {
         final var githubIcon = new Span();
         githubIcon.addClassNames(LumoUtility.Display.FLEX);
         githubIcon.getElement().setProperty("innerHTML", GITHUB_SVG);
-        final var githubLink = new Anchor("https://github.com/vesanieminen/evstats", "Code on Github");
+        final var githubLink = new Anchor("https://github.com/vesanieminen/evstats", T.tr("footer.codeOnGithub"));
         githubLink.addClassNames(LumoUtility.Display.FLEX);
         githubLink.add(githubIcon);
         githubIcon.addClassNames(LumoUtility.IconSize.MEDIUM, LumoUtility.TextColor.PRIMARY, LumoUtility.Margin.Left.SMALL);
@@ -140,7 +141,12 @@ public class MainLayout extends AppLayout {
     }
 
     private String getCurrentPageTitle() {
-        PageTitle title = getContent().getClass().getAnnotation(PageTitle.class);
+        // Views that participate in i18n implement HasDynamicTitle and translate
+        // their own title; the static @PageTitle is the English fallback.
+        if (getContent() instanceof com.vaadin.flow.router.HasDynamicTitle dynamic) {
+            return dynamic.getPageTitle();
+        }
+        com.vaadin.flow.router.PageTitle title = getContent().getClass().getAnnotation(com.vaadin.flow.router.PageTitle.class);
         return title == null ? "" : title.value();
     }
 }
