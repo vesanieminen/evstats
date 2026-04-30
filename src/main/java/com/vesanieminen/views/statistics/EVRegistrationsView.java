@@ -12,6 +12,7 @@ import com.vaadin.flow.component.charts.model.Tooltip;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
+import com.vesanieminen.components.ChartExport;
 import com.vesanieminen.i18n.T;
 import com.vesanieminen.services.AUT_FI_Service;
 import com.vesanieminen.views.MainLayout;
@@ -71,6 +72,8 @@ public class EVRegistrationsView extends Main implements HasDynamicTitle {
             final var tooltip = new Tooltip();
             tooltip.setShared(true);
             configuration.setTooltip(tooltip);
+
+            ChartExport.configure(chart, "ev-registrations");
 
             add(chart);
         } catch (IOException | URISyntaxException e) {

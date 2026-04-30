@@ -19,6 +19,7 @@ import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vesanieminen.i18n.T;
 import com.vesanieminen.views.charging.ChargingView;
+import com.vesanieminen.views.statistics.CumulativeBEVRegistrationsView;
 import com.vesanieminen.views.statistics.EVAdoptionRateView;
 import com.vesanieminen.views.statistics.EVRegistrationsView;
 import com.vesanieminen.views.statistics.TeslaRegistrationsBarView;
@@ -83,6 +84,7 @@ public class MainLayout extends AppLayout {
         statistics.addItem(
                 new SideNavItem(T.tr("nav.statistics.adoption"), EVAdoptionRateView.class, LineAwesomeIcon.CHART_AREA_SOLID.create()),
                 new SideNavItem(T.tr("nav.statistics.newCars"), EVRegistrationsView.class, LineAwesomeIcon.CHART_BAR_SOLID.create()),
+                new SideNavItem(T.tr("nav.statistics.bevPerYear"), CumulativeBEVRegistrationsView.class, LineAwesomeIcon.CHART_LINE_SOLID.create()),
                 new SideNavItem(T.tr("nav.statistics.teslaRegistrations"), TeslaRegistrationsView.class, LineAwesomeIcon.CHART_BAR_SOLID.create()),
                 new SideNavItem(T.tr("nav.statistics.teslaPerYear"), TeslaRegistrationsBarView.class, LineAwesomeIcon.BARS_SOLID.create()));
         nav.addItem(
