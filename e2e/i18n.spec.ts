@@ -9,7 +9,7 @@ test.describe('i18n', () => {
     await page.goto('/');
     // Navigation labels should be Finnish.
     await expect(page.getByRole('link', { name: 'Latauslaskuri' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Käyttöönotto' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Sähköistyminen' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Uudet autot' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Tesla-rekisteröinnit' })).toBeVisible();
     // Charging-view labels are Finnish too. "Lataustaso" is the Charge Level
