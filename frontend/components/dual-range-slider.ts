@@ -8,6 +8,8 @@ export class DualRangeSlider extends LitElement {
   @property({ type: Number, attribute: 'low-value' }) lowValue = 20;
   @property({ type: Number, attribute: 'high-value' }) highValue = 80;
   @property({ type: Number }) step = 1;
+  @property({ type: String, attribute: 'low-label' }) lowLabel = 'Current';
+  @property({ type: String, attribute: 'high-label' }) highLabel = 'Target';
 
   @state() private dragging: 'low' | 'high' | null = null;
 
@@ -116,11 +118,11 @@ export class DualRangeSlider extends LitElement {
     return html`
       <div class="labels">
         <div class="label-column">
-          <span class="label-text">Current</span>
+          <span class="label-text">${this.lowLabel}</span>
           <span class="label-value">${this.lowValue}%</span>
         </div>
         <div class="label-column">
-          <span class="label-text">Target</span>
+          <span class="label-text">${this.highLabel}</span>
           <span class="label-value">${this.highValue}%</span>
         </div>
       </div>

@@ -351,6 +351,8 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         Card chargeLevelCard = new Card(new Icon(VaadinIcon.PLUG), T.tr("charging.section.chargeLevel"));
 
         socSlider = new DualRangeSlider(0, 100, preservedState.charge.getCurrentSOC(), preservedState.charge.getTargetSOC());
+        socSlider.setLowLabel(T.tr("charging.current"));
+        socSlider.setHighLabel(T.tr("charging.target"));
         socSlider.setWidthFull();
         socSlider.addValueChangeListener(e -> doCalculation());
 
