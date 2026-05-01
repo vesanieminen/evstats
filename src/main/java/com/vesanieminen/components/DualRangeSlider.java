@@ -93,6 +93,14 @@ public class DualRangeSlider extends Component implements HasValue<HasValue.Valu
         return getElement().getProperty("step", 1.0);
     }
 
+    public void setLowLabel(String label) {
+        getElement().setProperty("lowLabel", label);
+    }
+
+    public void setHighLabel(String label) {
+        getElement().setProperty("highLabel", label);
+    }
+
     @Override
     public void setValue(DualRangeValue value) {
         Objects.requireNonNull(value, "Value cannot be null");
