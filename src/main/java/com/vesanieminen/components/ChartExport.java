@@ -4,6 +4,7 @@ import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.Buttons;
 import com.vaadin.flow.component.charts.model.ContextButton;
 import com.vaadin.flow.component.charts.model.Exporting;
+import com.vesanieminen.i18n.T;
 
 /**
  * Adds a small in-chart export menu (⋮) with two options: Download PNG and
@@ -111,10 +112,10 @@ public final class ChartExport {
                   contextButton: {
                     symbol: 'menuball',
                     menuItems: [
-                      { text: 'Download PNG', onclick: function() {
+                      { text: $1, onclick: function() {
                         this.exportChart({ type: 'image/png', filename: buildFilename(this) });
                       } },
-                      { text: 'Download CSV', onclick: function() {
+                      { text: $2, onclick: function() {
                         triggerDownload(buildCsv(this), buildFilename(this) + '.csv',
                           'text/csv;charset=utf-8;');
                       } }
@@ -167,6 +168,7 @@ public final class ChartExport {
         exporting.setButtons(buttons);
         chart.getConfiguration().setExporting(exporting);
 
-        chart.getElement().executeJs(INIT_JS, safeSlug);
+        chart.getElement().executeJs(INIT_JS, safeSlug,
+                T.tr("chart.download.png"), T.tr("chart.download.csv"));
     }
 }
