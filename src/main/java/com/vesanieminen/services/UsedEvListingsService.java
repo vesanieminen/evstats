@@ -61,13 +61,6 @@ public class UsedEvListingsService {
 
     @PostConstruct
     void start() {
-        if (repository.count() == 0) {
-            try {
-                fetchAndPersist();
-            } catch (Exception e) {
-                log.warn("Initial listings fetch failed; will retry on schedule.", e);
-            }
-        }
         scheduleNextRun(jitter());
     }
 
