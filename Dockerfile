@@ -20,4 +20,7 @@ FROM eclipse-temurin:21
 COPY --from=BUILD /app/target/evstats-1.0-SNAPSHOT.jar /app/
 WORKDIR /app/
 EXPOSE 8080
+# Point at the in-cluster Postgres service when running in Vaadin Shepherd.
+# Override at `docker run` time (`-e SPRING_DATASOURCE_URL=...`) for other targets.
+ENV SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-service:5432/postgres
 ENTRYPOINT java -jar evstats-1.0-SNAPSHOT.jar 8080
