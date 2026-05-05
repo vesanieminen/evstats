@@ -11,4 +11,6 @@ public interface UsedEvSnapshotRepository extends JpaRepository<UsedEvSnapshot, 
     Optional<UsedEvSnapshot> findFirstByOrderByFetchedAtDesc();
 
     List<UsedEvSnapshot> findAllByOrderByFetchedAtAsc();
+
+    List<UsedEvSnapshot> findAllByOrderByFetchedAtDesc();
 }

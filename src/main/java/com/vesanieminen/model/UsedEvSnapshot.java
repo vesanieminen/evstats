@@ -41,7 +41,15 @@ public class UsedEvSnapshot {
         return fetchedAt;
     }
 
+    public void setFetchedAt(Instant fetchedAt) {
+        this.fetchedAt = fetchedAt;
+    }
+
     public int getCount() {
         return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
     }
 }
