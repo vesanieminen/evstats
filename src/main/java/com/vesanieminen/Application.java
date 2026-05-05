@@ -23,6 +23,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @Theme(value = "evstats")
 @JsModule("src/prefers-color-scheme.js")
+// Render PNG/SVG exports in the browser instead of POSTing to export.highcharts.com,
+// which throttles/blocks shared cluster IPs.
+@JsModule("highcharts/es-modules/masters/modules/offline-exporting.src.js")
 @PWA(name = "Auto Liukuri", shortName = "Auto Liukuri", offlineResources = {})
 public class Application implements AppShellConfigurator {
 

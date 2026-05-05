@@ -113,7 +113,19 @@ public final class ChartExport {
                     symbol: 'menuball',
                     menuItems: [
                       { text: $1, onclick: function() {
-                        this.exportChart({ type: 'image/png', filename: buildFilename(this) });
+                        const opts = { type: 'image/png', filename: buildFilename(this) };
+                        // Charts run in styledMode (CSS-driven). The offline-exporting
+                        // module rasterises the SVG without the page CSS, so a styled
+                        // chart in dark mode renders as black-on-black. Force the
+                        // built-in light theme for the exported snapshot only.
+                        const chartOptions = {
+                          chart: { styledMode: false, backgroundColor: '#ffffff' }
+                        };
+                        if (typeof this.exportChartLocal === 'function') {
+                          this.exportChartLocal(opts, chartOptions);
+                        } else {
+                          this.exportChart(opts, chartOptions);
+                        }
                       } },
                       { text: $2, onclick: function() {
                         triggerDownload(buildCsv(this), buildFilename(this) + '.csv',
