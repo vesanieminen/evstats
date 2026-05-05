@@ -4,6 +4,8 @@
 .settings
 .project
 .classpath
+.playwright-cli
+.claude/scheduled_tasks.lock
 
 *.iml
 .DS_Store
