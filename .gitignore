@@ -22,3 +22,5 @@ drivers/
 error-screenshots/
 webpack.generated.js
 /src/main/resources/rebel.xml
+
+src/main/bundles
