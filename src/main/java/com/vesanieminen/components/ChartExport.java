@@ -113,14 +113,34 @@ public final class ChartExport {
                     symbol: 'menuball',
                     menuItems: [
                       { text: $1, onclick: function() {
-                        const opts = { type: 'image/png', filename: buildFilename(this) };
-                        // Charts run in styledMode (CSS-driven). The offline-exporting
-                        // module rasterises the SVG without the page CSS, so a styled
-                        // chart in dark mode renders as black-on-black. Force the
-                        // built-in light theme for the exported snapshot only.
-                        const chartOptions = {
-                          chart: { styledMode: false, backgroundColor: '#ffffff' }
+                        // Charts run in styledMode, so the SVG references CSS classes
+                        // and Lumo CSS variables. The offline-exporting rasteriser
+                        // doesn't share the page's stylesheet — pass the resolved CSS
+                        // inline (with `:root` custom properties expanded) so the PNG
+                        // matches the on-screen colours regardless of browser/theme.
+                        const collectCss = () => {
+                          let css = '';
+                          const rootCs = getComputedStyle(document.documentElement);
+                          const decls = [];
+                          for (let i = 0; i < rootCs.length; i++) {
+                            const p = rootCs[i];
+                            if (p.startsWith('--')) decls.push(p + ':' + rootCs.getPropertyValue(p));
+                          }
+                          if (decls.length) css += ':root{' + decls.join(';') + '}\\n';
+                          for (const sheet of document.styleSheets) {
+                            try {
+                              for (const rule of sheet.cssRules || []) css += rule.cssText + '\\n';
+                            } catch (e) { /* cross-origin sheet; skip */ }
+                          }
+                          return css;
                         };
+                        const opts = {
+                          type: 'image/png',
+                          filename: buildFilename(this),
+                          sourceWidth: this.chartWidth,
+                          sourceHeight: this.chartHeight
+                        };
+                        const chartOptions = { exporting: { cssText: collectCss() } };
                         if (typeof this.exportChartLocal === 'function') {
                           this.exportChartLocal(opts, chartOptions);
                         } else {
