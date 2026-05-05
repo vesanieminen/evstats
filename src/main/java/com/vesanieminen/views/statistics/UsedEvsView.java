@@ -2,6 +2,7 @@ package com.vesanieminen.views.statistics;
 
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.charts.Chart;
+import com.vaadin.flow.component.charts.model.AxisType;
 import com.vaadin.flow.component.charts.model.ChartType;
 import com.vaadin.flow.component.charts.model.DataSeries;
 import com.vaadin.flow.component.charts.model.DataSeriesItem;
@@ -51,7 +52,6 @@ public class UsedEvsView extends Main implements HasDynamicTitle {
         }
 
         final var chart = new Chart();
-        chart.setTimeline(true);
         chart.setHeightFull();
         final var configuration = chart.getConfiguration();
         final var series = new DataSeries(T.tr("statistics.usedEvs.series"));
@@ -61,8 +61,7 @@ public class UsedEvsView extends Main implements HasDynamicTitle {
         configuration.getChart().setType(ChartType.LINE);
         configuration.getChart().setStyledMode(true);
         configuration.getLegend().setEnabled(false);
-        configuration.getNavigator().setEnabled(false);
-        configuration.getScrollbar().setEnabled(false);
+        configuration.getxAxis().setType(AxisType.DATETIME);
         final var yAxis = configuration.getyAxis();
         yAxis.setMin(0);
         yAxis.setOpposite(false);
