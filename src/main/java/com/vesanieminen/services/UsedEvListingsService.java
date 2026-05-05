@@ -50,6 +50,7 @@ public class UsedEvListingsService {
     private static final Duration MAX_JITTER = Duration.ofMinutes(30);
 
     private final UsedEvSnapshotRepository repository;
+    private final SettingsService settingsService;
     private final TaskScheduler taskScheduler;
     private final String sourceUrl;
     private final HttpClient httpClient = HttpClient.newBuilder()
@@ -58,8 +59,11 @@ public class UsedEvListingsService {
             .connectTimeout(Duration.ofSeconds(10))
             .build();
 
-    public UsedEvListingsService(UsedEvSnapshotRepository repository, TaskScheduler taskScheduler) {
+    public UsedEvListingsService(UsedEvSnapshotRepository repository,
+                                 SettingsService settingsService,
+                                 TaskScheduler taskScheduler) {
         this.repository = repository;
+        this.settingsService = settingsService;
         this.taskScheduler = taskScheduler;
         this.sourceUrl = new String(Base64.getDecoder().decode(RESOURCE_KEY), StandardCharsets.UTF_8);
     }
@@ -76,10 +80,14 @@ public class UsedEvListingsService {
     }
 
     private void runAndReschedule() {
-        try {
-            fetchAndPersist();
-        } catch (Exception e) {
-            log.warn("Scheduled listings fetch failed.", e);
+        if (settingsService.isScheduledFetchEnabled()) {
+            try {
+                fetchAndPersist();
+            } catch (Exception e) {
+                log.warn("Scheduled listings fetch failed.", e);
+            }
+        } else {
+            log.debug("Scheduled listings fetch is disabled; skipping this tick.");
         }
         scheduleNextRun(BASE_INTERVAL.plus(jitter()));
     }

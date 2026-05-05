@@ -8,6 +8,7 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -31,6 +32,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vesanieminen.model.UsedEvSnapshot;
+import com.vesanieminen.services.SettingsService;
 import com.vesanieminen.services.UsedEvListingsService;
 import com.vesanieminen.services.UsedEvSnapshotRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -61,6 +63,7 @@ public class AdminView extends VerticalLayout {
 
     private final UsedEvListingsService service;
     private final UsedEvSnapshotRepository repository;
+    private final SettingsService settingsService;
     private final String adminToken;
 
     private final Span lastSnapshot = new Span();
@@ -68,9 +71,11 @@ public class AdminView extends VerticalLayout {
 
     public AdminView(UsedEvListingsService service,
                      UsedEvSnapshotRepository repository,
+                     SettingsService settingsService,
                      @Value("${admin.token:}") String adminToken) {
         this.service = service;
         this.repository = repository;
+        this.settingsService = settingsService;
         this.adminToken = adminToken;
 
         setMaxWidth("720px");
@@ -135,7 +140,22 @@ public class AdminView extends VerticalLayout {
         Button refresh = new Button("Fetch fresh snapshot now", new Icon(VaadinIcon.REFRESH), e -> handleRefresh());
         refresh.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        add(lastSnapshot, refresh);
+        Checkbox autoFetchToggle = new Checkbox("Automatic hourly fetching");
+        autoFetchToggle.setValue(settingsService.isScheduledFetchEnabled());
+        autoFetchToggle.addValueChangeListener(e -> {
+            settingsService.setScheduledFetchEnabled(e.getValue());
+            Notification n = Notification.show(
+                    Boolean.TRUE.equals(e.getValue())
+                            ? "Automatic fetching enabled."
+                            : "Automatic fetching disabled.",
+                    2500, Notification.Position.BOTTOM_CENTER);
+            n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        });
+
+        HorizontalLayout fetchControls = new HorizontalLayout(refresh, autoFetchToggle);
+        fetchControls.setAlignItems(Alignment.CENTER);
+
+        add(lastSnapshot, fetchControls);
 
         add(new H3("Snapshots"));
 
