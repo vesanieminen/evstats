@@ -10,6 +10,7 @@ import com.vaadin.flow.theme.Theme;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * The entry point of the Spring Boot application.
@@ -19,6 +20,7 @@ import org.springframework.context.annotation.Bean;
  *
  */
 @SpringBootApplication
+@EnableScheduling
 @Theme(value = "evstats")
 @JsModule("src/prefers-color-scheme.js")
 @PWA(name = "Auto Liukuri", shortName = "Auto Liukuri", offlineResources = {})
