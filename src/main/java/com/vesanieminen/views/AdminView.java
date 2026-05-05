@@ -1,6 +1,11 @@
 package com.vesanieminen.views;
 
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
@@ -19,25 +24,36 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.PasswordField;
+import com.vaadin.flow.component.upload.Upload;
+import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vesanieminen.model.UsedEvSnapshot;
 import com.vesanieminen.services.UsedEvListingsService;
 import com.vesanieminen.services.UsedEvSnapshotRepository;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Route("admin")
 @PageTitle("Admin")
 public class AdminView extends VerticalLayout {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminView.class);
 
     private static final ZoneId HELSINKI = ZoneId.of("Europe/Helsinki");
     private static final DateTimeFormatter TIMESTAMP_FORMAT =
@@ -123,15 +139,98 @@ public class AdminView extends VerticalLayout {
 
         add(new H3("Snapshots"));
 
+        HorizontalLayout actions = new HorizontalLayout();
+        actions.setAlignItems(Alignment.END);
+        actions.setSpacing(true);
+
         Button addRow = new Button("Add data point", new Icon(VaadinIcon.PLUS), e -> openEditor(null));
         addRow.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        add(addRow);
+
+        Anchor downloadCsv = new Anchor(
+                new StreamResource("used-ev-snapshots.csv", () -> new ByteArrayInputStream(buildCsv())),
+                "");
+        downloadCsv.getElement().setAttribute("download", true);
+        Button downloadButton = new Button("Download CSV", new Icon(VaadinIcon.DOWNLOAD));
+        downloadButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        downloadCsv.add(downloadButton);
+
+        MemoryBuffer buffer = new MemoryBuffer();
+        Upload upload = new Upload(buffer);
+        upload.setAcceptedFileTypes("text/csv", ".csv");
+        upload.setMaxFiles(1);
+        Button uploadButton = new Button("Upload CSV", new Icon(VaadinIcon.UPLOAD));
+        uploadButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        upload.setUploadButton(uploadButton);
+        upload.setDropAllowed(false);
+        upload.addSucceededListener(e -> handleImport(buffer, upload));
+
+        actions.add(addRow, downloadCsv, upload);
+        add(actions);
 
         configureGrid();
         add(grid);
 
         refreshGrid();
         refreshLastSnapshotLabel();
+    }
+
+    private byte[] buildCsv() {
+        StringBuilder sb = new StringBuilder("fetchedAt,count\n");
+        for (UsedEvSnapshot s : repository.findAllByOrderByFetchedAtDesc()) {
+            sb.append(s.getFetchedAt().toString()).append(',').append(s.getCount()).append('\n');
+        }
+        return sb.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    private void handleImport(MemoryBuffer buffer, Upload upload) {
+        int imported = 0;
+        List<String> skipped = new ArrayList<>();
+        try (InputStream in = buffer.getInputStream();
+             CSVReader reader = new CSVReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+            String[] row;
+            int lineNumber = 0;
+            while ((row = reader.readNext()) != null) {
+                lineNumber++;
+                if (lineNumber == 1 && row.length >= 2
+                        && row[0].trim().equalsIgnoreCase("fetchedAt")
+                        && row[1].trim().equalsIgnoreCase("count")) {
+                    continue;
+                }
+                if (row.length < 2 || row[0].isBlank() || row[1].isBlank()) {
+                    skipped.add("line " + lineNumber + ": missing fields");
+                    continue;
+                }
+                try {
+                    Instant fetchedAt = Instant.parse(row[0].trim());
+                    int count = Integer.parseInt(row[1].trim());
+                    if (count < 0) {
+                        skipped.add("line " + lineNumber + ": negative count");
+                        continue;
+                    }
+                    repository.save(new UsedEvSnapshot(fetchedAt, count));
+                    imported++;
+                } catch (Exception parseEx) {
+                    skipped.add("line " + lineNumber + ": " + parseEx.getClass().getSimpleName());
+                }
+            }
+        } catch (IOException | CsvValidationException ex) {
+            Notification n = Notification.show(
+                    "Import failed: " + ex.getClass().getSimpleName(),
+                    4000, Notification.Position.MIDDLE);
+            n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            upload.clearFileList();
+            return;
+        }
+        upload.clearFileList();
+        refreshGrid();
+        refreshLastSnapshotLabel();
+
+        String summary = "Imported " + imported + " row" + (imported == 1 ? "" : "s") + ".";
+        if (!skipped.isEmpty()) {
+            summary += " Skipped " + skipped.size() + ": " + String.join("; ", skipped);
+        }
+        Notification n = Notification.show(summary, 5000, Notification.Position.BOTTOM_CENTER);
+        n.addThemeVariants(skipped.isEmpty() ? NotificationVariant.LUMO_SUCCESS : NotificationVariant.LUMO_WARNING);
     }
 
     private void configureGrid() {
@@ -177,9 +276,13 @@ public class AdminView extends VerticalLayout {
                     3000, Notification.Position.BOTTOM_CENTER);
             n.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         } catch (Exception ex) {
+            log.warn("Admin-triggered refresh failed.", ex);
+            String detail = ex.getMessage() != null && !ex.getMessage().isBlank()
+                    ? ex.getMessage()
+                    : ex.getClass().getSimpleName();
             Notification n = Notification.show(
-                    "Refresh failed: " + ex.getClass().getSimpleName(),
-                    4000, Notification.Position.MIDDLE);
+                    "Refresh failed (" + ex.getClass().getSimpleName() + "): " + detail,
+                    8000, Notification.Position.MIDDLE);
             n.addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
     }
