@@ -113,39 +113,68 @@ public final class ChartExport {
                     symbol: 'menuball',
                     menuItems: [
                       { text: $1, onclick: function() {
-                        // Charts run in styledMode, so the SVG references CSS classes
-                        // and Lumo CSS variables. The offline-exporting rasteriser
-                        // doesn't share the page's stylesheet — pass the resolved CSS
-                        // inline (with `:root` custom properties expanded) so the PNG
-                        // matches the on-screen colours regardless of browser/theme.
-                        const collectCss = () => {
-                          let css = '';
-                          const rootCs = getComputedStyle(document.documentElement);
+                        // Custom PNG export. Charts run in styledMode, so the SVG only
+                        // references CSS classes — Highcharts' offline-exporting rasteriser
+                        // can't reproduce the on-screen colours in Safari (and the export
+                        // server is blocked in production). We bake the live computed
+                        // styles into the cloned SVG as inline style="..." attributes so
+                        // the SVG renders identically in any browser's <img>/canvas
+                        // pipeline, then convert to PNG ourselves.
+                        const chart = this;
+                        const filename = buildFilename(chart) + '.png';
+                        const sourceSvg = chart.container.querySelector('svg');
+                        if (!sourceSvg) return;
+                        const cloneSvg = sourceSvg.cloneNode(true);
+                        const props = ['fill','fill-opacity','stroke','stroke-opacity',
+                          'stroke-width','stroke-dasharray','stroke-dashoffset',
+                          'stroke-linecap','stroke-linejoin','opacity','visibility','color',
+                          'font-family','font-size','font-weight','font-style',
+                          'text-anchor','dominant-baseline','paint-order'];
+                        const sourceEls = [sourceSvg, ...sourceSvg.querySelectorAll('*')];
+                        const cloneEls = [cloneSvg, ...cloneSvg.querySelectorAll('*')];
+                        for (let i = 0; i < sourceEls.length; i++) {
+                          const cs = getComputedStyle(sourceEls[i]);
                           const decls = [];
-                          for (let i = 0; i < rootCs.length; i++) {
-                            const p = rootCs[i];
-                            if (p.startsWith('--')) decls.push(p + ':' + rootCs.getPropertyValue(p));
+                          for (const p of props) {
+                            const v = cs.getPropertyValue(p);
+                            if (v) decls.push(p + ':' + v);
                           }
-                          if (decls.length) css += ':root{' + decls.join(';') + '}\\n';
-                          for (const sheet of document.styleSheets) {
-                            try {
-                              for (const rule of sheet.cssRules || []) css += rule.cssText + '\\n';
-                            } catch (e) { /* cross-origin sheet; skip */ }
-                          }
-                          return css;
-                        };
-                        const opts = {
-                          type: 'image/png',
-                          filename: buildFilename(this),
-                          sourceWidth: this.chartWidth,
-                          sourceHeight: this.chartHeight
-                        };
-                        const chartOptions = { exporting: { cssText: collectCss() } };
-                        if (typeof this.exportChartLocal === 'function') {
-                          this.exportChartLocal(opts, chartOptions);
-                        } else {
-                          this.exportChart(opts, chartOptions);
+                          if (decls.length) cloneEls[i].setAttribute('style', decls.join(';'));
+                          cloneEls[i].removeAttribute('class');
                         }
+                        cloneSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                        const w = chart.chartWidth, h = chart.chartHeight;
+                        const containerBg = getComputedStyle(chart.container).backgroundColor;
+                        const bg = (containerBg && containerBg !== 'rgba(0, 0, 0, 0)' && containerBg !== 'transparent')
+                          ? containerBg : '#ffffff';
+                        const svgString = new XMLSerializer().serializeToString(cloneSvg);
+                        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+                        const svgUrl = URL.createObjectURL(svgBlob);
+                        const img = new Image();
+                        img.onload = () => {
+                          const scale = window.devicePixelRatio || 2;
+                          const canvas = document.createElement('canvas');
+                          canvas.width = Math.round(w * scale);
+                          canvas.height = Math.round(h * scale);
+                          const ctx = canvas.getContext('2d');
+                          ctx.scale(scale, scale);
+                          ctx.fillStyle = bg;
+                          ctx.fillRect(0, 0, w, h);
+                          ctx.drawImage(img, 0, 0, w, h);
+                          URL.revokeObjectURL(svgUrl);
+                          canvas.toBlob((pngBlob) => {
+                            const dlUrl = URL.createObjectURL(pngBlob);
+                            const a = document.createElement('a');
+                            a.href = dlUrl;
+                            a.download = filename;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            setTimeout(() => URL.revokeObjectURL(dlUrl), 0);
+                          }, 'image/png');
+                        };
+                        img.onerror = () => URL.revokeObjectURL(svgUrl);
+                        img.src = svgUrl;
                       } },
                       { text: $2, onclick: function() {
                         triggerDownload(buildCsv(this), buildFilename(this) + '.csv',
