@@ -67,6 +67,8 @@ public class UsedEvsView extends Main implements HasDynamicTitle {
         configuration.getxAxis().setOrdinal(false);
         configuration.getNavigator().setEnabled(false);
         configuration.getScrollbar().setEnabled(false);
+        // Default zoom: YTD (4th button in the Zoom strip, 0-indexed).
+        configuration.getRangeSelector().setSelected(3);
         final var yAxis = configuration.getyAxis();
         yAxis.setMin(0);
         yAxis.setOpposite(false);

@@ -204,7 +204,9 @@ public class AdminView extends VerticalLayout {
 
     private void handleImport(MemoryBuffer buffer, Upload upload) {
         int imported = 0;
+        int duplicates = 0;
         List<String> skipped = new ArrayList<>();
+        java.util.Set<Instant> seenInBatch = new java.util.HashSet<>();
         try (InputStream in = buffer.getInputStream();
              CSVReader reader = new CSVReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
             String[] row;
@@ -227,6 +229,10 @@ public class AdminView extends VerticalLayout {
                         skipped.add("line " + lineNumber + ": negative count");
                         continue;
                     }
+                    if (!seenInBatch.add(fetchedAt) || repository.existsByFetchedAt(fetchedAt)) {
+                        duplicates++;
+                        continue;
+                    }
                     repository.save(new UsedEvSnapshot(fetchedAt, count));
                     imported++;
                 } catch (Exception parseEx) {
@@ -245,12 +251,19 @@ public class AdminView extends VerticalLayout {
         refreshGrid();
         refreshLastSnapshotLabel();
 
-        String summary = "Imported " + imported + " row" + (imported == 1 ? "" : "s") + ".";
-        if (!skipped.isEmpty()) {
-            summary += " Skipped " + skipped.size() + ": " + String.join("; ", skipped);
+        StringBuilder summary = new StringBuilder("Imported ")
+                .append(imported).append(" row").append(imported == 1 ? "" : "s").append('.');
+        if (duplicates > 0) {
+            summary.append(" Skipped ").append(duplicates).append(" duplicate")
+                    .append(duplicates == 1 ? "" : "s").append('.');
         }
-        Notification n = Notification.show(summary, 5000, Notification.Position.BOTTOM_CENTER);
-        n.addThemeVariants(skipped.isEmpty() ? NotificationVariant.LUMO_SUCCESS : NotificationVariant.LUMO_WARNING);
+        if (!skipped.isEmpty()) {
+            summary.append(" Skipped ").append(skipped.size()).append(": ")
+                    .append(String.join("; ", skipped));
+        }
+        Notification n = Notification.show(summary.toString(), 5000, Notification.Position.BOTTOM_CENTER);
+        boolean hadIssues = !skipped.isEmpty() || duplicates > 0;
+        n.addThemeVariants(hadIssues ? NotificationVariant.LUMO_WARNING : NotificationVariant.LUMO_SUCCESS);
     }
 
     private void configureGrid() {
