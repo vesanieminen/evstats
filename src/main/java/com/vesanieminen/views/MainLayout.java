@@ -100,7 +100,7 @@ public class MainLayout extends AppLayout {
         layout.addClassNames(LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN);
 
         final var sourceSpan = new Span(T.tr("footer.source") + " ");
-        final var link = new Anchor("https://www.aut.fi/tilastot/ensirekisteroinnit/ensirekisteroinnit_kayttovoimittain/henkiloautojen_kayttovoimatilastot", "aut.fi");
+        final var link = new Anchor("https://aut.fi/markkinatilastot/uudet-autot/", "aut.fi");
         final var footer = new Div(sourceSpan, link);
         footer.addClassNames(LumoUtility.Display.FLEX, LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.SMALL, LumoUtility.Margin.Bottom.XSMALL, LumoUtility.Gap.XSMALL);
         layout.add(footer);
