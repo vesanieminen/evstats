@@ -21,6 +21,7 @@ import com.vesanieminen.i18n.T;
 import com.vesanieminen.views.charging.ChargingView;
 import com.vesanieminen.views.statistics.CumulativeBEVRegistrationsView;
 import com.vesanieminen.views.statistics.EVAdoptionRateView;
+import com.vesanieminen.views.statistics.EVDefectBreakdownView;
 import com.vesanieminen.views.statistics.EVRegistrationsView;
 import com.vesanieminen.views.statistics.EVReliabilityView;
 import com.vesanieminen.views.statistics.TeslaRegistrationsBarView;
@@ -90,7 +91,8 @@ public class MainLayout extends AppLayout {
                 new SideNavItem(T.tr("nav.statistics.teslaRegistrations"), TeslaRegistrationsView.class, LineAwesomeIcon.CHART_BAR_SOLID.create()),
                 new SideNavItem(T.tr("nav.statistics.teslaPerYear"), TeslaRegistrationsBarView.class, LineAwesomeIcon.BARS_SOLID.create()),
                 new SideNavItem(T.tr("nav.statistics.usedEvs"), UsedEvsView.class, LineAwesomeIcon.CAR_SIDE_SOLID.create()),
-                new SideNavItem(T.tr("nav.statistics.reliability"), EVReliabilityView.class, LineAwesomeIcon.WRENCH_SOLID.create()));
+                new SideNavItem(T.tr("nav.statistics.reliability"), EVReliabilityView.class, LineAwesomeIcon.WRENCH_SOLID.create()),
+                new SideNavItem(T.tr("nav.statistics.defectBreakdown"), EVDefectBreakdownView.class, LineAwesomeIcon.LIST_SOLID.create()));
         nav.addItem(
                 new SideNavItem(T.tr("nav.charging"), ChargingView.class, LineAwesomeIcon.CAR_BATTERY_SOLID.create()),
                 statistics

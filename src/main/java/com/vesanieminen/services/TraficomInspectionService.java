@@ -5,6 +5,8 @@ import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvValidationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,6 +15,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -21,6 +25,8 @@ import java.util.OptionalDouble;
 import java.util.Set;
 
 public class TraficomInspectionService {
+
+    private static final Logger log = LoggerFactory.getLogger(TraficomInspectionService.class);
 
     private static final String CSV_FILENAME = "data/traficom-katsastus-2025.csv";
     private static final String TOTALS_YEAR = "Vuodet yhteensä";
@@ -170,5 +176,164 @@ public class TraficomInspectionService {
                 .distinct()
                 .sorted(Comparator.reverseOrder())
                 .toList();
+    }
+
+    // -- Defect themes ---------------------------------------------------
+
+    public enum DefectTheme {
+        CHASSIS, BRAKES, BODY, POWERTRAIN, WHEELS, LIGHTS_SAFETY, DOCUMENTS
+    }
+
+    public record MakeModel(String make, String model) implements Comparable<MakeModel> {
+        @Override
+        public int compareTo(MakeModel o) {
+            int c = make.compareToIgnoreCase(o.make);
+            return c != 0 ? c : model.compareToIgnoreCase(o.model);
+        }
+    }
+
+    public record ThemeBreakdown(DefectTheme theme, double share, double weight) {
+    }
+
+    /**
+     * Distinct (make, model) pairs found in the dataset, excluding any totals
+     * rows. Sorted alphabetically by make then model.
+     */
+    public static List<MakeModel> distinctMakeModels() {
+        return loadAll().stream()
+                .filter(r -> !TOTALS_MAKE.equals(r.make()) && !TOTALS_MODEL.equals(r.model()))
+                .map(r -> new MakeModel(r.make(), r.model()))
+                .distinct()
+                .sorted()
+                .toList();
+    }
+
+    /**
+     * The curated BEV-only allow-list as a set of {@link MakeModel} pairs.
+     * Useful as the default selection in a model-picker UI.
+     */
+    public static java.util.LinkedHashSet<MakeModel> bevAllowList() {
+        java.util.LinkedHashSet<MakeModel> out = new java.util.LinkedHashSet<>();
+        for (Map.Entry<String, Set<String>> e : BEV_MODELS.entrySet()) {
+            for (String model : e.getValue()) {
+                out.add(new MakeModel(e.getKey(), model));
+            }
+        }
+        return out;
+    }
+
+    private static final Map<String, DefectTheme> DEFECT_THEMES;
+
+    static {
+        Map<String, DefectTheme> m = new HashMap<>();
+        // CHASSIS
+        m.put("Etuakselisto", DefectTheme.CHASSIS);
+        m.put("Taka-akselisto", DefectTheme.CHASSIS);
+        m.put("Jousitus ja iskunvaimennus", DefectTheme.CHASSIS);
+        m.put("Ohjausnivelet ja -tangot", DefectTheme.CHASSIS);
+        // BRAKES
+        m.put("Käyttöjarru", DefectTheme.BRAKES);
+        m.put("Käyttöjarrun dynamometritesti", DefectTheme.BRAKES);
+        m.put("Seisontajarrun dynamometritesti", DefectTheme.BRAKES);
+        // BODY
+        m.put("Alustan kotelot ja pohjalevy", DefectTheme.BODY);
+        m.put("Kori", DefectTheme.BODY);
+        m.put("Runko", DefectTheme.BODY);
+        m.put("Muut ikkunat", DefectTheme.BODY);
+        // POWERTRAIN
+        m.put("Sisäinen valvontajärjestelmä (OBD)", DefectTheme.POWERTRAIN);
+        m.put("Bensiinimoottorin pakokaasumittaus", DefectTheme.POWERTRAIN);
+        m.put("Dieselmoottorin pakokaasumittaus", DefectTheme.POWERTRAIN);
+        m.put("Pakokaasupäästöt", DefectTheme.POWERTRAIN);
+        // WHEELS
+        m.put("Renkaat ja vanteet", DefectTheme.WHEELS);
+        // LIGHTS_SAFETY
+        m.put("Ajovakautusjärjestelmä", DefectTheme.LIGHTS_SAFETY);
+        m.put("Ajovalo", DefectTheme.LIGHTS_SAFETY);
+        m.put("Lähivalo", DefectTheme.LIGHTS_SAFETY);
+        m.put("Turvavyöt ja -varusteet", DefectTheme.LIGHTS_SAFETY);
+        m.put("Taksivarustus", DefectTheme.LIGHTS_SAFETY);
+        // DOCUMENTS
+        m.put("Asiapaperit", DefectTheme.DOCUMENTS);
+        m.put("Valmistajan kilpi", DefectTheme.DOCUMENTS);
+        DEFECT_THEMES = Map.copyOf(m);
+    }
+
+    /**
+     * Maps a Finnish defect string to its theme. Returns {@code null} for
+     * unknown strings so callers can choose to log + skip rather than throw.
+     */
+    public static DefectTheme themeOf(String defectFi) {
+        if (defectFi == null) {
+            return null;
+        }
+        return DEFECT_THEMES.get(defectFi.trim());
+    }
+
+    /**
+     * Defect-theme breakdown for the entire dataset (every leaf row).
+     * Convenience for the "all cars baseline" comparison.
+     */
+    public static List<ThemeBreakdown> breakdownAll() {
+        return aggregateBreakdown(r -> true);
+    }
+
+    /**
+     * Defect-theme breakdown for the rows matching the given (make, model)
+     * selection. Returns zero-share rows for every theme when the selection
+     * is empty.
+     */
+    public static List<ThemeBreakdown> breakdown(Set<MakeModel> selection) {
+        Set<MakeModel> sel = selection == null ? Set.of() : selection;
+        if (sel.isEmpty()) {
+            return zeroBreakdown();
+        }
+        return aggregateBreakdown(r -> sel.contains(new MakeModel(r.make(), r.model())));
+    }
+
+    private static List<ThemeBreakdown> aggregateBreakdown(java.util.function.Predicate<InspectionRow> rowFilter) {
+        EnumMap<DefectTheme, Double> weights = new EnumMap<>(DefectTheme.class);
+        for (DefectTheme t : DefectTheme.values()) {
+            weights.put(t, 0.0);
+        }
+        for (InspectionRow r : loadAll()) {
+            if (r.cohortYear() == null) {
+                continue; // skip "Vuodet yhteensä" totals rows
+            }
+            if (TOTALS_MAKE.equals(r.make()) || TOTALS_MODEL.equals(r.model())) {
+                continue; // skip per-year and per-brand totals
+            }
+            if (!rowFilter.test(r)) {
+                continue;
+            }
+            double rowWeight = r.inspections() * (r.failPct() / 100.0);
+            if (rowWeight <= 0) {
+                continue;
+            }
+            for (String defect : r.topDefects()) {
+                DefectTheme theme = themeOf(defect);
+                if (theme != null) {
+                    weights.merge(theme, rowWeight, Double::sum);
+                } else {
+                    log.warn("Traficom defect string '{}' has no theme mapping (data refresh may need an update)", defect);
+                }
+            }
+        }
+        double total = weights.values().stream().mapToDouble(Double::doubleValue).sum();
+        List<ThemeBreakdown> out = new ArrayList<>(DefectTheme.values().length);
+        for (DefectTheme t : DefectTheme.values()) {
+            double w = weights.get(t);
+            double share = total > 0 ? w / total : 0.0;
+            out.add(new ThemeBreakdown(t, share, w));
+        }
+        return List.copyOf(out);
+    }
+
+    private static List<ThemeBreakdown> zeroBreakdown() {
+        List<ThemeBreakdown> out = new ArrayList<>(DefectTheme.values().length);
+        for (DefectTheme t : DefectTheme.values()) {
+            out.add(new ThemeBreakdown(t, 0.0, 0.0));
+        }
+        return List.copyOf(out);
     }
 }
