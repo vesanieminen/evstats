@@ -29,7 +29,7 @@ vaadin-button:hover {
 }
 
 vaadin-app-layout::part(drawer) {
-    width: 300px;
+    width: 340px;
 }
 
 vaadin-dialog-overlay::part(overlay) {
