@@ -1,6 +1,8 @@
 package com.vesanieminen.views.statistics;
 
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.charts.Chart;
 import com.vaadin.flow.component.charts.model.AxisType;
 import com.vaadin.flow.component.charts.model.ChartType;
@@ -12,11 +14,14 @@ import com.vaadin.flow.component.charts.model.Stacking;
 import com.vaadin.flow.component.charts.model.Tooltip;
 import com.vaadin.flow.component.charts.model.XAxis;
 import com.vaadin.flow.component.charts.model.YAxis;
-import com.vaadin.flow.component.combobox.MultiSelectComboBox;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vesanieminen.components.ChartExport;
 import com.vesanieminen.i18n.T;
 import com.vesanieminen.services.TraficomInspectionService;
@@ -33,10 +38,19 @@ import java.util.Set;
 @Route(value = "defect-breakdown", layout = MainLayout.class)
 public class EVDefectBreakdownView extends Main implements HasDynamicTitle {
 
-    private final MultiSelectComboBox<MakeModel> picker = new MultiSelectComboBox<>();
+    private static final List<MakeModel> DEFAULT_MODELS = List.of(
+            new MakeModel("Tesla", "MODEL 3"),
+            new MakeModel("Polestar", "2"),
+            new MakeModel("Volkswagen", "ID.4")
+    );
+
+    private final ComboBox<MakeModel> picker = new ComboBox<>();
+    private final HorizontalLayout chipsRow = new HorizontalLayout();
     private final Chart stackedChart = new Chart();
     private final Chart groupedChart = new Chart();
     private final VerticalLayout root = new VerticalLayout();
+
+    private final LinkedHashSet<MakeModel> selected = new LinkedHashSet<>();
 
     @Override
     public String getPageTitle() {
@@ -45,16 +59,14 @@ public class EVDefectBreakdownView extends Main implements HasDynamicTitle {
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
-        setHeightFull();
-        attachEvent.getUI().getPage().retrieveExtendedClientDetails(details -> {
-            if (details.isTouchDevice() && details.isIOS()) {
-                setHeight("var(--fullscreen-height)");
-            }
-        });
+        // Don't clamp Main to viewport height — let it grow with content so the
+        // AppLayout content slot's overflow:auto handles the scroll naturally.
+        // Single body-level scroll is the right UX here, especially on iOS.
+        setWidthFull();
 
         removeAll();
         root.removeAll();
-        root.setSizeFull();
+        root.setWidthFull();
         root.setPadding(true);
         root.setSpacing(false);
 
@@ -62,46 +74,75 @@ public class EVDefectBreakdownView extends Main implements HasDynamicTitle {
         picker.setHelperText(T.tr("statistics.defectBreakdown.selector.helper"));
         picker.setItems(TraficomInspectionService.distinctMakeModels());
         picker.setItemLabelGenerator(mm -> mm.make() + " " + mm.model());
-        picker.setClearButtonVisible(true);
+        picker.setPlaceholder(T.tr("statistics.defectBreakdown.selector.placeholder"));
+        picker.setClearButtonVisible(false);
         picker.setWidthFull();
-        // Default selection: the curated BEV allow-list, so the page opens
-        // showing the same comparison the previous version did.
-        picker.setValue(TraficomInspectionService.bevAllowList());
         picker.addValueChangeListener(e -> {
-            updateStacked();
-            updateGrouped();
+            MakeModel mm = e.getValue();
+            if (mm != null && selected.add(mm)) {
+                renderChips();
+                refreshCharts();
+            }
+            picker.clear();
         });
         root.add(picker);
 
-        stackedChart.setHeight("260px");
-        stackedChart.getStyle().set("width", "100%");
+        chipsRow.setWidthFull();
+        chipsRow.addClassNames(LumoUtility.FlexWrap.WRAP, LumoUtility.Margin.Top.SMALL,
+                LumoUtility.Margin.Bottom.MEDIUM);
+        chipsRow.setSpacing(true);
+        root.add(chipsRow);
+
+        stackedChart.setWidthFull();
         ChartExport.configure(stackedChart, "ev-defect-breakdown");
         root.add(stackedChart);
 
-        groupedChart.setSizeFull();
-        groupedChart.getStyle().set("min-height", "360px");
+        // Fixed height per theme row so the grouped chart is always readable on
+        // mobile (no fighting with the stacked chart for leftover space).
+        groupedChart.setWidthFull();
+        groupedChart.setHeight((100 + DefectTheme.values().length * 50) + "px");
         ChartExport.configure(groupedChart, "ev-defect-breakdown-grouped");
         root.add(groupedChart);
-        root.expand(groupedChart);
 
         add(root);
+
+        // Seed with a few contrasting BEVs so the page is informative on first load.
+        if (selected.isEmpty()) {
+            selected.addAll(DEFAULT_MODELS);
+        }
+        renderChips();
+        refreshCharts();
+    }
+
+    private void renderChips() {
+        chipsRow.removeAll();
+        for (MakeModel mm : selected) {
+            Button chip = new Button(mm.make() + " " + mm.model(), VaadinIcon.CLOSE_SMALL.create());
+            chip.setIconAfterText(true);
+            chip.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+            chip.addClassNames(LumoUtility.Background.CONTRAST_10, LumoUtility.BorderRadius.LARGE);
+            chip.addClickListener(e -> {
+                selected.remove(mm);
+                renderChips();
+                refreshCharts();
+            });
+            chipsRow.add(chip);
+        }
+    }
+
+    private void refreshCharts() {
         updateStacked();
         updateGrouped();
     }
 
-    private Set<MakeModel> selection() {
-        Set<MakeModel> v = picker.getValue();
-        return v == null ? new LinkedHashSet<>() : v;
-    }
-
-    private String selectedLabel() {
-        int n = selection().size();
-        return T.tr("statistics.defectBreakdown.segment.selected", n);
-    }
-
     private void updateStacked() {
         List<ThemeBreakdown> all = TraficomInspectionService.breakdownAll();
-        List<ThemeBreakdown> sel = TraficomInspectionService.breakdown(selection());
+
+        // Scale chart height with the number of bars so labels + legend + bars
+        // never overlap. ~60 px per category, plus ~160 px for title + legend.
+        int categoryCount = 1 + selected.size();
+        int height = Math.max(260, 160 + categoryCount * 60);
+        stackedChart.getStyle().set("height", height + "px");
 
         var configuration = stackedChart.getConfiguration();
         configuration.setSeries(new ArrayList<>());
@@ -111,12 +152,18 @@ public class EVDefectBreakdownView extends Main implements HasDynamicTitle {
         configuration.getChart().setStyledMode(true);
         configuration.getLegend().setEnabled(true);
 
+        // Categories: All cars + each selected model.
+        String allLabel = T.tr("statistics.defectBreakdown.segment.all");
+        List<String> categories = new ArrayList<>();
+        categories.add(allLabel);
+        List<List<ThemeBreakdown>> perModel = new ArrayList<>();
+        for (MakeModel mm : selected) {
+            categories.add(modelLabel(mm));
+            perModel.add(TraficomInspectionService.breakdown(Set.of(mm)));
+        }
         XAxis xAxis = configuration.getxAxis();
         xAxis.setType(AxisType.CATEGORY);
-        xAxis.setCategories(
-                T.tr("statistics.defectBreakdown.segment.all"),
-                selectedLabel()
-        );
+        xAxis.setCategories(categories.toArray(new String[0]));
         xAxis.setTitle("");
 
         YAxis yAxis = configuration.getyAxis();
@@ -135,12 +182,12 @@ public class EVDefectBreakdownView extends Main implements HasDynamicTitle {
 
         for (DefectTheme theme : DefectTheme.values()) {
             DataSeries series = new DataSeries(themeLabel(theme));
-            series.add(new DataSeriesItem(
-                    T.tr("statistics.defectBreakdown.segment.all"),
-                    findShare(all, theme) * 100.0));
-            series.add(new DataSeriesItem(
-                    selectedLabel(),
-                    findShare(sel, theme) * 100.0));
+            series.add(new DataSeriesItem(allLabel, findShare(all, theme) * 100.0));
+            int idx = 0;
+            for (MakeModel mm : selected) {
+                series.add(new DataSeriesItem(modelLabel(mm), findShare(perModel.get(idx), theme) * 100.0));
+                idx++;
+            }
             configuration.addSeries(series);
         }
 
@@ -155,7 +202,6 @@ public class EVDefectBreakdownView extends Main implements HasDynamicTitle {
 
     private void updateGrouped() {
         List<ThemeBreakdown> all = TraficomInspectionService.breakdownAll();
-        List<ThemeBreakdown> sel = TraficomInspectionService.breakdown(selection());
 
         var configuration = groupedChart.getConfiguration();
         configuration.setSeries(new ArrayList<>());
@@ -184,13 +230,19 @@ public class EVDefectBreakdownView extends Main implements HasDynamicTitle {
         configuration.setPlotOptions(plot);
 
         DataSeries allSeries = new DataSeries(T.tr("statistics.defectBreakdown.segment.all"));
-        DataSeries selSeries = new DataSeries(selectedLabel());
         for (DefectTheme theme : DefectTheme.values()) {
             allSeries.add(new DataSeriesItem(themeLabel(theme), findShare(all, theme) * 100.0));
-            selSeries.add(new DataSeriesItem(themeLabel(theme), findShare(sel, theme) * 100.0));
         }
         configuration.addSeries(allSeries);
-        configuration.addSeries(selSeries);
+
+        for (MakeModel mm : selected) {
+            List<ThemeBreakdown> b = TraficomInspectionService.breakdown(Set.of(mm));
+            DataSeries series = new DataSeries(modelLabel(mm));
+            for (DefectTheme theme : DefectTheme.values()) {
+                series.add(new DataSeriesItem(themeLabel(theme), findShare(b, theme) * 100.0));
+            }
+            configuration.addSeries(series);
+        }
 
         Tooltip tooltip = new Tooltip();
         tooltip.setShared(true);
@@ -198,6 +250,10 @@ public class EVDefectBreakdownView extends Main implements HasDynamicTitle {
         configuration.setTooltip(tooltip);
 
         groupedChart.drawChart(true);
+    }
+
+    private static String modelLabel(MakeModel mm) {
+        return mm.make() + " " + mm.model();
     }
 
     private static double findShare(List<ThemeBreakdown> rows, DefectTheme theme) {

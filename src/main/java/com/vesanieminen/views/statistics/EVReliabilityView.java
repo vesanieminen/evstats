@@ -51,16 +51,13 @@ public class EVReliabilityView extends Main implements HasDynamicTitle {
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
-        setHeightFull();
-        attachEvent.getUI().getPage().retrieveExtendedClientDetails(details -> {
-            if (details.isTouchDevice() && details.isIOS()) {
-                setHeight("var(--fullscreen-height)");
-            }
-        });
+        // Don't clamp Main to viewport height — let it grow with content so the
+        // AppLayout content slot scrolls naturally on mobile.
+        setWidthFull();
 
         removeAll();
         root.removeAll();
-        root.setSizeFull();
+        root.setWidthFull();
         root.setPadding(false);
         root.setSpacing(false);
 
@@ -70,11 +67,9 @@ public class EVReliabilityView extends Main implements HasDynamicTitle {
         emptyState.setVisible(false);
         root.add(emptyState);
 
-        chart.setSizeFull();
-        chart.getStyle().set("min-height", "400px");
+        chart.setWidthFull();
         ChartExport.configure(chart, "ev-reliability");
         root.add(chart);
-        root.expand(chart);
 
         add(root);
         updateChart();
@@ -125,6 +120,11 @@ public class EVReliabilityView extends Main implements HasDynamicTitle {
 
         emptyState.setVisible(false);
         chart.setVisible(true);
+
+        // Scale chart height with the number of bars so the labels are readable
+        // on mobile and the page can scroll within the AppLayout content slot.
+        // ~32 px per bar plus ~180 px for title + subtitle + axis labels.
+        chart.setHeight(Math.max(360, 180 + rows.size() * 32) + "px");
 
         var configuration = chart.getConfiguration();
         configuration.setSeries(new java.util.ArrayList<>());
