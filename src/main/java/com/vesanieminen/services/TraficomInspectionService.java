@@ -178,6 +178,66 @@ public class TraficomInspectionService {
                 .toList();
     }
 
+    /**
+     * Tesla model × cohort-year leaf rows (excludes totals).
+     */
+    public static List<InspectionRow> teslaRows() {
+        return loadAll().stream()
+                .filter(r -> r.cohortYear() != null)
+                .filter(r -> "Tesla".equals(r.make()))
+                .filter(r -> !TOTALS_MODEL.equals(r.model()))
+                .toList();
+    }
+
+    /**
+     * Returns the i18n key for a Finnish defect string, e.g.
+     * {@code inspection.defect.etuakselisto}. Callers should pass the result
+     * through {@code T.tr(...)} so localisation respects the current UI locale.
+     * Returns {@code null} for unknown / null inputs.
+     */
+    public static String defectKey(String defectFi) {
+        if (defectFi == null) {
+            return null;
+        }
+        String trimmed = defectFi.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        return "inspection.defect." + slug(trimmed);
+    }
+
+    private static String slug(String s) {
+        StringBuilder sb = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (Character.isLetterOrDigit(c)) {
+                sb.append(Character.toLowerCase(c));
+            } else if (sb.length() > 0 && sb.charAt(sb.length() - 1) != '_') {
+                sb.append('_');
+            }
+        }
+        // Normalise Finnish characters to ASCII so the i18n key lookup is stable.
+        String normalised = sb.toString();
+        normalised = normalised.replace('ä', 'a').replace('ö', 'o').replace('å', 'a');
+        if (normalised.endsWith("_")) {
+            normalised = normalised.substring(0, normalised.length() - 1);
+        }
+        return normalised;
+    }
+
+    /**
+     * Distinct Finnish defect strings observed across all leaf rows. Useful
+     * for asserting glossary coverage in tests.
+     */
+    public static java.util.Set<String> distinctDefectStrings() {
+        return loadAll().stream()
+                .filter(r -> r.cohortYear() != null)
+                .filter(r -> !TOTALS_MAKE.equals(r.make()) && !TOTALS_MODEL.equals(r.model()))
+                .flatMap(r -> r.topDefects().stream())
+                .filter(s -> s != null && !s.isBlank())
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    }
+
     // -- Defect themes ---------------------------------------------------
 
     public enum DefectTheme {
