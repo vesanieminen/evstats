@@ -5,3 +5,51 @@
 :where([styled-mode]) .highcharts-axis-labels {
     font-size: var(--lumo-font-size-s);
 }
+
+/* Export menu (kebab "menuball") — Highcharts' default fills the button-box
+ * white and the dots near-white, which renders as a bright square against
+ * dark Lumo and is washed-out against light Lumo. Drop the box fill, paint
+ * the dots with the secondary-text token, and theme the popup menu using
+ * Lumo surface tokens so it picks up dark-mode and brand-theme overrides. */
+:where([styled-mode]) .highcharts-contextbutton .highcharts-button-box {
+    fill: transparent;
+    stroke: none;
+}
+
+:where([styled-mode]) .highcharts-contextbutton .highcharts-button-symbol {
+    fill: var(--lumo-secondary-text-color);
+    stroke: var(--lumo-secondary-text-color);
+}
+
+:where([styled-mode]) .highcharts-contextbutton:hover .highcharts-button-box {
+    fill: var(--lumo-contrast-10pct);
+    stroke: none;
+}
+
+:where([styled-mode]) .highcharts-contextbutton:hover .highcharts-button-symbol {
+    fill: var(--lumo-primary-text-color);
+    stroke: var(--lumo-primary-text-color);
+}
+
+:where([styled-mode]) .highcharts-menu {
+    background: var(--lumo-base-color);
+    border: 1px solid var(--lumo-contrast-10pct);
+    box-shadow: var(--lumo-box-shadow-s);
+    border-radius: var(--lumo-border-radius-m);
+    padding: var(--lumo-space-xs) 0;
+    margin: 0;
+}
+
+:where([styled-mode]) .highcharts-menu-item {
+    color: var(--lumo-body-text-color);
+    background: transparent;
+    padding: var(--lumo-space-xs) var(--lumo-space-m);
+    font-family: var(--lumo-font-family);
+    font-size: var(--lumo-font-size-s);
+    transition: background 60ms;
+}
+
+:where([styled-mode]) .highcharts-menu-item:hover {
+    background: var(--lumo-contrast-10pct);
+    color: var(--lumo-primary-text-color);
+}

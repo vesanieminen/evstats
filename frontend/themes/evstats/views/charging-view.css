@@ -528,6 +528,14 @@ html:where(.brand-polestar) {
     --lumo-primary-color: #E07020;             /* Safety Orange */
     --lumo-primary-text-color: #C45E10;        /* primary-active */
     --lumo-primary-color-50pct: rgba(224, 112, 32, 0.5);
+
+    /* Shape: Polestar's tokens spec calls for sharp 0px corners across the
+     * board. Overriding the three Lumo radius tokens cascades to every
+     * component that consumes them (cards, buttons, inputs, dialogs, the
+     * chart export menu, etc.) in both light and dark mode. */
+    --lumo-border-radius-s: 0;
+    --lumo-border-radius-m: 0;
+    --lumo-border-radius-l: 0;
 }
 /* Dark mode: full Polestar dark palette. charging-view.css and Lumo's
  * dark-mode components read --lumo-contrast-Npct (theme-aware contrast family,
