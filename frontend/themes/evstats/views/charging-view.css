@@ -470,3 +470,190 @@
 .charging-card-header vaadin-icon {
     color: var(--lumo-primary-text-color);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Per-brand themes (issue #22)
+ *
+ * Each .brand-<key> class is applied to the ChargingView <main> root from
+ * Brand.cssClass() in Java. Tokens override the local Lumo custom properties
+ * so theming is scoped to /charging only — other views stay on the project
+ * default theme. :where() keeps specificity at zero so the dark-mode toggle
+ * and Lumo defaults still win when the brand block doesn't explicitly override
+ * a token.
+ *
+ * Three-tier dark-mode strategy:
+ *   - Tier 1 (Tesla, BMW): full light + dark token sets.
+ *   - Tier 2 (Polestar): dark-native; full dark palette + accent-only in light.
+ *   - Tier 3 (Porsche, Audi, Mercedes-Benz, VW, Hyundai, Ford): light tokens
+ *     drive light mode; dark mode keeps the project default surface and
+ *     overrides only the chromatic accent.
+ *
+ * Sources for the seven brands not on getdesign.md are well-known identity
+ * colors. // TODO verify against latest brand guidelines.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+/* TESLA — getdesign.md (verified) */
+:where(.brand-tesla) {
+    --lumo-primary-color: #3E6AE1;             /* Electric Blue */
+    --lumo-primary-text-color: #3E6AE1;
+    --lumo-primary-color-50pct: rgba(62, 106, 225, 0.5);
+    --lumo-base-color: #FFFFFF;                /* White Canvas */
+    --lumo-body-text-color: #393C41;           /* Graphite */
+}
+[theme~="dark"] :where(.brand-tesla) {
+    --lumo-primary-color: #3E6AE1;
+    --lumo-primary-text-color: #6A8FE6;
+    --lumo-base-color: #171A20;                /* Carbon Dark */
+    --lumo-body-text-color: rgba(255, 255, 255, 0.85);
+}
+
+/* BMW — getdesign.md (verified) */
+:where(.brand-bmw) {
+    --lumo-primary-color: #1C69D4;             /* BMW corporate blue */
+    --lumo-primary-text-color: #0653B6;        /* primary-active */
+    --lumo-primary-color-50pct: rgba(28, 105, 212, 0.5);
+    --lumo-base-color: #FFFFFF;
+    --lumo-body-text-color: #262626;
+}
+[theme~="dark"] :where(.brand-bmw) {
+    --lumo-primary-color: #1C69D4;
+    --lumo-primary-text-color: #4F8FE3;
+    --lumo-base-color: #1A2129;
+    --lumo-body-text-color: rgba(255, 255, 255, 0.85);
+}
+
+/* POLESTAR — verified dark palette (issue #22 comment) */
+/* Light mode: accent only on Lumo default surface (Tier 2). */
+:where(.brand-polestar) {
+    --lumo-primary-color: #E07020;             /* Safety Orange */
+    --lumo-primary-text-color: #C45E10;        /* primary-active */
+    --lumo-primary-color-50pct: rgba(224, 112, 32, 0.5);
+}
+/* Dark mode: full Polestar dark palette — every token from the brand
+ * reference is mapped onto the closest Lumo equivalent. */
+[theme~="dark"] :where(.brand-polestar) {
+    /* Accent */
+    --lumo-primary-color: #E07020;             /* primary */
+    --lumo-primary-text-color: #E07020;        /* text_accent */
+    --lumo-primary-color-50pct: rgba(224, 112, 32, 0.5);
+    --lumo-primary-color-10pct: rgba(224, 112, 32, 0.1);
+
+    /* Surfaces (deepest → raised) */
+    --lumo-base-color: #141414;                /* background — app root */
+    --lumo-shade-5pct: #1E1E1E;                /* surface — cards, panels */
+    --lumo-shade-10pct: #282828;               /* surface_raised — input fill */
+    --lumo-shade-20pct: #333333;               /* surface_overlay — hover */
+
+    /* Typography */
+    --lumo-header-text-color: #FFFFFF;         /* text — headlines */
+    --lumo-body-text-color: #BBBBBB;           /* text_body */
+    --lumo-secondary-text-color: #777777;      /* text_secondary */
+    --lumo-tertiary-text-color: #777777;
+    --lumo-disabled-text-color: #444444;       /* text_disabled */
+
+    /* Borders & dividers */
+    --lumo-contrast-10pct: #2E2E2E;            /* border */
+    --lumo-contrast-20pct: #2E2E2E;
+}
+
+/* Tier 3 brands (Porsche, Audi, Mercedes-Benz, Volkswagen, Hyundai, Ford):
+ * light mode applies the chromatic accent + a brand-flavoured light surface
+ * + dark text. In dark mode, only the chromatic accent is overridden — Lumo's
+ * default dark surface and dark-mode body text apply, so foreground contrast
+ * stays readable. The light-mode surface/text overrides are scoped via
+ * html:not([theme~="dark"]) so they don't leak into dark mode. */
+
+/* PORSCHE — well-known "Porsche red"; TODO verify against latest brand guidelines */
+:where(.brand-porsche) {
+    --lumo-primary-color: #D5001C;
+    --lumo-primary-text-color: #D5001C;
+    --lumo-primary-color-50pct: rgba(213, 0, 28, 0.5);
+}
+html:not([theme~="dark"]) :where(.brand-porsche) {
+    --lumo-base-color: #FFFFFF;
+    --lumo-body-text-color: #1C1C1C;
+}
+[theme~="dark"] :where(.brand-porsche) {
+    --lumo-primary-color: #E83A52;             /* slightly lighter for dark contrast */
+    --lumo-primary-text-color: #E83A52;
+}
+
+/* AUDI — well-known black/red; TODO verify against latest brand guidelines */
+:where(.brand-audi) {
+    --lumo-primary-color: #BB0A30;             /* Sport-line red */
+    --lumo-primary-text-color: #000000;
+    --lumo-primary-color-50pct: rgba(187, 10, 48, 0.5);
+}
+html:not([theme~="dark"]) :where(.brand-audi) {
+    --lumo-base-color: #FFFFFF;
+    --lumo-body-text-color: #000000;
+}
+[theme~="dark"] :where(.brand-audi) {
+    --lumo-primary-color: #E04055;
+    --lumo-primary-text-color: #E04055;
+}
+
+/* MERCEDES-BENZ — silver/black; TODO verify against latest brand guidelines */
+:where(.brand-mercedes) {
+    --lumo-primary-color: #000000;
+    --lumo-primary-text-color: #000000;
+    --lumo-primary-color-50pct: rgba(0, 0, 0, 0.5);
+}
+html:not([theme~="dark"]) :where(.brand-mercedes) {
+    --lumo-base-color: #FFFFFF;
+    --lumo-body-text-color: #1C1C1C;
+}
+[theme~="dark"] :where(.brand-mercedes) {
+    --lumo-primary-color: #B5B5B5;             /* silver */
+    --lumo-primary-text-color: #B5B5B5;
+}
+
+/* VOLKSWAGEN — corporate blue; TODO verify against latest brand guidelines */
+:where(.brand-volkswagen) {
+    --lumo-primary-color: #001E50;
+    --lumo-primary-text-color: #001E50;
+    --lumo-primary-color-50pct: rgba(0, 30, 80, 0.5);
+}
+html:not([theme~="dark"]) :where(.brand-volkswagen) {
+    --lumo-base-color: #FFFFFF;
+    --lumo-body-text-color: #1C1C1C;
+}
+[theme~="dark"] :where(.brand-volkswagen) {
+    --lumo-primary-color: #00B0F0;             /* VW digital blue lighter for dark */
+    --lumo-primary-text-color: #00B0F0;
+}
+
+/* HYUNDAI — Hyundai blue; TODO verify against latest brand guidelines */
+:where(.brand-hyundai) {
+    --lumo-primary-color: #002C5F;
+    --lumo-primary-text-color: #002C5F;
+    --lumo-primary-color-50pct: rgba(0, 44, 95, 0.5);
+}
+html:not([theme~="dark"]) :where(.brand-hyundai) {
+    --lumo-base-color: #FFFFFF;
+    --lumo-body-text-color: #1C1C1C;
+}
+[theme~="dark"] :where(.brand-hyundai) {
+    --lumo-primary-color: #00AAD2;             /* Hyundai light brand blue, lifted for dark contrast */
+    --lumo-primary-text-color: #00AAD2;
+}
+
+/* FORD — Ford blue; TODO verify against latest brand guidelines */
+:where(.brand-ford) {
+    --lumo-primary-color: #003478;
+    --lumo-primary-text-color: #003478;
+    --lumo-primary-color-50pct: rgba(0, 52, 120, 0.5);
+}
+html:not([theme~="dark"]) :where(.brand-ford) {
+    --lumo-base-color: #FFFFFF;
+    --lumo-body-text-color: #1C1C1C;
+}
+[theme~="dark"] :where(.brand-ford) {
+    --lumo-primary-color: #1F8FFF;             /* Ford "Performance Blue" lifted for dark contrast */
+    --lumo-primary-text-color: #1F8FFF;
+}
+
+/* DEFAULT — explicit no-op so Brand.DEFAULT.cssClass() resolves cleanly. */
+:where(.brand-default) {
+    /* inherit project Lumo tokens */
+}

@@ -150,7 +150,7 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         // Car image container
         carImageContainer = new Div();
         carImageContainer.addClassName("car-svg-container");
-        carImageContainer.getElement().setProperty("innerHTML", getCarSvgString());
+        carImageContainer.getElement().setProperty("innerHTML", defaultVehicleHtml());
         vehicleSection.add(carImageContainer);
 
         // Vehicle name
@@ -242,6 +242,7 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
             selectedModel = e.getValue();
             vehicleName.setText(selectedModel.name());
             WebStorage.setItem(VEHICLE_STORAGE_KEY, selectedModel.name());
+            applyBrandTheme(selectedModel);
             if (selectedModel.equals(EVModel.CUSTOM)) {
                 batteryCapacityField.setVisible(true);
                 consumptionField.setVisible(true);
@@ -253,6 +254,11 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
             }
             doCalculation();
         });
+        // Apply the initial brand theme — vehicleSelect.setValue() above fired
+        // before the listener was attached, so do it explicitly. WebStorage
+        // hydration in the constructor's tail block will re-fire the listener
+        // and re-apply if a different preset was persisted.
+        applyBrandTheme(selectedModel);
 
         customFieldsDiv.add(batteryCapacityField, consumptionField);
 
@@ -336,7 +342,7 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         Button resetImageBtn = new Button(T.tr("charging.image.reset"), new Icon(VaadinIcon.REFRESH));
         resetImageBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
         resetImageBtn.addClickListener(e -> {
-            carImageContainer.getElement().setProperty("innerHTML", getCarSvgString());
+            carImageContainer.getElement().setProperty("innerHTML", defaultVehicleHtml());
             WebStorage.removeItem(CAR_IMAGE_STORAGE_KEY);
             Notification.show(T.tr("charging.image.resetDone"), 2000, Notification.Position.MIDDLE);
         });
@@ -650,32 +656,19 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
             carImageContainer.getElement().setProperty("innerHTML", imgHtml);
         } else {
             // Fallback to default SVG
-            carImageContainer.getElement().setProperty("innerHTML", getCarSvgString());
+            carImageContainer.getElement().setProperty("innerHTML", defaultVehicleHtml());
         }
     }
 
-    private String getCarSvgString() {
+    private String defaultVehicleHtml() {
+        // Default vehicle thumbnail used when no custom user image is set.
         return """
-                <svg viewBox="0 0 200 80" style="width: 180px; height: 80px; display: block; margin: 0 auto;">
-                    <defs>
-                        <linearGradient id="carGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#6b7280"></stop>
-                            <stop offset="100%" stop-color="#4b5563"></stop>
-                        </linearGradient>
-                        <linearGradient id="windowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stop-color="#60a5fa"></stop>
-                            <stop offset="100%" stop-color="#2563eb"></stop>
-                        </linearGradient>
-                    </defs>
-                    <ellipse cx="45" cy="65" rx="18" ry="18" fill="#1f2937"></ellipse>
-                    <ellipse cx="45" cy="65" rx="12" ry="12" fill="#6b7280"></ellipse>
-                    <ellipse cx="155" cy="65" rx="18" ry="18" fill="#1f2937"></ellipse>
-                    <ellipse cx="155" cy="65" rx="12" ry="12" fill="#6b7280"></ellipse>
-                    <path d="M20 50 Q25 25 60 20 L140 20 Q175 25 180 50 L180 55 Q180 60 175 60 L25 60 Q20 60 20 55 Z" fill="url(#carGrad)"></path>
-                    <path d="M55 22 Q60 12 80 10 L120 10 Q140 12 145 22 L140 20 L60 20 Z" fill="url(#windowGrad)" opacity="0.9"></path>
-                    <rect x="5" y="48" width="15" height="6" rx="2" fill="#fbbf24" opacity="0.9"></rect>
-                    <rect x="180" y="48" width="15" height="6" rx="2" fill="#ef4444" opacity="0.9"></rect>
-                </svg>
+                <img src="themes/evstats/images/ev.png" \
+                     alt="Default vehicle" \
+                     style="width: 180px; height: 80px; object-fit: contain; \
+                            object-position: center; display: block; \
+                            margin: 0 auto;" \
+                     onerror="this.style.display='none'" />
                 """;
     }
 
@@ -880,6 +873,12 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
                 setCarImage(item);
             }
         });
+    }
+
+    private void applyBrandTheme(EVModel model) {
+        var classList = getElement().getClassList();
+        classList.removeIf(c -> c.startsWith("brand-"));
+        classList.add(Brand.from(model).cssClass());
     }
 
     @Setter
