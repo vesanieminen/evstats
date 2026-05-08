@@ -2,6 +2,11 @@
 // Dark explicitly via the settings dialog, it overrides the OS preference and
 // is persisted in localStorage. "system" (or absent) follows the OS and updates
 // live when the OS preference changes.
+//
+// The first synchronous application happens in index.html so the right palette
+// is on <html> before the first paint. This module re-applies on demand
+// (settings dialog) and listens for OS-level changes when the user is on
+// "system".
 const PREFERENCE_KEY = "theme.preference";
 
 function readPreference() {
@@ -27,5 +32,3 @@ window.applyTheme = () => {
 window
     .matchMedia("(prefers-color-scheme: dark)")
     .addEventListener("change", window.applyTheme);
-
-window.applyTheme();

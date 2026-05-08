@@ -19,17 +19,16 @@ async function pickVehicle(page: Page, label: string | RegExp, expectedClass: st
   // Items in the rendered field are also <vaadin-select-item>; restrict to the
   // open overlay's options via role="option".
   await page.locator('vaadin-select-item[role="option"]').filter({ hasText: label }).first().click();
-  // The brand-* class is applied via a server roundtrip; wait for the new
-  // class specifically (not just any brand-*) so successive picks don't race.
-  await page.locator(`main.${expectedClass}`).waitFor();
+  // The brand-* class is applied to <html> via a server roundtrip; wait for the
+  // new class specifically (not just any brand-*) so successive picks don't race.
+  await page.locator(`html.${expectedClass}`).waitFor();
 }
 
-/** Read the computed --lumo-primary-color of <main> as an `rgb(a, b, c)` triple. */
+/** Read the computed --lumo-primary-color of <html> as an `rgb(a, b, c)` triple. */
 async function primaryColor(page: Page): Promise<string> {
   await page.locator('main').first().waitFor();
   return await page.evaluate(() => {
-    const main = document.querySelector('main') as HTMLElement;
-    return getComputedStyle(main).getPropertyValue('--lumo-primary-color').trim();
+    return getComputedStyle(document.documentElement).getPropertyValue('--lumo-primary-color').trim();
   });
 }
 
@@ -65,31 +64,76 @@ test.describe('Charging-page brand theme', () => {
     expect(normalise(await primaryColor(page))).toBe(normalise('#E07020'));
   });
 
-  test('Custom resets to the project-default primary token', async ({ page }) => {
-    // Read the default by visiting another view first.
-    await page.goto('/registrations');
-    const defaultPrimary = normalise(await primaryColor(page));
+  test('Custom resolves to bare Lumo tokens (brand-default is a no-op)', async ({ page }) => {
+    // Capture Lumo's real default by stripping any brand class first — the
+    // cold-load default is now brand-tesla (set by the inline boot script),
+    // so we can't read "default primary" by just visiting another view.
+    await page.evaluate(() => {
+      Array.from(document.documentElement.classList).forEach(c => {
+        if (c.startsWith('brand-')) document.documentElement.classList.remove(c);
+      });
+    });
+    const lumoDefault = normalise(await primaryColor(page));
 
-    await page.goto('/');
     await pickVehicle(page, 'Custom', 'brand-default');
-    expect(normalise(await primaryColor(page))).toBe(defaultPrimary);
+    expect(normalise(await primaryColor(page))).toBe(lumoDefault);
   });
 
-  test('charging view tags <main> with the brand class', async ({ page }) => {
+  test('charging view tags <html> with the brand class', async ({ page }) => {
     await pickVehicle(page, /Tesla Model 3 LR/i, 'brand-tesla');
-    await expect(page.locator('main.brand-tesla')).toBeVisible();
+    await expect(page.locator('html.brand-tesla')).toHaveCount(1);
     await pickVehicle(page, /BMW iX xDrive50/i, 'brand-bmw');
-    await expect(page.locator('main.brand-bmw')).toBeVisible();
-    await expect(page.locator('main.brand-tesla')).toHaveCount(0);
+    await expect(page.locator('html.brand-bmw')).toHaveCount(1);
+    await expect(page.locator('html.brand-tesla')).toHaveCount(0);
   });
 
-  test('cross-view isolation: registrations view stays on default theme', async ({ page }) => {
+  test('app-wide takeover: registrations view inherits the brand theme', async ({ page }) => {
     await pickVehicle(page, /Tesla Model 3 LR/i, 'brand-tesla');
     expect(normalise(await primaryColor(page))).toBe(normalise('#3E6AE1'));
 
     await page.goto('/registrations');
-    const otherPrimary = normalise(await primaryColor(page));
-    expect(otherPrimary).not.toBe(normalise('#3E6AE1'));
+    expect(normalise(await primaryColor(page))).toBe(normalise('#3E6AE1'));
+    await expect(page.locator('html.brand-tesla')).toHaveCount(1);
+  });
+
+  test('nav-back persists the user vehicle (no default-vehicle flash)', async ({ page }) => {
+    await pickVehicle(page, /Polestar 2 LR/i, 'brand-polestar');
+    await page.goto('/registrations');
+    await page.goto('/');
+    // The session-scoped PreservedState seeds selectedModel before the view
+    // renders, so the vehicle name span shouldn't flash through "Tesla Model 3 LR".
+    await expect(page.locator('.vehicle-name')).toHaveText('Polestar 2 LR');
+    await expect(page.locator('html.brand-polestar')).toHaveCount(1);
+  });
+});
+
+test.describe('Inline boot script (no theme/brand flash on reload)', () => {
+  test('preseeded localStorage paints dark + Polestar before any module loads', async ({ page }) => {
+    // addInitScript runs in the page context before any inline or external
+    // script. By the time the boot script in <head> executes, theme.brand and
+    // theme.preference are already set, so <html> ends up dark + brand-polestar
+    // synchronously — no flash window.
+    await page.addInitScript(() => {
+      localStorage.setItem('theme.brand', 'brand-polestar');
+      localStorage.setItem('theme.preference', 'dark');
+    });
+    await page.goto('/');
+
+    // Both attributes should be present on <html> from the very first DOM
+    // observation. We don't assert "before paint" directly (Playwright observes
+    // post-paint), but a missing class here would mean the boot script didn't
+    // run synchronously.
+    await expect(page.locator('html.brand-polestar')).toHaveCount(1);
+    expect(await page.evaluate(() => document.documentElement.getAttribute('theme'))).toBe('dark');
+  });
+
+  test('empty localStorage falls back to brand-tesla default', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.removeItem('theme.brand');
+      localStorage.removeItem('theme.preference');
+    });
+    await page.goto('/');
+    await expect(page.locator('html.brand-tesla')).toHaveCount(1);
   });
 });
 
@@ -129,29 +173,29 @@ test.describe('Charging-page Polestar dark palette (#24)', () => {
     await page.goto('/');
   });
 
-  test('main background paints Polestar #141414', async ({ page }) => {
+  test('html background paints Polestar #141414', async ({ page }) => {
     await darken(page);
     await pickVehicle(page, /Polestar 2 LR/i, 'brand-polestar');
-    expect(normalise(await bgOf(page, 'main.brand-polestar'))).toBe(normalise('#141414'));
+    expect(normalise(await bgOf(page, 'html.brand-polestar'))).toBe(normalise('#141414'));
   });
 
   test('charging-card surface paints #1E1E1E', async ({ page }) => {
     await darken(page);
     await pickVehicle(page, /Polestar 2 LR/i, 'brand-polestar');
-    expect(normalise(await bgOf(page, 'main.brand-polestar .charging-card'))).toBe(normalise('#1E1E1E'));
+    expect(normalise(await bgOf(page, 'html.brand-polestar .charging-card'))).toBe(normalise('#1E1E1E'));
   });
 
   test('input-fill contrast token reads #282828', async ({ page }) => {
     await darken(page);
     await pickVehicle(page, /Polestar 2 LR/i, 'brand-polestar');
-    expect(normalise(await colorVar(page, '--lumo-contrast-10pct', 'main.brand-polestar')))
+    expect(normalise(await colorVar(page, '--lumo-contrast-10pct', 'html.brand-polestar')))
       .toBe(normalise('#282828'));
   });
 
   test('secondary-text token reads #777777', async ({ page }) => {
     await darken(page);
     await pickVehicle(page, /Polestar 2 LR/i, 'brand-polestar');
-    expect(normalise(await colorVar(page, '--lumo-secondary-text-color', 'main.brand-polestar')))
+    expect(normalise(await colorVar(page, '--lumo-secondary-text-color', 'html.brand-polestar')))
       .toBe(normalise('#777777'));
   });
 
@@ -160,21 +204,21 @@ test.describe('Charging-page Polestar dark palette (#24)', () => {
     // Capture Lumo's dark default for the card surface using the Custom preset
     // (which resolves to brand-default — pure Lumo tokens).
     await pickVehicle(page, 'Custom', 'brand-default');
-    const lumoDarkCard = await bgOf(page, 'main.brand-default .charging-card');
+    const lumoDarkCard = await bgOf(page, 'html.brand-default .charging-card');
 
     await pickVehicle(page, /Polestar 2 LR/i, 'brand-polestar');
-    expect(normalise(await bgOf(page, 'main.brand-polestar .charging-card'))).toBe(normalise('#1E1E1E'));
+    expect(normalise(await bgOf(page, 'html.brand-polestar .charging-card'))).toBe(normalise('#1E1E1E'));
 
     await pickVehicle(page, 'Custom', 'brand-default');
-    expect(normalise(await bgOf(page, 'main.brand-default .charging-card'))).toBe(normalise(lumoDarkCard));
+    expect(normalise(await bgOf(page, 'html.brand-default .charging-card'))).toBe(normalise(lumoDarkCard));
   });
 
   test('non-regression: BMW dark surface still reads #1A2129', async ({ page }) => {
     await darken(page);
     await pickVehicle(page, /BMW iX xDrive50/i, 'brand-bmw');
     // BMW Tier 1 sets --lumo-base-color in dark mode; the variable is what the
-    // brand block exposes, regardless of whether <main> background is painted.
-    expect(normalise(await colorVar(page, '--lumo-base-color', 'main.brand-bmw')))
+    // brand block exposes, regardless of whether <html> background is painted.
+    expect(normalise(await colorVar(page, '--lumo-base-color', 'html.brand-bmw')))
       .toBe(normalise('#1A2129'));
   });
 
@@ -196,15 +240,14 @@ test.describe('Charging-page Polestar dark palette (#24)', () => {
     expect(normalise(chrome.drawer ?? '')).toBe(normalise('#141414'));
   });
 
-  test('takeover self-resets: html paint drops when navigating off /charging', async ({ page }) => {
+  test('takeover persists across navigation: html keeps Polestar #141414 off /charging', async ({ page }) => {
     await darken(page);
     await pickVehicle(page, /Polestar 2 LR/i, 'brand-polestar');
     expect(normalise(await bgOf(page, 'html'))).toBe(normalise('#141414'));
 
     await page.goto('/registrations');
-    // The :has(main.brand-polestar) selector no longer matches because <main>
-    // is the registrations view's element and doesn't carry the brand class.
-    const after = normalise(await bgOf(page, 'html'));
-    expect(after).not.toBe(normalise('#141414'));
+    // The brand class lives on <html>, so it follows the user across views.
+    expect(normalise(await bgOf(page, 'html'))).toBe(normalise('#141414'));
+    await expect(page.locator('html.brand-polestar')).toHaveCount(1);
   });
 });

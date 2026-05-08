@@ -2,6 +2,7 @@ package com.vesanieminen.views.charging;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -78,7 +79,7 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
     private final Span rangeAddedSpan;
     private final Span targetSocValueSpan;
     private final Span targetRangeSpan;
-    private EVModel selectedModel = EVModel.PRESETS.get(0);
+    private EVModel selectedModel;
 
     // Charge level fields
     private final DualRangeSlider socSlider;
@@ -94,6 +95,7 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
     private static final String AMPERES_STORAGE_KEY = "amperesSlider";
     private static final String VEHICLE_STORAGE_KEY = "vehicleSelect";
     private static final String CAR_IMAGE_STORAGE_KEY = "carImage";
+    private static final String BRAND_STORAGE_KEY = "theme.brand";
     private static final int MAX_IMAGE_SIZE_BYTES = 100 * 1024; // 100KB max
     private Div carImageContainer;
 
@@ -132,6 +134,13 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         this.liukuriService = liukuriService;
         this.mapperService = mapperService;
         this.settingsState = settingsState;
+
+        // Initial model: preserved-state cache (survives intra-session navigation)
+        // beats the hardcoded fallback. Without this, navigating back to /charging
+        // would render the default vehicle for a frame before localStorage rehydrates.
+        selectedModel = preservedState.selectedModel != null
+                ? preservedState.selectedModel
+                : EVModel.PRESETS.get(0);
 
         setHeight("var(--fullscreen-height-charging-updated)");
 
@@ -240,6 +249,7 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         vehicleSelect.setWidthFull();
         vehicleSelect.addValueChangeListener(e -> {
             selectedModel = e.getValue();
+            preservedState.selectedModel = selectedModel;
             vehicleName.setText(selectedModel.name());
             WebStorage.setItem(VEHICLE_STORAGE_KEY, selectedModel.name());
             applyBrandTheme(selectedModel);
@@ -254,11 +264,13 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
             }
             doCalculation();
         });
-        // Apply the initial brand theme — vehicleSelect.setValue() above fired
-        // before the listener was attached, so do it explicitly. WebStorage
-        // hydration in the constructor's tail block will re-fire the listener
-        // and re-apply if a different preset was persisted.
-        applyBrandTheme(selectedModel);
+        // No unconditional applyBrandTheme() at construction time on purpose —
+        // the inline boot script in index.html has already painted the right
+        // brand from localStorage. Re-applying here would race the boot output
+        // with the (possibly stale) constructor-time selectedModel and flash
+        // the default brand for one frame. WebStorage hydration in
+        // readFieldValues() will fire the listener with the user's pick if it
+        // ever differs from preservedState.
 
         customFieldsDiv.add(batteryCapacityField, consumptionField);
 
@@ -876,9 +888,13 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
     }
 
     private void applyBrandTheme(EVModel model) {
-        var classList = getElement().getClassList();
-        classList.removeIf(c -> c.startsWith("brand-"));
-        classList.add(Brand.from(model).cssClass());
+        String slug = Brand.from(model).cssClass();
+        // The brand class lives on <html> so the palette covers AppLayout chrome
+        // and any view, not just /charging. Persist alongside theme.preference so
+        // the inline boot script in index.html can re-apply it before first paint.
+        UI.getCurrent().getPage().executeJs(
+                "window.applyBrandClass && window.applyBrandClass($0);", slug);
+        WebStorage.setItem(BRAND_STORAGE_KEY, slug);
     }
 
     @Setter
@@ -919,5 +935,9 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
                 CalculationTarget.CHARGING_END,
                 LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
         );
+        // Cached so navigating back to /charging within the session re-uses the
+        // user's last pick instead of flashing the default vehicle while
+        // localStorage rehydrates.
+        EVModel selectedModel;
     }
 }
