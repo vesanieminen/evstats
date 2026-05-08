@@ -529,20 +529,33 @@
     --lumo-primary-text-color: #C45E10;        /* primary-active */
     --lumo-primary-color-50pct: rgba(224, 112, 32, 0.5);
 }
-/* Dark mode: full Polestar dark palette — every token from the brand
- * reference is mapped onto the closest Lumo equivalent. */
+/* Dark mode: full Polestar dark palette. The previous version mapped surface
+ * tokens to --lumo-shade-Npct, but charging-view.css and Lumo's dark-mode
+ * components actually read --lumo-contrast-Npct (theme-aware contrast family,
+ * which renders as light tints in dark mode). Re-map onto the variables that
+ * are actually consumed; #24. */
 [theme~="dark"] :where(.brand-polestar) {
+    /* Paint <main>'s own background (Lumo doesn't read base-color onto <main>;
+     * scope is intentionally main-only, <html> stays on Lumo defaults). */
+    background-color: #141414;
+
     /* Accent */
     --lumo-primary-color: #E07020;             /* primary */
     --lumo-primary-text-color: #E07020;        /* text_accent */
     --lumo-primary-color-50pct: rgba(224, 112, 32, 0.5);
     --lumo-primary-color-10pct: rgba(224, 112, 32, 0.1);
 
-    /* Surfaces (deepest → raised) */
+    /* Surfaces — mapped to the contrast family that charging-view.css and
+     * Lumo dark-mode components actually consume. */
     --lumo-base-color: #141414;                /* background — app root */
-    --lumo-shade-5pct: #1E1E1E;                /* surface — cards, panels */
-    --lumo-shade-10pct: #282828;               /* surface_raised — input fill */
-    --lumo-shade-20pct: #333333;               /* surface_overlay — hover */
+    --lumo-contrast-5pct: #1E1E1E;             /* surface — cards, panels */
+    --lumo-contrast-10pct: #282828;            /* surface_raised — input fill, borders */
+    --lumo-contrast-20pct: #333333;            /* surface_overlay — hover, secondary surface */
+    /* Kept for completeness even though charging-view.css doesn't read these
+     * directly; some Vaadin components consume them. */
+    --lumo-shade-5pct: #1E1E1E;
+    --lumo-shade-10pct: #282828;
+    --lumo-shade-20pct: #333333;
 
     /* Typography */
     --lumo-header-text-color: #FFFFFF;         /* text — headlines */
@@ -550,10 +563,6 @@
     --lumo-secondary-text-color: #777777;      /* text_secondary */
     --lumo-tertiary-text-color: #777777;
     --lumo-disabled-text-color: #444444;       /* text_disabled */
-
-    /* Borders & dividers */
-    --lumo-contrast-10pct: #2E2E2E;            /* border */
-    --lumo-contrast-20pct: #2E2E2E;
 }
 
 /* Tier 3 brands (Porsche, Audi, Mercedes-Benz, Volkswagen, Hyundai, Ford):

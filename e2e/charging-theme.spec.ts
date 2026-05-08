@@ -92,3 +92,87 @@ test.describe('Charging-page brand theme', () => {
     expect(otherPrimary).not.toBe(normalise('#3E6AE1'));
   });
 });
+
+/**
+ * Polestar dark-mode tokens (issue #24). Verifies that the surface hierarchy
+ * from juuso-vaadin's reference palette actually paints — not just the accent.
+ */
+async function darken(page: Page) {
+  await page.locator('#settings-button').click();
+  await page.getByRole('button', { name: /Switch to dark mode/i }).click();
+  await page.keyboard.press('Escape');
+}
+
+async function bgOf(page: Page, selector: string): Promise<string> {
+  await page.locator(selector).first().waitFor();
+  return await page.evaluate((sel) => {
+    const el = document.querySelector(sel) as HTMLElement;
+    return getComputedStyle(el).backgroundColor;
+  }, selector);
+}
+
+async function colorVar(page: Page, varName: string, selector = 'main'): Promise<string> {
+  await page.locator(selector).first().waitFor();
+  return await page.evaluate(
+    ([sel, v]) => {
+      const el = document.querySelector(sel) as HTMLElement;
+      return getComputedStyle(el).getPropertyValue(v).trim();
+    },
+    [selector, varName]
+  );
+}
+
+test.describe('Charging-page Polestar dark palette (#24)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+  });
+
+  test('main background paints Polestar #141414', async ({ page }) => {
+    await darken(page);
+    await pickVehicle(page, /Polestar 2 LR/i, 'brand-polestar');
+    expect(normalise(await bgOf(page, 'main.brand-polestar'))).toBe(normalise('#141414'));
+  });
+
+  test('charging-card surface paints #1E1E1E', async ({ page }) => {
+    await darken(page);
+    await pickVehicle(page, /Polestar 2 LR/i, 'brand-polestar');
+    expect(normalise(await bgOf(page, 'main.brand-polestar .charging-card'))).toBe(normalise('#1E1E1E'));
+  });
+
+  test('input-fill contrast token reads #282828', async ({ page }) => {
+    await darken(page);
+    await pickVehicle(page, /Polestar 2 LR/i, 'brand-polestar');
+    expect(normalise(await colorVar(page, '--lumo-contrast-10pct', 'main.brand-polestar')))
+      .toBe(normalise('#282828'));
+  });
+
+  test('secondary-text token reads #777777', async ({ page }) => {
+    await darken(page);
+    await pickVehicle(page, /Polestar 2 LR/i, 'brand-polestar');
+    expect(normalise(await colorVar(page, '--lumo-secondary-text-color', 'main.brand-polestar')))
+      .toBe(normalise('#777777'));
+  });
+
+  test('switching away from Polestar reverts surface to Lumo dark default', async ({ page }) => {
+    await darken(page);
+    // Capture Lumo's dark default for the card surface using the Custom preset
+    // (which resolves to brand-default — pure Lumo tokens).
+    await pickVehicle(page, 'Custom', 'brand-default');
+    const lumoDarkCard = await bgOf(page, 'main.brand-default .charging-card');
+
+    await pickVehicle(page, /Polestar 2 LR/i, 'brand-polestar');
+    expect(normalise(await bgOf(page, 'main.brand-polestar .charging-card'))).toBe(normalise('#1E1E1E'));
+
+    await pickVehicle(page, 'Custom', 'brand-default');
+    expect(normalise(await bgOf(page, 'main.brand-default .charging-card'))).toBe(normalise(lumoDarkCard));
+  });
+
+  test('non-regression: BMW dark surface still reads #1A2129', async ({ page }) => {
+    await darken(page);
+    await pickVehicle(page, /BMW iX xDrive50/i, 'brand-bmw');
+    // BMW Tier 1 sets --lumo-base-color in dark mode; the variable is what the
+    // brand block exposes, regardless of whether <main> background is painted.
+    expect(normalise(await colorVar(page, '--lumo-base-color', 'main.brand-bmw')))
+      .toBe(normalise('#1A2129'));
+  });
+});
