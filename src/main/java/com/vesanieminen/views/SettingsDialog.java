@@ -23,7 +23,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.vaadin.lineawesome.LineAwesomeIcon;
 
 import java.util.List;
 import java.util.Locale;
@@ -38,6 +37,32 @@ public class SettingsDialog extends Dialog {
     private final Checkbox vatCheckbox;
     public static final String margin = "settings.margin";
     public static final String vat = "settings.vat";
+    private static final String THEME_PREFERENCE_KEY = "theme.preference";
+
+    public enum ThemePreference {
+        SYSTEM("system"),
+        LIGHT("light"),
+        DARK("dark");
+
+        private final String storageValue;
+
+        ThemePreference(String storageValue) {
+            this.storageValue = storageValue;
+        }
+
+        public String storageValue() {
+            return storageValue;
+        }
+
+        public static ThemePreference fromStorage(String raw) {
+            if (raw == null) return SYSTEM;
+            return switch (raw) {
+                case "light" -> LIGHT;
+                case "dark" -> DARK;
+                default -> SYSTEM;
+            };
+        }
+    }
 
     public SettingsDialog(SettingsState settingsState, ObjectMapperService mapperService, LocaleService localeService) {
         this.mapperService = mapperService;
@@ -51,32 +76,30 @@ public class SettingsDialog extends Dialog {
         final var generalH3 = new H3(T.tr("settings.general"));
         add(generalH3);
 
-        Button themeButton = new Button(LineAwesomeIcon.MOON_SOLID.create());
-        UI.getCurrent().getPage().executeJs("return document.documentElement.getAttribute('theme');")
-                .then(String.class, darkMode -> {
-                            if ("dark".equals(darkMode)) {
-                                setThemeButtonMode(themeButton, LineAwesomeIcon.SUN_SOLID, T.tr("settings.theme.toLight"));
-                            } else {
-                                setThemeButtonMode(themeButton, LineAwesomeIcon.MOON_SOLID, T.tr("settings.theme.toDark"));
-                            }
-                        }
-                );
-        themeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        themeButton.addClickListener(e -> {
-            final var ui = UI.getCurrent();
-            ui.getPage().executeJs("return document.documentElement.getAttribute('theme');")
-                    .then(String.class, darkMode -> {
-                                if ("dark".equals(darkMode)) {
-                                    ui.getPage().executeJs("document.documentElement.setAttribute('theme', '');");
-                                    setThemeButtonMode(themeButton, LineAwesomeIcon.MOON_SOLID, T.tr("settings.theme.toDark"));
-                                } else {
-                                    ui.getPage().executeJs("document.documentElement.setAttribute('theme', 'dark');");
-                                    setThemeButtonMode(themeButton, LineAwesomeIcon.SUN_SOLID, T.tr("settings.theme.toLight"));
-                                }
-                            }
-                    );
+        final Select<ThemePreference> themeSelect = new Select<>();
+        themeSelect.setLabel(T.tr("settings.theme.label"));
+        themeSelect.setHelperText(T.tr("settings.theme.helper"));
+        themeSelect.setId("settings-theme");
+        themeSelect.setItems(ThemePreference.SYSTEM, ThemePreference.LIGHT, ThemePreference.DARK);
+        themeSelect.setItemLabelGenerator(p -> switch (p) {
+            case SYSTEM -> T.tr("settings.theme.system");
+            case LIGHT -> T.tr("settings.theme.light");
+            case DARK -> T.tr("settings.theme.dark");
         });
-        add(themeButton);
+        themeSelect.setValue(ThemePreference.SYSTEM);
+        themeSelect.setWidthFull();
+        WebStorage.getItem(THEME_PREFERENCE_KEY, raw -> themeSelect.setValue(ThemePreference.fromStorage(raw)));
+        themeSelect.addValueChangeListener(e -> {
+            if (!e.isFromClient() || e.getValue() == null) {
+                return;
+            }
+            ThemePreference picked = e.getValue();
+            WebStorage.setItem(THEME_PREFERENCE_KEY, picked.storageValue());
+            // Re-evaluate the document theme attribute now. applyTheme() reads
+            // localStorage so it picks up the value just persisted above.
+            UI.getCurrent().getPage().executeJs("window.applyTheme && window.applyTheme();");
+        });
+        add(themeSelect);
 
         final Select<Locale> languageSelect = new Select<>();
         languageSelect.setLabel(T.tr("settings.language"));
@@ -122,12 +145,6 @@ public class SettingsDialog extends Dialog {
 
         marginField.addValueChangeListener(item -> mapperService.saveFieldValue(marginField));
         vatCheckbox.addValueChangeListener(item -> mapperService.saveFieldValue(vatCheckbox));
-    }
-
-    private void setThemeButtonMode(Button theme, LineAwesomeIcon darkMode, String translation) {
-        theme.setIcon(darkMode.create());
-        theme.setText(translation);
-        theme.setAriaLabel(translation);
     }
 
     public void readFieldValues() {

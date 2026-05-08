@@ -99,7 +99,9 @@ test.describe('Charging-page brand theme', () => {
  */
 async function darken(page: Page) {
   await page.locator('#settings-button').click();
-  await page.getByRole('button', { name: /Switch to dark mode/i }).click();
+  await page.getByRole('dialog', { name: 'Settings' }).waitFor();
+  await page.locator('#settings-theme').click({ force: true });
+  await page.getByRole('option', { name: 'Dark', exact: true }).click();
   await page.keyboard.press('Escape');
 }
 

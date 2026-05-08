@@ -2,15 +2,16 @@ import { Page } from '@playwright/test';
 
 export async function closeSettingsDialogIfOpen(page: Page) {
   const dialog = page.getByRole('dialog', { name: 'Settings' });
-  if (await dialog.isVisible().catch(() => false)) {
-    const close = dialog.getByRole('button').first();
-    await close.click();
+  if (!(await dialog.isVisible().catch(() => false))) {
+    return;
   }
-  const overlay = page.locator('vaadin-dialog-overlay[opened]');
-  if (await overlay.isVisible().catch(() => false)) {
+  // Escape reliably closes the topmost Vaadin overlay. May need two presses
+  // if a vaadin-select dropdown inside the dialog is also open.
+  await page.keyboard.press('Escape');
+  if (await dialog.isVisible().catch(() => false)) {
     await page.keyboard.press('Escape');
   }
-  await overlay.waitFor({ state: 'hidden' }).catch(() => {});
+  await dialog.waitFor({ state: 'hidden' }).catch(() => {});
 }
 
 export async function waitForChargingToolReady(page: Page) {
