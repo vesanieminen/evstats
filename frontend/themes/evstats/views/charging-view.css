@@ -565,6 +565,21 @@
     --lumo-disabled-text-color: #444444;       /* text_disabled */
 }
 
+/* Polestar dark — extend the #141414 app surface to the AppLayout chrome
+ * (navbar + drawer) AND the document root so there's no seam between the
+ * routed <main> view and the surrounding chrome. The brand class lives on
+ * <main>; we reach back up via :has() and into the AppLayout shadow DOM via
+ * ::part(). Self-resets when the user navigates off /charging because the
+ * :has() descendant match drops. */
+html[theme~="dark"]:has(main.brand-polestar) {
+    background-color: #141414;
+}
+[theme~="dark"] vaadin-app-layout:has(main.brand-polestar)::part(navbar),
+[theme~="dark"] vaadin-app-layout:has(main.brand-polestar)::part(drawer) {
+    background-color: #141414;
+    border-color: #2E2E2E;
+}
+
 /* Tier 3 brands (Porsche, Audi, Mercedes-Benz, Volkswagen, Hyundai, Ford):
  * light mode applies the chromatic accent + a brand-flavoured light surface
  * + dark text. In dark mode, only the chromatic accent is overridden — Lumo's

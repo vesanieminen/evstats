@@ -175,4 +175,34 @@ test.describe('Charging-page Polestar dark palette (#24)', () => {
     expect(normalise(await colorVar(page, '--lumo-base-color', 'main.brand-bmw')))
       .toBe(normalise('#1A2129'));
   });
+
+  test('full takeover: html, drawer and navbar all paint Polestar #141414', async ({ page }) => {
+    await darken(page);
+    await pickVehicle(page, /Polestar 2 LR/i, 'brand-polestar');
+    expect(normalise(await bgOf(page, 'html'))).toBe(normalise('#141414'));
+    const chrome = await page.evaluate(() => {
+      const layout = document.querySelector('vaadin-app-layout') as any;
+      const shadow = layout?.shadowRoot;
+      const navbar = shadow?.querySelector('div[part="navbar"]:not([hidden])') as HTMLElement | null;
+      const drawer = shadow?.querySelector('div[part="drawer"]') as HTMLElement | null;
+      return {
+        navbar: navbar ? getComputedStyle(navbar).backgroundColor : null,
+        drawer: drawer ? getComputedStyle(drawer).backgroundColor : null,
+      };
+    });
+    expect(normalise(chrome.navbar ?? '')).toBe(normalise('#141414'));
+    expect(normalise(chrome.drawer ?? '')).toBe(normalise('#141414'));
+  });
+
+  test('takeover self-resets: html paint drops when navigating off /charging', async ({ page }) => {
+    await darken(page);
+    await pickVehicle(page, /Polestar 2 LR/i, 'brand-polestar');
+    expect(normalise(await bgOf(page, 'html'))).toBe(normalise('#141414'));
+
+    await page.goto('/registrations');
+    // The :has(main.brand-polestar) selector no longer matches because <main>
+    // is the registrations view's element and doesn't carry the brand class.
+    const after = normalise(await bgOf(page, 'html'));
+    expect(after).not.toBe(normalise('#141414'));
+  });
 });
