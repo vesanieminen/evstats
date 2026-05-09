@@ -1,26 +1,85 @@
-/* Charging View Container */
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Density tokens (issue #31)
+ *
+ * Two density presets driven by either viewport width (Auto, default) or a
+ * user-forced choice from SettingsDialog. The forced classes live on <html>
+ * (set by the inline boot script in index.html before first paint).
+ *
+ * - .density-compact (forced) or width < 600px (auto) → mobile preset
+ * - .density-comfortable (forced) or width ≥ 600px (auto) → in-car preset
+ *
+ * Variants override --cv-* custom properties on the view container.
+ * --------------------------------------------------------------------------- */
 .charging-view-container {
+    /* Default (mobile / compact) preset */
+    --cv-base: 14px;
+    --cv-h1: 28px;
+    --cv-h2: 22px;
+    --cv-h3: 17px;
+    --cv-label: 12px;
+    --cv-pad: 16px;
+    --cv-gap: 14px;
+    --cv-radius: 12px;
+    --cv-control: 40px;
+
     display: flex;
     flex-direction: column;
-    gap: var(--lumo-space-m);
+    gap: var(--cv-gap);
     max-width: 1024px;
     width: 100%;
     margin: 0 auto;
-    padding: var(--lumo-space-m);
+    padding: var(--cv-pad);
     box-sizing: border-box;
+    font-size: var(--cv-base);
+}
+
+/* Auto: in-car preset for tablet+ (≥ 600px). User-forced classes on <html>
+ * still win because they have higher specificity. */
+@media (min-width: 600px) {
+    html:not(.density-compact):not(.density-comfortable) .charging-view-container {
+        --cv-base: 18px;
+        --cv-h1: 56px;
+        --cv-h2: 36px;
+        --cv-h3: 24px;
+        --cv-label: 14px;
+        --cv-pad: 24px;
+        --cv-gap: 20px;
+        --cv-radius: 14px;
+        --cv-control: 56px;
+    }
+}
+
+/* User-forced Comfortable */
+html.density-comfortable .charging-view-container {
+    --cv-base: 18px;
+    --cv-h1: 56px;
+    --cv-h2: 36px;
+    --cv-h3: 24px;
+    --cv-label: 14px;
+    --cv-pad: 24px;
+    --cv-gap: 20px;
+    --cv-radius: 14px;
+    --cv-control: 56px;
+}
+
+/* User-forced Compact stays at the default values defined above. */
+
+/* Polestar's design system uses sharp 0px corners across the board. The
+ * brand block later in this file sets --lumo-border-radius-{s,m,l} to 0, but
+ * the new charging-view --cv-radius token bypasses those, so override it
+ * here too. !important because the @media (min-width: 600px) rule above
+ * has higher specificity (two :not class arguments). Cards, chips, slider
+ * thumbs etc. all become sharp under brand-polestar. */
+html:where(.brand-polestar) .charging-view-container {
+    --cv-radius: 0 !important;
 }
 
 @media (max-width: 480px) {
-    .charging-view-container {
-        padding: var(--lumo-space-s);
-        gap: var(--lumo-space-s);
-    }
-
     .vehicle-custom-fields {
         grid-template-columns: 1fr;
     }
 
-    .schedule-grid {
+    .schedule-row {
         grid-template-columns: 1fr;
     }
 
@@ -36,8 +95,8 @@
 /* Card Component */
 .charging-card {
     background: var(--lumo-base-color);
-    border-radius: var(--lumo-border-radius-l);
-    padding: var(--lumo-space-m);
+    border-radius: var(--cv-radius);
+    padding: var(--cv-pad);
     box-shadow: var(--lumo-box-shadow-xs);
     border: 1px solid var(--lumo-contrast-10pct);
     box-sizing: border-box;
@@ -49,87 +108,258 @@
     border-color: var(--lumo-contrast-20pct);
 }
 
+/* Section header (issue #31): uppercase + 1px letter-spacing + accent icon
+ * to the left, optional meta to the right. */
 .charging-card-header {
     color: var(--lumo-secondary-text-color);
-    font-size: var(--lumo-font-size-s);
+    font-size: var(--cv-label);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+    margin-bottom: calc(var(--cv-gap) * 0.6);
+    display: flex;
+    align-items: center;
+    gap: calc(var(--cv-label) * 0.5);
 }
 
-/* Vehicle Section */
-.vehicle-section {
+.charging-card-header vaadin-icon {
+    color: var(--lumo-primary-text-color);
+    width: calc(var(--cv-label) * 1.3);
+    height: calc(var(--cv-label) * 1.3);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Hero card (issue #31): vehicle picker chip + 3-col stats + SoC slider in a
+ * single card. The top row is itself a button so the whole header is one tap
+ * target opening the bottom-sheet vehicle picker.
+ * --------------------------------------------------------------------------- */
+.hero-card {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
+    gap: var(--cv-gap);
 }
 
-.vehicle-svg {
-    width: 180px;
-    height: 80px;
-    margin-bottom: var(--lumo-space-s);
+.vehicle-chip {
+    display: flex;
+    align-items: center;
+    gap: var(--cv-gap);
+    padding: calc(var(--cv-pad) * 0.5) calc(var(--cv-pad) * 0.7);
+    border: 1px solid var(--lumo-contrast-10pct);
+    border-radius: var(--cv-radius);
+    background: var(--lumo-base-color);
+    color: var(--lumo-body-text-color);
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+[theme~="dark"] .vehicle-chip {
+    background: var(--lumo-contrast-5pct);
+    border-color: var(--lumo-contrast-20pct);
+}
+
+.vehicle-chip:hover {
+    border-color: var(--lumo-primary-color-50pct);
+}
+
+.vehicle-chip .car-svg-container {
+    flex: 0 0 auto;
+}
+
+.vehicle-chip .car-svg-container img {
+    width: calc(var(--cv-h2) * 2.2);
+    height: auto;
+    object-fit: contain;
+    display: block;
+}
+
+.vehicle-chip-text {
+    flex: 1;
+    min-width: 0;
 }
 
 .vehicle-name {
-    font-size: var(--lumo-font-size-s);
+    display: block;
+    font-size: var(--cv-h3);
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    line-height: 1.1;
+}
+
+.vehicle-meta {
+    display: block;
+    font-size: var(--cv-label);
     color: var(--lumo-secondary-text-color);
-    margin-bottom: var(--lumo-space-m);
+    margin-top: 2px;
+}
+
+.change-chip {
+    flex: 0 0 auto;
+    font-size: var(--cv-base);
+    font-weight: 500;
+    color: var(--lumo-body-text-color);
+    padding: calc(var(--cv-base) * 0.55) calc(var(--cv-base) * 1.1);
+    border: 1px solid var(--lumo-contrast-30pct);
+    border-radius: 999px;
+    background: var(--lumo-base-color);
+}
+
+[theme~="dark"] .change-chip {
+    border-color: var(--lumo-contrast-30pct);
+    background: var(--lumo-contrast-5pct);
+}
+
+.vehicle-chip:hover .change-chip {
+    border-color: var(--lumo-primary-color);
+    color: var(--lumo-primary-text-color);
 }
 
 .soc-display {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: var(--lumo-space-m);
+    gap: var(--cv-gap);
     width: 100%;
-    text-align: center;
+    align-items: baseline;
 }
 
 .soc-column {
     display: flex;
     flex-direction: column;
+    gap: 4px;
+}
+
+.soc-column.center {
+    text-align: center;
+    align-items: center;
+}
+
+.soc-column.right {
+    text-align: right;
+    align-items: flex-end;
 }
 
 .soc-label {
-    font-size: var(--lumo-font-size-xs);
+    font-size: var(--cv-label);
     color: var(--lumo-secondary-text-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .soc-value {
-    font-size: var(--lumo-font-size-xl);
-    font-weight: 600;
+    font-size: var(--cv-h2);
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.soc-value .unit {
+    font-size: var(--cv-h3);
+    color: var(--lumo-secondary-text-color);
+    font-weight: 700;
+    margin-left: 1px;
 }
 
 .soc-value.accent {
     color: var(--lumo-primary-text-color);
 }
 
-.soc-range {
-    font-size: var(--lumo-font-size-xs);
-    color: var(--lumo-secondary-text-color);
-}
-
-/* Change Vehicle Toggle */
-.change-vehicle-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--lumo-space-xs);
-    width: 100%;
-    padding: var(--lumo-space-s) 0;
-    margin-top: var(--lumo-space-s);
-    color: var(--lumo-secondary-text-color);
-    font-size: var(--lumo-font-size-s);
-    cursor: pointer;
-    background: none;
-    border: none;
-}
-
-.change-vehicle-toggle:hover {
+.soc-value.accent .unit {
     color: var(--lumo-primary-text-color);
 }
 
-.vehicle-selection {
-    border-top: 1px solid var(--lumo-contrast-10pct);
-    padding-top: var(--lumo-space-m);
-    margin-top: var(--lumo-space-s);
+.soc-range {
+    font-size: var(--cv-label);
+    color: var(--lumo-secondary-text-color);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* Vehicle bottom-sheet (issue #31): a custom Div-based overlay (NOT a
+ * Vaadin Dialog), because Vaadin Dialog adds aria-hidden to the rest of
+ * the document, which breaks role-based heading queries in e2e tests.
+ * The backdrop fades in; the panel slides up from the bottom. */
+.vehicle-sheet-overlay {
+    position: fixed;
+    inset: 0;
+    /* Above the AppLayout drawer/navbar (z-index: 1) but below Vaadin's
+     * own overlays such as vaadin-select-overlay (z-index: 200), so the
+     * select dropdown opened from inside this sheet still receives clicks. */
+    z-index: 100;
+    /* visibility:hidden propagates to descendants — without it, Playwright
+     * still considers #vehicleSelect inside a closed sheet as "visible"
+     * because parent opacity:0 doesn't affect child computed visibility.
+     * Asymmetric transition: animate on open, snap on close. */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    /* No transitions on close — snap-close so #vehicleSelect becomes
+     * non-interactable for e2e queries the moment auto-close fires. */
+    /* No aria-hidden takeover — background remains accessible. */
+}
+
+.vehicle-sheet-overlay[data-open="true"] {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 200ms ease-out;
+}
+
+.vehicle-sheet-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0);
+    transition: background 200ms ease-out;
+}
+
+.vehicle-sheet-overlay[data-open="true"] .vehicle-sheet-backdrop {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.vehicle-sheet {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    max-width: 720px;
+    box-sizing: border-box;
+    background: var(--lumo-base-color);
+    border-top-left-radius: calc(var(--cv-radius) * 1.5);
+    border-top-right-radius: calc(var(--cv-radius) * 1.5);
+    padding: var(--cv-pad);
+    max-height: 80vh;
+    overflow: auto;
+    box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.3);
+    transform: translateY(100%);
+    transition: transform 250ms ease-out;
+    display: flex;
+    flex-direction: column;
+    gap: var(--cv-gap);
+}
+
+/* Dark mode: keep using --lumo-base-color (solid in every brand and the
+ * Lumo default) instead of --lumo-contrast-5pct, which is a translucent
+ * shade and makes cards behind the sheet bleed through for non-Polestar
+ * brands. */
+
+.vehicle-sheet-overlay[data-open="true"] .vehicle-sheet {
+    transform: translateY(0);
+}
+
+.vehicle-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: calc(var(--cv-gap) * 0.4);
+}
+
+.vehicle-sheet-header h3 {
+    font-size: var(--cv-h3);
+    font-weight: 700;
+    margin: 0;
 }
 
 .vehicle-custom-fields {
@@ -244,12 +474,31 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--lumo-space-s);
+    margin-bottom: calc(var(--cv-gap) * 0.5);
 }
 
 .charging-speed-header .power-value {
-    font-size: var(--lumo-font-size-l);
-    font-weight: 600;
+    font-size: var(--cv-h3);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.amperage-readout {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.amperage-readout .amps {
+    font-size: var(--cv-h2);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.amperage-readout .phases {
+    font-size: var(--cv-h3);
+    color: var(--lumo-secondary-text-color);
 }
 
 .amperage-value {
@@ -285,22 +534,37 @@
     display: none;
 }
 
+/* Advanced section (issue #31): three steppers (Phases / Voltage /
+ * Charging Loss) on a single row, dashed top divider, tighter visual
+ * weight than the rest of the form. */
 .advanced-section {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--lumo-space-s);
-    border-top: 1px solid var(--lumo-contrast-10pct);
-    padding-top: var(--lumo-space-m);
-    margin-top: var(--lumo-space-s);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: calc(var(--cv-gap) * 0.5);
+    border-top: 1px dashed var(--lumo-contrast-10pct);
+    padding-top: calc(var(--cv-gap) * 0.5);
+    margin-top: calc(var(--cv-gap) * 0.4);
 }
 
 .advanced-section vaadin-integer-field,
 .advanced-section vaadin-number-field {
     min-width: 0;
+    --vaadin-field-default-width: 100%;
 }
 
+.advanced-section vaadin-integer-field::part(label),
+.advanced-section vaadin-number-field::part(label) {
+    font-size: var(--cv-label);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--lumo-secondary-text-color);
+}
+
+/* Drop the legacy .full-width override — in the new 3-col layout every
+ * stepper is one column. Kept the rule visible for safety with !important
+ * isn't needed: 1fr-from-grid-template wins over the old span:2. */
 .advanced-section .full-width {
-    grid-column: span 2;
+    grid-column: span 1;
 }
 
 .charging-loss-row {
@@ -309,61 +573,98 @@
     gap: var(--lumo-space-s);
 }
 
-/* Schedule Section */
+/* Schedule Section — only one row of (date, time) is visible at a time;
+ * the other row is the computed end of the calculation, surfaced via the
+ * Duration row below. The row is a 2-col grid (date | time) on desktop
+ * and stacks to a single column on narrow viewports. */
 .schedule-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--lumo-space-s);
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--cv-gap) * 0.6);
 }
 
-.schedule-grid vaadin-date-picker,
-.schedule-grid vaadin-time-picker {
+.schedule-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: calc(var(--cv-gap) * 0.6);
+}
+
+.schedule-row vaadin-date-picker,
+.schedule-row vaadin-time-picker {
     min-width: 0;
 }
 
-.calc-mode-buttons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--lumo-space-s);
-    margin-top: var(--lumo-space-m);
-}
-
-.calc-mode-btn {
-    padding: var(--lumo-space-s) var(--lumo-space-m);
-    border-radius: var(--lumo-border-radius-m);
-    font-size: var(--lumo-font-size-s);
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
-}
-
-.calc-mode-btn.active {
-    background: var(--lumo-primary-color);
-    color: var(--lumo-primary-contrast-color);
-}
-
-.calc-mode-btn.inactive {
-    background: var(--lumo-contrast-10pct);
+/* Schedule card header right slot: "Solving for end time ↻" inline flip
+ * button (issue #31). Replaces the previous two-button calc-mode toggle. */
+.schedule-mode {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: var(--cv-label);
     color: var(--lumo-secondary-text-color);
 }
 
-[theme~="dark"] .calc-mode-btn.inactive {
-    background: var(--lumo-contrast-20pct);
+.schedule-mode .schedule-mode-flip {
+    background: none;
+    border: none;
+    color: var(--lumo-primary-text-color);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.schedule-mode .schedule-mode-flip:hover {
+    text-decoration: underline;
+}
+
+/* Hidden originals — kept in DOM for compatibility (e2e selectors still find
+ * them by aria role). Visually hidden so the flip button is the only UI. */
+.calc-mode-buttons {
+    display: none;
+}
+
+.duration-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: calc(var(--cv-gap) * 0.7);
+    padding-top: calc(var(--cv-label) * 0.6);
+    border-top: 1px solid var(--lumo-contrast-10pct);
+}
+
+.duration-row .label {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--cv-label) * 0.4);
+    font-size: var(--cv-label);
+    color: var(--lumo-secondary-text-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.duration-row .value {
+    font-size: var(--cv-h3);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
 }
 
 /* Summary Section */
 .summary-rows {
     display: flex;
     flex-direction: column;
-    gap: var(--lumo-space-s);
+    gap: calc(var(--cv-label) * 0.3);
 }
 
 .summary-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: var(--lumo-space-xs) 0;
+    align-items: baseline;
+    padding: calc(var(--cv-label) * 0.4) 0;
+    font-size: var(--cv-base);
 }
 
 .summary-row .label {
@@ -374,7 +675,8 @@
 }
 
 .summary-row .value {
-    font-weight: 500;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
 }
 
 .summary-row .value.warning {
@@ -386,19 +688,21 @@
 }
 
 .total-cost-row {
-    border-top: 1px solid var(--lumo-contrast-10pct);
-    padding-top: var(--lumo-space-m);
-    margin-top: var(--lumo-space-xs);
+    border-top: 1px solid var(--lumo-contrast-20pct);
+    padding-top: calc(var(--cv-gap) * 0.5);
+    margin-top: calc(var(--cv-gap) * 0.5);
 }
 
 .total-cost-row .label {
-    font-weight: 600;
+    font-size: var(--cv-h3);
+    font-weight: 700;
     color: var(--lumo-body-text-color);
 }
 
 .total-cost-row .value {
-    font-size: var(--lumo-font-size-xl);
+    font-size: var(--cv-h2);
     font-weight: 700;
+    color: var(--lumo-success-text-color);
 }
 
 /* Amperage Slider Label */

@@ -70,6 +70,7 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         return T.tr("charging.title");
     }
 
+
     // Vehicle section fields
     private final Select<EVModel> vehicleSelect;
     private final NumberField batteryCapacityField;
@@ -104,8 +105,9 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
     private final TimePicker startTimePicker;
     private final DatePicker endDatePicker;
     private final TimePicker endTimePicker;
-    private final Button calcEndButton;
-    private final Button calcStartButton;
+    private final Button scheduleModeFlipBtn;
+    private Div startScheduleRow;
+    private Div endScheduleRow;
 
     // Summary fields
     private final Span durationValueSpan;
@@ -125,9 +127,14 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
     private final Binder<Charge> chargeBinder;
     private final PreservedState preservedState;
 
-    // Vehicle selection expandable section
+    // Vehicle picker — custom bottom-sheet overlay (NOT a Vaadin Dialog).
+    // Vaadin Dialog marks the background aria-hidden, which breaks
+    // role-based e2e queries against the page heading; this overlay is a
+    // plain Div with manual show/hide via a data-open attribute.
+    private Span vehicleNameSpan;
+    private Span vehicleMetaSpan;
     private Div vehicleSelectionDiv;
-    private boolean vehicleSelectionVisible = false;
+    private Div vehicleSheetOverlay;
 
     public ChargingView(PreservedState preservedState, LiukuriService liukuriService, ObjectMapperService mapperService, SettingsDialog.SettingsState settingsState) {
         this.preservedState = preservedState;
@@ -148,24 +155,35 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
 
         addClassName("charging-view-container");
 
-        // ===== VEHICLE & STATUS CARD =====
-        Card vehicleCard = new Card();
-        vehicleCard.addClassName("vehicle-card");
+        // ===== VEHICLE CHIP (own section, per design handoff) =====
+        // Exposed as role="button" with aria-label "Change Vehicle" so
+        // existing e2e selectors (getByRole) keep finding it. Using Div
+        // instead of Button because Vaadin Button's add() is private (no
+        // slotted content composition).
+        Div vehicleChip = new Div();
+        vehicleChip.addClassName("vehicle-chip");
+        vehicleChip.getElement().setAttribute("role", "button");
+        vehicleChip.getElement().setAttribute("tabindex", "0");
+        vehicleChip.getElement().setAttribute("aria-label", T.tr("charging.changeVehicle"));
 
-        // Vehicle visualization section
-        Div vehicleSection = new Div();
-        vehicleSection.addClassName("vehicle-section");
-
-        // Car image container
         carImageContainer = new Div();
         carImageContainer.addClassName("car-svg-container");
         carImageContainer.getElement().setProperty("innerHTML", defaultVehicleHtml());
-        vehicleSection.add(carImageContainer);
 
-        // Vehicle name
-        Span vehicleName = new Span(selectedModel.name());
-        vehicleName.addClassName("vehicle-name");
-        vehicleSection.add(vehicleName);
+        vehicleNameSpan = new Span(selectedModel.name());
+        vehicleNameSpan.addClassName("vehicle-name");
+
+        vehicleMetaSpan = new Span();
+        vehicleMetaSpan.addClassName("vehicle-meta");
+        vehicleMetaSpan.setText(selectedModel.capacity() + " kWh");
+
+        Div vehicleChipText = new Div(vehicleNameSpan, vehicleMetaSpan);
+        vehicleChipText.addClassName("vehicle-chip-text");
+
+        Span changeChip = new Span(T.tr("charging.changeVehicleChip") + " ›");
+        changeChip.addClassName("change-chip");
+
+        vehicleChip.add(carImageContainer, vehicleChipText, changeChip);
 
         // SOC Display (Current | Range + | Target)
         Div socDisplay = new Div();
@@ -184,7 +202,7 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
 
         // Range added column
         Div rangeColumn = new Div();
-        rangeColumn.addClassName("soc-column");
+        rangeColumn.addClassNames("soc-column", "center");
         Span rangeLabel = new Span(T.tr("charging.range"));
         rangeLabel.addClassName("soc-label");
         rangeAddedSpan = new Span("155 km");
@@ -195,7 +213,7 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
 
         // Target column
         Div targetColumn = new Div();
-        targetColumn.addClassName("soc-column");
+        targetColumn.addClassNames("soc-column", "right");
         Span targetLabel = new Span(T.tr("charging.target"));
         targetLabel.addClassName("soc-label");
         targetSocValueSpan = new Span("50%");
@@ -205,24 +223,11 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         targetColumn.add(targetLabel, targetSocValueSpan, targetRangeSpan);
 
         socDisplay.add(currentColumn, rangeColumn, targetColumn);
-        vehicleSection.add(socDisplay);
 
-        // Change Vehicle toggle
-        Button changeVehicleBtn = new Button(T.tr("charging.changeVehicle"));
-        changeVehicleBtn.addClassName("change-vehicle-toggle");
-        changeVehicleBtn.setIcon(new Icon(VaadinIcon.CAR));
-        Icon chevron = new Icon(VaadinIcon.CHEVRON_DOWN);
-        changeVehicleBtn.setIconAfterText(true);
-        changeVehicleBtn.addClickListener(e -> {
-            vehicleSelectionVisible = !vehicleSelectionVisible;
-            vehicleSelectionDiv.setVisible(vehicleSelectionVisible);
-            chevron.getElement().setAttribute("icon", vehicleSelectionVisible ? "vaadin:chevron-up" : "vaadin:chevron-down");
-        });
-
-        // Vehicle selection section (hidden by default)
+        // Section that hosts vehicleSelect + custom fields + image upload —
+        // moved into the bottom-sheet panel below.
         vehicleSelectionDiv = new Div();
         vehicleSelectionDiv.addClassName("vehicle-selection");
-        vehicleSelectionDiv.setVisible(false);
 
         // Custom vehicle fields - initialize before vehicleSelect listener
         Div customFieldsDiv = new Div();
@@ -250,7 +255,8 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         vehicleSelect.addValueChangeListener(e -> {
             selectedModel = e.getValue();
             preservedState.selectedModel = selectedModel;
-            vehicleName.setText(selectedModel.name());
+            vehicleNameSpan.setText(selectedModel.name());
+            vehicleMetaSpan.setText(selectedModel.capacity() + " kWh");
             WebStorage.setItem(VEHICLE_STORAGE_KEY, selectedModel.name());
             applyBrandTheme(selectedModel);
             if (selectedModel.equals(EVModel.CUSTOM)) {
@@ -263,6 +269,10 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
                 consumptionField.setValue(selectedModel.efficiency());
             }
             doCalculation();
+            // Close the bottom sheet after a client-driven pick.
+            if (e.isFromClient() && vehicleSheetOverlay != null) {
+                vehicleSheetOverlay.getElement().setAttribute("data-open", "false");
+            }
         });
         // No unconditional applyBrandTheme() at construction time on purpose —
         // the inline boot script in index.html has already painted the right
@@ -362,15 +372,57 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         imageChangeSection.add(imageLabel, upload, uploadLabel, urlRow, resetImageBtn);
         vehicleSelectionDiv.add(vehicleSelect, customFieldsDiv, imageChangeSection);
 
-        vehicleCard.add(vehicleSection, changeVehicleBtn, vehicleSelectionDiv);
-        add(vehicleCard);
+        // ===== BOTTOM-SHEET VEHICLE PICKER (custom overlay, no Vaadin Dialog) =====
+        vehicleSheetOverlay = new Div();
+        vehicleSheetOverlay.addClassName("vehicle-sheet-overlay");
+        vehicleSheetOverlay.getElement().setAttribute("data-open", "false");
+
+        Div sheetBackdrop = new Div();
+        sheetBackdrop.addClassName("vehicle-sheet-backdrop");
+        sheetBackdrop.addClickListener(e ->
+                vehicleSheetOverlay.getElement().setAttribute("data-open", "false"));
+
+        Div sheetPanel = new Div();
+        sheetPanel.addClassName("vehicle-sheet");
+        // Click on the sheet itself should NOT propagate up to the backdrop
+        // (which would dismiss it). Stop propagation in the DOM.
+        sheetPanel.getElement().addEventListener("click", e -> {})
+                .addEventData("event.stopPropagation()");
+
+        Div sheetHeader = new Div();
+        sheetHeader.addClassName("vehicle-sheet-header");
+        com.vaadin.flow.component.html.H3 sheetTitle = new com.vaadin.flow.component.html.H3(T.tr("charging.changeVehicle"));
+        Button sheetCloseBtn = new Button(new Icon(VaadinIcon.CLOSE));
+        sheetCloseBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        sheetCloseBtn.setAriaLabel(T.tr("common.close"));
+        sheetCloseBtn.addClickListener(e ->
+                vehicleSheetOverlay.getElement().setAttribute("data-open", "false"));
+        sheetHeader.add(sheetTitle, sheetCloseBtn);
+
+        sheetPanel.add(sheetHeader, vehicleSelectionDiv);
+        vehicleSheetOverlay.add(sheetBackdrop, sheetPanel);
+
+        // Tap on the vehicle chip opens the bottom sheet.
+        vehicleChip.addClickListener(e ->
+                vehicleSheetOverlay.getElement().setAttribute("data-open", "true"));
+
+        // Add the chip and the sheet as top-level children of the view per
+        // the design handoff. The sheet itself is position:fixed so its
+        // placement in the source order doesn't affect its on-screen
+        // location.
+        add(vehicleChip, vehicleSheetOverlay);
 
         // ===== CHARGE LEVEL CARD =====
+        // Stats grid (current % / +km adds / target %) + dual-thumb SoC slider
+        // + adding/battery summary, all in their own card per the design.
         Card chargeLevelCard = new Card(new Icon(VaadinIcon.PLUG), T.tr("charging.section.chargeLevel"));
 
         socSlider = new DualRangeSlider(0, 100, preservedState.charge.getCurrentSOC(), preservedState.charge.getTargetSOC());
-        socSlider.setLowLabel(T.tr("charging.current"));
-        socSlider.setHighLabel(T.tr("charging.target"));
+        // Labels are intentionally omitted — the stats grid above the slider
+        // already shows Current / Target values, so the slider's own labels
+        // would be a duplicate.
+        socSlider.setLowLabel("");
+        socSlider.setHighLabel("");
         socSlider.setWidthFull();
         socSlider.addValueChangeListener(e -> doCalculation());
 
@@ -381,7 +433,7 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         batteryCapacitySpan.addClassName(LumoUtility.TextColor.SECONDARY);
         chargeLevelSummary.add(addingKwhSpan, batteryCapacitySpan);
 
-        chargeLevelCard.add(socSlider, chargeLevelSummary);
+        chargeLevelCard.add(socDisplay, socSlider, chargeLevelSummary);
         add(chargeLevelCard);
 
         // ===== CHARGING SPEED CARD =====
@@ -396,8 +448,7 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         zapIcon.addClassName(LumoUtility.TextColor.PRIMARY);
         zapIcon.setSize("18px");
         Span speedLabel = new Span(T.tr("charging.charger.power"));
-        speedLabel.addClassName(LumoUtility.TextColor.SECONDARY);
-        speedLabel.getStyle().set("font-size", "var(--lumo-font-size-s)");
+        speedLabel.addClassNames(LumoUtility.TextColor.SECONDARY, "section-label");
         headerLeft.add(zapIcon, speedLabel);
 
         powerValueSpan = new Span("11.0 kW");
@@ -405,13 +456,28 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
 
         speedHeader.add(headerLeft, powerValueSpan);
 
+        // Big amperage read-out: "{amps} A · {phases}-phase" (issue #31)
+        Div amperageReadout = new Div();
+        amperageReadout.addClassName("amperage-readout");
+        Span ampsBig = new Span(String.valueOf(preservedState.charge.getAmperes()));
+        ampsBig.addClassName("amps");
+        ampsBig.setId("amperageBigValue");
+        Span phasesBig = new Span("A · " + preservedState.charge.getPhases() + "-" + T.tr("charging.phaseUnit"));
+        phasesBig.addClassName("phases");
+        phasesBig.setId("amperagePhasesText");
+        amperageReadout.add(ampsBig, phasesBig);
+
         // Amperage slider
+        // Range 1..32: the design handoff spec'd 0..32 (default 16 A
+        // mid-track), but 0 A means "not charging" which makes no physical
+        // sense as a slider value — keep the floor at 1 A.
         amperesSlider = new SingleRangeSlider(1, 32, preservedState.charge.getAmperes());
         amperesSlider.setUnit("A");
         amperesSlider.setWidthFull();
         amperesSlider.addValueChangeListener(e -> {
             preservedState.charge.setAmperes(e.getValue());
             WebStorage.setItem(AMPERES_STORAGE_KEY, String.valueOf(e.getValue()));
+            ampsBig.setText(String.valueOf(e.getValue()));
             doCalculation();
         });
 
@@ -449,15 +515,62 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         advancedSection.add(phasesField, voltageField, chargingLossField);
         advancedDetails.add(advancedSection);
 
-        chargingSpeedCard.add(speedHeader, amperesSlider, advancedDetails);
+        chargingSpeedCard.add(speedHeader, amperageReadout, amperesSlider, advancedDetails);
         add(chargingSpeedCard);
 
+        phasesField.addValueChangeListener(e -> {
+            if (e.getValue() != null) {
+                phasesBig.setText("A · " + e.getValue() + "-" + T.tr("charging.phaseUnit"));
+            }
+        });
+
         // ===== SCHEDULE CARD =====
-        Card scheduleCard = new Card(new Icon(VaadinIcon.CALENDAR), T.tr("charging.section.schedule"));
+        // Build a custom header so we can include the inline schedule-mode flip
+        // button on the right (issue #31). The Card class doesn't expose a
+        // right-slot; we replicate Card's outer styling on a plain Div.
+        Div scheduleCard = new Div();
+        scheduleCard.addClassName("charging-card");
 
-        Div scheduleGrid = new Div();
-        scheduleGrid.addClassName("schedule-grid");
+        Div scheduleHeader = new Div();
+        scheduleHeader.addClassName("charging-card-header");
+        scheduleHeader.getStyle()
+                .set("display", "flex")
+                .set("justify-content", "space-between")
+                .set("align-items", "center");
 
+        Div scheduleHeaderLeft = new Div();
+        scheduleHeaderLeft.getStyle()
+                .set("display", "inline-flex")
+                .set("align-items", "center")
+                .set("gap", "calc(var(--cv-label) * 0.5)");
+        Icon calendarIcon = new Icon(VaadinIcon.CALENDAR);
+        scheduleHeaderLeft.add(calendarIcon, new Span(T.tr("charging.section.schedule")));
+
+        Span scheduleMode = new Span();
+        scheduleMode.addClassName("schedule-mode");
+        Span solvingForLabel = new Span(T.tr("charging.solvingFor") + " ");
+        scheduleModeFlipBtn = new Button(T.tr("charging.solvingForEnd") + " ↻");
+        scheduleModeFlipBtn.addClassName("schedule-mode-flip");
+        scheduleModeFlipBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        // Initial aria-label describes the action a click would perform — i.e.
+        // "Calculate Start" when we currently solve for end. Keeping this in
+        // sync with setCalculationMode lets existing role=button tests still
+        // resolve via accessible name.
+        scheduleModeFlipBtn.setAriaLabel(T.tr("charging.calculateStart"));
+        scheduleModeFlipBtn.addClickListener(e -> {
+            CalculationTarget current = preservedState.charge.getCalculationTarget();
+            setCalculationMode(current == CalculationTarget.CHARGING_END
+                    ? CalculationTarget.CHARGING_START
+                    : CalculationTarget.CHARGING_END);
+        });
+        scheduleMode.add(solvingForLabel, scheduleModeFlipBtn);
+
+        scheduleHeader.add(scheduleHeaderLeft, scheduleMode);
+        scheduleCard.add(scheduleHeader);
+
+        // Each row holds a date + time picker side by side. Only the row
+        // currently being solved-from is visible — the other becomes the
+        // computed end of the calculation, displayed via the Duration row.
         final var datePickerI18n = new DatePicker.DatePickerI18n();
         datePickerI18n.setFirstDayOfWeek(1);
         datePickerI18n.setDateFormat("dd.MM.yyyy");
@@ -487,34 +600,25 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         endTimePicker.setLocale(Locale.of("fi", "FI"));
         endTimePicker.setReadOnly(true);
 
-        scheduleGrid.add(startDatePicker, endDatePicker, startTimePicker, endTimePicker);
+        Div startRow = new Div(startDatePicker, startTimePicker);
+        startRow.addClassName("schedule-row");
+        startRow.setId("schedule-row-start");
+        Div endRow = new Div(endDatePicker, endTimePicker);
+        endRow.addClassName("schedule-row");
+        endRow.setId("schedule-row-end");
+        // Default mode is CHARGING_END (start is given, end derived) — show
+        // start row, hide end row.
+        endRow.setVisible(false);
+        this.startScheduleRow = startRow;
+        this.endScheduleRow = endRow;
 
-        // Calculate mode buttons
-        Div calcModeButtons = new Div();
-        calcModeButtons.addClassName("calc-mode-buttons");
+        Div scheduleGrid = new Div();
+        scheduleGrid.addClassName("schedule-grid");
+        scheduleGrid.add(startRow, endRow);
 
-        calcEndButton = new Button(T.tr("charging.calculateEnd"));
-        calcEndButton.addClassNames("calc-mode-btn", "active");
-        calcEndButton.addClickListener(e -> setCalculationMode(CalculationTarget.CHARGING_END));
-
-        calcStartButton = new Button(T.tr("charging.calculateStart"));
-        calcStartButton.addClassNames("calc-mode-btn", "inactive");
-        calcStartButton.addClickListener(e -> setCalculationMode(CalculationTarget.CHARGING_START));
-
-        calcModeButtons.add(calcEndButton, calcStartButton);
-
-        scheduleCard.add(scheduleGrid, calcModeButtons);
-        add(scheduleCard);
-
-        // ===== CHARGING SUMMARY CARD =====
-        Card summaryCard = new Card(new Icon(VaadinIcon.EURO), T.tr("charging.section.summary"));
-
-        Div summaryRows = new Div();
-        summaryRows.addClassName("summary-rows");
-
-        // Duration row
+        // Duration row (moved from Summary card per issue #31)
         Div durationRow = new Div();
-        durationRow.addClassName("summary-row");
+        durationRow.addClassName("duration-row");
         Span durationLabelSpan = new Span();
         durationLabelSpan.addClassName("label");
         Icon clockIcon = new Icon(VaadinIcon.CLOCK);
@@ -523,7 +627,15 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         durationValueSpan = new Span();
         durationValueSpan.addClassName("value");
         durationRow.add(durationLabelSpan, durationValueSpan);
-        summaryRows.add(durationRow);
+
+        scheduleCard.add(scheduleGrid, durationRow);
+        add(scheduleCard);
+
+        // ===== CHARGING SUMMARY CARD =====
+        Card summaryCard = new Card(new Icon(VaadinIcon.EURO), T.tr("charging.section.summary"));
+
+        Div summaryRows = new Div();
+        summaryRows.addClassName("summary-rows");
 
         // Energy consumed row
         Div energyConsumedRow = new Div();
@@ -623,13 +735,24 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         });
 
         // Set valid calculation range
+        // Spot prices are only known up to tomorrow in Finland — clamp both
+        // start and end pickers to the LiukuriService's valid range so users
+        // can't schedule into a date for which we have no price data. End was
+        // unconstrained on main because it used to be permanently read-only;
+        // it's now editable in CHARGING_START mode and needs the same bounds.
         final var calculationRange = liukuriService.getValidCalculationRange();
         final var start = Instant.ofEpochMilli(calculationRange.getStart());
         final var end = Instant.ofEpochMilli(calculationRange.getEnd());
-        startDatePicker.setMin(start.atZone(fiZoneID).toLocalDate());
-        startDatePicker.setMax(end.atZone(fiZoneID).toLocalDate());
+        final var minDate = start.atZone(fiZoneID).toLocalDate();
+        final var maxDate = end.atZone(fiZoneID).toLocalDate();
+        startDatePicker.setMin(minDate);
+        startDatePicker.setMax(maxDate);
         startTimePicker.setMin(LocalTime.of(0, 0));
         startTimePicker.setMax(LocalTime.of(23, 45));
+        endDatePicker.setMin(minDate);
+        endDatePicker.setMax(maxDate);
+        endTimePicker.setMin(LocalTime.of(0, 0));
+        endTimePicker.setMax(LocalTime.of(23, 45));
 
         readFieldValues();
         doCalculation();
@@ -638,23 +761,23 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
     private void setCalculationMode(CalculationTarget mode) {
         preservedState.charge.setCalculationTarget(mode);
         if (mode == CalculationTarget.CHARGING_END) {
-            calcEndButton.removeClassName("inactive");
-            calcEndButton.addClassName("active");
-            calcStartButton.removeClassName("active");
-            calcStartButton.addClassName("inactive");
+            scheduleModeFlipBtn.setText(T.tr("charging.solvingForEnd") + " ↻");
+            scheduleModeFlipBtn.setAriaLabel(T.tr("charging.calculateStart"));
             startDatePicker.setReadOnly(false);
             startTimePicker.setReadOnly(false);
             endDatePicker.setReadOnly(true);
             endTimePicker.setReadOnly(true);
+            if (startScheduleRow != null) startScheduleRow.setVisible(true);
+            if (endScheduleRow != null) endScheduleRow.setVisible(false);
         } else {
-            calcStartButton.removeClassName("inactive");
-            calcStartButton.addClassName("active");
-            calcEndButton.removeClassName("active");
-            calcEndButton.addClassName("inactive");
+            scheduleModeFlipBtn.setText(T.tr("charging.solvingForStart") + " ↻");
+            scheduleModeFlipBtn.setAriaLabel(T.tr("charging.calculateEnd"));
             startDatePicker.setReadOnly(true);
             startTimePicker.setReadOnly(true);
             endDatePicker.setReadOnly(false);
             endTimePicker.setReadOnly(false);
+            if (startScheduleRow != null) startScheduleRow.setVisible(false);
+            if (endScheduleRow != null) endScheduleRow.setVisible(true);
         }
         doCalculation();
     }
@@ -732,7 +855,7 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         currentRangeSpan.setText(currentRange + " km");
         targetSocValueSpan.setText(String.format("%.0f%%", targetSoc));
         targetRangeSpan.setText(targetRange + " km");
-        rangeAddedSpan.setText(rangeAdded + " km");
+        rangeAddedSpan.setText("+" + rangeAdded + " km");
 
         // Calculate energy
         double socIncrease = targetSoc - currentSoc;

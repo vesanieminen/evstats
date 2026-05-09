@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Liukuri — Charging view redesign</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; font-family: Inter, system-ui, sans-serif; background: #f0eee9; }
+  #root { height: 100%; }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="charging-core.jsx"></script>
+<script type="text/babel" src="charging-v1.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "showLight": true,
+  "showDark": true
+}/*EDITMODE-END*/;
+
+// Frame — light bezel + label stamp around an interactive ChargingV1.
+function Frame({ density, dark, label }) {
+  return (
+    <div data-screen-label={`${density}-${dark ? 'dark' : 'light'}`}
+      style={{
+        width: '100%', height: '100%',
+        background: dark ? '#0e0f12' : '#f6f6f4',
+        borderRadius: 22, overflow: 'hidden',
+        boxShadow: dark
+          ? 'inset 0 0 0 1px rgba(255,255,255,0.08)'
+          : 'inset 0 0 0 1px rgba(0,0,0,0.06)',
+        position: 'relative',
+      }}>
+      {label && (
+        <div style={{
+          position: 'absolute', top: 12, left: 16, right: 16, zIndex: 5,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          fontSize: 11, color: dark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)',
+          fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: 0.5,
+          textTransform: 'uppercase', pointerEvents: 'none',
+        }}>
+          <span>{label}</span><span>{dark ? 'dark' : 'light'}</span>
+        </div>
+      )}
+      <div style={{ width: '100%', height: '100%', paddingTop: 32, boxSizing: 'border-box' }}>
+        <ChargingV1 density={density} dark={dark} />
+      </div>
+    </div>
+  );
+}
+
+const App = () => {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  // Mobile keeps original web sizing; tablet, desktop, in-car all share the
+  // larger Polestar 2 in-car density per the latest direction.
+  const viewports = [
+    { id: 'incar',   name: 'Polestar 2 in-car', w: 1152, h: 1536, density: 'incar'   },
+    { id: 'tablet',  name: 'Tablet',            w: 820,  h: 1180, density: 'tablet'  },
+    { id: 'desktop', name: 'Desktop',           w: 1280, h: 900,  density: 'desktop' },
+    { id: 'mobile',  name: 'Mobile',            w: 390,  h: 844,  density: 'mobile'  },
+  ];
+
+  const cards = [];
+  viewports.forEach((vp) => {
+    if (t.showLight) cards.push(
+      <DCArtboard key={`${vp.id}-l`} id={`${vp.id}-l`}
+        label={`${vp.name} · Light · ${vp.w}×${vp.h}`} width={vp.w} height={vp.h}>
+        <Frame density={vp.density} dark={false} label={vp.name} />
+      </DCArtboard>
+    );
+    if (t.showDark) cards.push(
+      <DCArtboard key={`${vp.id}-d`} id={`${vp.id}-d`}
+        label={`${vp.name} · Dark · ${vp.w}×${vp.h}`} width={vp.w} height={vp.h}>
+        <Frame density={vp.density} dark={true} label={vp.name} />
+      </DCArtboard>
+    );
+  });
+
+  return (
+    <React.Fragment>
+      <DesignCanvas
+        title="Liukuri · charging view"
+        subtitle="Refined direction · all viewports · interactive">
+        <DCSection id="all" title="All viewports"
+          subtitle="Mobile keeps web sizing · tablet, desktop, and in-car share the Polestar 2 scale">
+          {cards}
+        </DCSection>
+      </DesignCanvas>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="Themes shown">
+          <TweakToggle label="Light" value={t.showLight}
+            onChange={(v) => setTweak('showLight', v)} />
+          <TweakToggle label="Dark" value={t.showDark}
+            onChange={(v) => setTweak('showDark', v)} />
+        </TweakSection>
+      </TweaksPanel>
+    </React.Fragment>
+  );
+};
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>

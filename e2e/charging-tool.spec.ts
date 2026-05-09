@@ -27,7 +27,9 @@ test.describe('Charging tool', () => {
   });
 
   test('calculations update on input change', async ({ page }) => {
-    const durationValue = page.locator('.summary-row').filter({ hasText: 'Duration' }).locator('.value');
+    // Duration moved from the Summary card to the Schedule card (.duration-row)
+    // in the design uplift (issue #31).
+    const durationValue = page.locator('.duration-row .value');
     const initialDuration = await durationValue.textContent();
 
     // Expand advanced section and change voltage to affect calculations

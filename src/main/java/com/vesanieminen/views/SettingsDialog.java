@@ -38,6 +38,7 @@ public class SettingsDialog extends Dialog {
     public static final String margin = "settings.margin";
     public static final String vat = "settings.vat";
     private static final String THEME_PREFERENCE_KEY = "theme.preference";
+    private static final String DENSITY_PREFERENCE_KEY = "density.preference";
 
     public enum ThemePreference {
         SYSTEM("system"),
@@ -60,6 +61,31 @@ public class SettingsDialog extends Dialog {
                 case "light" -> LIGHT;
                 case "dark" -> DARK;
                 default -> SYSTEM;
+            };
+        }
+    }
+
+    public enum DensityPreference {
+        AUTO("auto"),
+        COMPACT("compact"),
+        COMFORTABLE("comfortable");
+
+        private final String storageValue;
+
+        DensityPreference(String storageValue) {
+            this.storageValue = storageValue;
+        }
+
+        public String storageValue() {
+            return storageValue;
+        }
+
+        public static DensityPreference fromStorage(String raw) {
+            if (raw == null) return AUTO;
+            return switch (raw) {
+                case "compact" -> COMPACT;
+                case "comfortable" -> COMFORTABLE;
+                default -> AUTO;
             };
         }
     }
@@ -100,6 +126,29 @@ public class SettingsDialog extends Dialog {
             UI.getCurrent().getPage().executeJs("window.applyTheme && window.applyTheme();");
         });
         add(themeSelect);
+
+        final Select<DensityPreference> densitySelect = new Select<>();
+        densitySelect.setLabel(T.tr("settings.density.label"));
+        densitySelect.setHelperText(T.tr("settings.density.helper"));
+        densitySelect.setId("settings-density");
+        densitySelect.setItems(DensityPreference.AUTO, DensityPreference.COMPACT, DensityPreference.COMFORTABLE);
+        densitySelect.setItemLabelGenerator(p -> switch (p) {
+            case AUTO -> T.tr("settings.density.auto");
+            case COMPACT -> T.tr("settings.density.compact");
+            case COMFORTABLE -> T.tr("settings.density.comfortable");
+        });
+        densitySelect.setValue(DensityPreference.AUTO);
+        densitySelect.setWidthFull();
+        WebStorage.getItem(DENSITY_PREFERENCE_KEY, raw -> densitySelect.setValue(DensityPreference.fromStorage(raw)));
+        densitySelect.addValueChangeListener(e -> {
+            if (!e.isFromClient() || e.getValue() == null) {
+                return;
+            }
+            DensityPreference picked = e.getValue();
+            WebStorage.setItem(DENSITY_PREFERENCE_KEY, picked.storageValue());
+            UI.getCurrent().getPage().executeJs("window.applyDensity && window.applyDensity();");
+        });
+        add(densitySelect);
 
         final Select<Locale> languageSelect = new Select<>();
         languageSelect.setLabel(T.tr("settings.language"));
