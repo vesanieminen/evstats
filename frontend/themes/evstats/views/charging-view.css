@@ -22,9 +22,11 @@
     --cv-radius: 12px;
     --cv-control: 40px;
 
-    /* Slider value display (Current % / Target %) — sized to match the
-     * old big stats-grid values that used --cv-h2. */
+    /* Slider value display (Current % / Target % on the SoC slider, the
+     * amperage value on the speed slider) — sized to match the old big
+     * stats-grid values that used --cv-h2. */
     --dual-slider-value-size: var(--cv-h2);
+    --single-slider-value-size: var(--cv-h2);
 
     display: flex;
     flex-direction: column;

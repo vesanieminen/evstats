@@ -34,9 +34,13 @@ export class SingleRangeSlider extends LitElement {
     }
 
     .slider-value {
-      font-size: var(--lumo-font-size-l, 18px);
-      font-weight: 600;
+      /* Charging-view tunes this via --single-slider-value-size; falls back
+       * to a much larger size than Lumo's "l" so the slider value (e.g.
+       * "16 A") matches the SOC % displayed by the dual slider. */
+      font-size: var(--single-slider-value-size, var(--lumo-font-size-xxl, 36px));
+      font-weight: 700;
       color: var(--lumo-body-text-color, #333);
+      line-height: 1;
     }
 
     .slider-track-container {
