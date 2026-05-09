@@ -74,6 +74,10 @@ html:where(.brand-polestar) .charging-view-container {
     --cv-radius: 0 !important;
 }
 
+/* Narrow viewport responsive collapses for non-Advanced sections.
+ * .advanced-section's responsive behaviour lives next to its own rule
+ * later in this file so its 3-col base + 2-col + 1-col cascade is in
+ * source order. */
 @media (max-width: 480px) {
     .vehicle-custom-fields {
         grid-template-columns: 1fr;
@@ -81,14 +85,6 @@ html:where(.brand-polestar) .charging-view-container {
 
     .schedule-row {
         grid-template-columns: 1fr;
-    }
-
-    .advanced-section {
-        grid-template-columns: 1fr;
-    }
-
-    .advanced-section .full-width {
-        grid-column: span 1;
     }
 }
 
@@ -565,6 +561,27 @@ html:where(.brand-polestar) .charging-view-container {
  * isn't needed: 1fr-from-grid-template wins over the old span:2. */
 .advanced-section .full-width {
     grid-column: span 1;
+}
+
+/* Phones (481-599px): 3 steppers don't fit in one row — drop to 2
+ * columns and put Charging Loss on its own row spanning both. */
+@media (min-width: 481px) and (max-width: 599px) {
+    .advanced-section {
+        grid-template-columns: 1fr 1fr;
+    }
+    .advanced-section .full-width {
+        grid-column: span 2;
+    }
+}
+
+/* Tiny (≤ 480px): 1 column, every stepper on its own row. */
+@media (max-width: 480px) {
+    .advanced-section {
+        grid-template-columns: 1fr;
+    }
+    .advanced-section .full-width {
+        grid-column: span 1;
+    }
 }
 
 .charging-loss-row {
