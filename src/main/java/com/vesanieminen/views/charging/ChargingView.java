@@ -222,6 +222,14 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
             vehicleMetaSpan.setText(selectedModel.capacity() + " kWh");
             WebStorage.setItem(VEHICLE_STORAGE_KEY, selectedModel.name());
             applyBrandTheme(selectedModel);
+            // Polestar's brand identity is dark-mode only; force theme to
+            // dark when the user picks a Polestar (only triggered on
+            // client-driven changes so WebStorage hydration on load
+            // doesn't override the user's stored preference).
+            if (e.isFromClient() && Brand.from(selectedModel) == Brand.POLESTAR) {
+                WebStorage.setItem("theme.preference", "dark");
+                UI.getCurrent().getPage().executeJs("window.applyTheme && window.applyTheme();");
+            }
             if (selectedModel.equals(EVModel.CUSTOM)) {
                 batteryCapacityField.setVisible(true);
                 consumptionField.setVisible(true);
