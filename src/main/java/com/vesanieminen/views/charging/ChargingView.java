@@ -180,8 +180,14 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         Div vehicleChipText = new Div(vehicleNameSpan, vehicleMetaSpan);
         vehicleChipText.addClassName("vehicle-chip-text");
 
-        Span changeChip = new Span(T.tr("charging.changeVehicleChip") + " ›");
+        // Compact edit-icon affordance instead of a "Change ›" text pill —
+        // the whole row is already the click target (role="button" with
+        // aria-label "Change Vehicle"); the icon is purely a visual hint.
+        // Keeps more horizontal space free for long vehicle names.
+        Icon editIcon = new Icon(VaadinIcon.EDIT);
+        Div changeChip = new Div(editIcon);
         changeChip.addClassName("change-chip");
+        changeChip.getElement().setAttribute("aria-hidden", "true");
 
         vehicleChip.add(carImageContainer, vehicleChipText, changeChip);
 

@@ -191,15 +191,25 @@ html:where(.brand-polestar) .charging-view-container {
     margin-top: 2px;
 }
 
+/* Circular edit-icon button — visual affordance only; the parent
+ * .vehicle-chip is the actual click target. Square aspect ratio keeps
+ * the icon centred regardless of the surrounding text height. */
 .change-chip {
     flex: 0 0 auto;
-    font-size: var(--cv-base);
-    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(var(--cv-base) * 2.4);
+    height: calc(var(--cv-base) * 2.4);
     color: var(--lumo-body-text-color);
-    padding: calc(var(--cv-base) * 0.55) calc(var(--cv-base) * 1.1);
     border: 1px solid var(--lumo-contrast-30pct);
-    border-radius: 999px;
+    border-radius: 50%;
     background: var(--lumo-base-color);
+}
+
+.change-chip vaadin-icon {
+    width: calc(var(--cv-base) * 1.1);
+    height: calc(var(--cv-base) * 1.1);
 }
 
 [theme~="dark"] .change-chip {
