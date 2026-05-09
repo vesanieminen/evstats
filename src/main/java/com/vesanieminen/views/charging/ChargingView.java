@@ -75,10 +75,8 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
     private final Select<EVModel> vehicleSelect;
     private final NumberField batteryCapacityField;
     private final NumberField consumptionField;
-    private final Span currentSocValueSpan;
     private final Span currentRangeSpan;
     private final Span rangeAddedSpan;
-    private final Span targetSocValueSpan;
     private final Span targetRangeSpan;
     private EVModel selectedModel;
 
@@ -106,8 +104,6 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
     private final DatePicker endDatePicker;
     private final TimePicker endTimePicker;
     private final Button scheduleModeFlipBtn;
-    private Div startScheduleRow;
-    private Div endScheduleRow;
 
     // Summary fields
     private final Span durationValueSpan;
@@ -190,45 +186,6 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         changeChip.getElement().setAttribute("aria-hidden", "true");
 
         vehicleChip.add(carImageContainer, vehicleChipText, changeChip);
-
-        // SOC Display (Current | Range + | Target)
-        Div socDisplay = new Div();
-        socDisplay.addClassName("soc-display");
-
-        // Current column
-        Div currentColumn = new Div();
-        currentColumn.addClassName("soc-column");
-        Span currentLabel = new Span(T.tr("charging.current"));
-        currentLabel.addClassName("soc-label");
-        currentSocValueSpan = new Span("20%");
-        currentSocValueSpan.addClassName("soc-value");
-        currentRangeSpan = new Span("103 km");
-        currentRangeSpan.addClassName("soc-range");
-        currentColumn.add(currentLabel, currentSocValueSpan, currentRangeSpan);
-
-        // Range added column
-        Div rangeColumn = new Div();
-        rangeColumn.addClassNames("soc-column", "center");
-        Span rangeLabel = new Span(T.tr("charging.range"));
-        rangeLabel.addClassName("soc-label");
-        rangeAddedSpan = new Span("155 km");
-        rangeAddedSpan.addClassNames("soc-value", "accent");
-        Span addedLabel = new Span(T.tr("charging.added"));
-        addedLabel.addClassName("soc-range");
-        rangeColumn.add(rangeLabel, rangeAddedSpan, addedLabel);
-
-        // Target column
-        Div targetColumn = new Div();
-        targetColumn.addClassNames("soc-column", "right");
-        Span targetLabel = new Span(T.tr("charging.target"));
-        targetLabel.addClassName("soc-label");
-        targetSocValueSpan = new Span("50%");
-        targetSocValueSpan.addClassName("soc-value");
-        targetRangeSpan = new Span("258 km");
-        targetRangeSpan.addClassName("soc-range");
-        targetColumn.add(targetLabel, targetSocValueSpan, targetRangeSpan);
-
-        socDisplay.add(currentColumn, rangeColumn, targetColumn);
 
         // Section that hosts vehicleSelect + custom fields + image upload —
         // moved into the bottom-sheet panel below.
@@ -439,7 +396,38 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         batteryCapacitySpan.addClassName(LumoUtility.TextColor.SECONDARY);
         chargeLevelSummary.add(addingKwhSpan, batteryCapacitySpan);
 
-        chargeLevelCard.add(socDisplay, socSlider, chargeLevelSummary);
+        // Range row (km only — the slider thumbs already show the %s).
+        // Current / +Added (accent) / Target on a single line above the
+        // adding/battery summary.
+        Div rangeRow = new Div();
+        rangeRow.addClassName("soc-display");
+        Div curCol = new Div();
+        curCol.addClassName("soc-column");
+        Span curLabel = new Span(T.tr("charging.current"));
+        curLabel.addClassName("soc-label");
+        currentRangeSpan = new Span("103 km");
+        currentRangeSpan.addClassName("soc-range");
+        curCol.add(curLabel, currentRangeSpan);
+
+        Div addCol = new Div();
+        addCol.addClassNames("soc-column", "center");
+        Span addLabel = new Span(T.tr("charging.added"));
+        addLabel.addClassName("soc-label");
+        rangeAddedSpan = new Span("+155 km");
+        rangeAddedSpan.addClassNames("soc-range", "accent");
+        addCol.add(addLabel, rangeAddedSpan);
+
+        Div tgtCol = new Div();
+        tgtCol.addClassNames("soc-column", "right");
+        Span tgtLabel = new Span(T.tr("charging.target"));
+        tgtLabel.addClassName("soc-label");
+        targetRangeSpan = new Span("258 km");
+        targetRangeSpan.addClassName("soc-range");
+        tgtCol.add(tgtLabel, targetRangeSpan);
+
+        rangeRow.add(curCol, addCol, tgtCol);
+
+        chargeLevelCard.add(socSlider, rangeRow, chargeLevelSummary);
         add(chargeLevelCard);
 
         // ===== CHARGING SPEED CARD =====
@@ -462,17 +450,6 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
 
         speedHeader.add(headerLeft, powerValueSpan);
 
-        // Big amperage read-out: "{amps} A · {phases}-phase" (issue #31)
-        Div amperageReadout = new Div();
-        amperageReadout.addClassName("amperage-readout");
-        Span ampsBig = new Span(String.valueOf(preservedState.charge.getAmperes()));
-        ampsBig.addClassName("amps");
-        ampsBig.setId("amperageBigValue");
-        Span phasesBig = new Span("A · " + preservedState.charge.getPhases() + "-" + T.tr("charging.phaseUnit"));
-        phasesBig.addClassName("phases");
-        phasesBig.setId("amperagePhasesText");
-        amperageReadout.add(ampsBig, phasesBig);
-
         // Amperage slider
         // Range 1..32: the design handoff spec'd 0..32 (default 16 A
         // mid-track), but 0 A means "not charging" which makes no physical
@@ -483,7 +460,6 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         amperesSlider.addValueChangeListener(e -> {
             preservedState.charge.setAmperes(e.getValue());
             WebStorage.setItem(AMPERES_STORAGE_KEY, String.valueOf(e.getValue()));
-            ampsBig.setText(String.valueOf(e.getValue()));
             doCalculation();
         });
 
@@ -521,14 +497,8 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         advancedSection.add(phasesField, voltageField, chargingLossField);
         advancedDetails.add(advancedSection);
 
-        chargingSpeedCard.add(speedHeader, amperageReadout, amperesSlider, advancedDetails);
+        chargingSpeedCard.add(speedHeader, amperesSlider, advancedDetails);
         add(chargingSpeedCard);
-
-        phasesField.addValueChangeListener(e -> {
-            if (e.getValue() != null) {
-                phasesBig.setText("A · " + e.getValue() + "-" + T.tr("charging.phaseUnit"));
-            }
-        });
 
         // ===== SCHEDULE CARD =====
         // Build a custom header so we can include the inline schedule-mode flip
@@ -606,21 +576,25 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         endTimePicker.setLocale(Locale.of("fi", "FI"));
         endTimePicker.setReadOnly(true);
 
-        Div startRow = new Div(startDatePicker, startTimePicker);
-        startRow.addClassName("schedule-row");
-        startRow.setId("schedule-row-start");
-        Div endRow = new Div(endDatePicker, endTimePicker);
-        endRow.addClassName("schedule-row");
-        endRow.setId("schedule-row-end");
-        // Default mode is CHARGING_END (start is given, end derived) — show
-        // start row, hide end row.
-        endRow.setVisible(false);
-        this.startScheduleRow = startRow;
-        this.endScheduleRow = endRow;
+        // Schedule layout per design: [Start group] → [End group].
+        // Each group holds its date + time picker; the group's date/time
+        // sit side-by-side on wide screens and stack when there isn't
+        // enough room. The arrow lives between the two groups and is
+        // vertically centred against them. The derived pickers stay
+        // read-only so the user can see the computed end time.
+        Div startGroup = new Div(startDatePicker, startTimePicker);
+        startGroup.addClassName("schedule-pair");
+
+        Div endGroup = new Div(endDatePicker, endTimePicker);
+        endGroup.addClassName("schedule-pair");
+
+        Span scheduleArrow = new Span("→");
+        scheduleArrow.addClassName("schedule-arrow");
+        scheduleArrow.getElement().setAttribute("aria-hidden", "true");
 
         Div scheduleGrid = new Div();
         scheduleGrid.addClassName("schedule-grid");
-        scheduleGrid.add(startRow, endRow);
+        scheduleGrid.add(startGroup, scheduleArrow, endGroup);
 
         // Duration row (moved from Summary card per issue #31)
         Div durationRow = new Div();
@@ -773,8 +747,6 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
             startTimePicker.setReadOnly(false);
             endDatePicker.setReadOnly(true);
             endTimePicker.setReadOnly(true);
-            if (startScheduleRow != null) startScheduleRow.setVisible(true);
-            if (endScheduleRow != null) endScheduleRow.setVisible(false);
         } else {
             scheduleModeFlipBtn.setText(T.tr("charging.solvingForStart") + " ↻");
             scheduleModeFlipBtn.setAriaLabel(T.tr("charging.calculateEnd"));
@@ -782,8 +754,6 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
             startTimePicker.setReadOnly(true);
             endDatePicker.setReadOnly(false);
             endTimePicker.setReadOnly(false);
-            if (startScheduleRow != null) startScheduleRow.setVisible(false);
-            if (endScheduleRow != null) endScheduleRow.setVisible(true);
         }
         doCalculation();
     }
@@ -851,15 +821,11 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         preservedState.charge.setTargetSOC(targetSoc);
         preservedState.charge.setCapacity(capacity);
 
-        // Calculate ranges
+        // Range row (km only — slider thumbs cover the percentages)
         int currentRange = (int) Math.round((capacity * currentSoc / 100.0) / consumption * 100);
         int targetRange = (int) Math.round((capacity * targetSoc / 100.0) / consumption * 100);
         int rangeAdded = targetRange - currentRange;
-
-        // Update vehicle display
-        currentSocValueSpan.setText(String.format("%.0f%%", currentSoc));
         currentRangeSpan.setText(currentRange + " km");
-        targetSocValueSpan.setText(String.format("%.0f%%", targetSoc));
         targetRangeSpan.setText(targetRange + " km");
         rangeAddedSpan.setText("+" + rangeAdded + " km");
 

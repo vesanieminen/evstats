@@ -105,9 +105,13 @@ export class DualRangeSlider extends LitElement {
     }
 
     .label-value {
-      font-size: var(--lumo-font-size-l, 18px);
-      font-weight: 600;
+      /* Charging-view tunes this via --dual-slider-value-size; falls back
+       * to a much larger size than Lumo's "l" so the SOC % stays readable
+       * after the dedicated stats grid was removed. */
+      font-size: var(--dual-slider-value-size, var(--lumo-font-size-xxl, 36px));
+      font-weight: 700;
       color: var(--lumo-body-text-color, #333);
+      line-height: 1;
     }
   `;
 

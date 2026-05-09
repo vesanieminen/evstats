@@ -22,6 +22,10 @@
     --cv-radius: 12px;
     --cv-control: 40px;
 
+    /* Slider value display (Current % / Target %) — sized to match the
+     * old big stats-grid values that used --cv-h2. */
+    --dual-slider-value-size: var(--cv-h2);
+
     display: flex;
     flex-direction: column;
     gap: var(--cv-gap);
@@ -80,10 +84,6 @@ html:where(.brand-polestar) .charging-view-container {
  * source order. */
 @media (max-width: 480px) {
     .vehicle-custom-fields {
-        grid-template-columns: 1fr;
-    }
-
-    .schedule-row {
         grid-template-columns: 1fr;
     }
 }
@@ -600,25 +600,56 @@ html:where(.brand-polestar) .charging-view-container {
     gap: var(--lumo-space-s);
 }
 
-/* Schedule Section — only one row of (date, time) is visible at a time;
- * the other row is the computed end of the calculation, surfaced via the
- * Duration row below. The row is a 2-col grid (date | time) on desktop
- * and stacks to a single column on narrow viewports. */
+/* Schedule Section per design: [Start pair] → [End pair].
+ * The arrow is vertically centred against both pairs. Each pair holds
+ * its date + time picker; on wide screens the pair lays out side by
+ * side, on narrower screens it stacks date over time. The smallest
+ * viewports stack the whole thing (no arrow). */
 .schedule-grid {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     gap: calc(var(--cv-gap) * 0.6);
+    align-items: center;
 }
 
-.schedule-row {
+.schedule-grid vaadin-date-picker,
+.schedule-grid vaadin-time-picker {
+    min-width: 0;
+}
+
+.schedule-pair {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: calc(var(--cv-gap) * 0.6);
+    gap: calc(var(--cv-gap) * 0.4);
 }
 
-.schedule-row vaadin-date-picker,
-.schedule-row vaadin-time-picker {
-    min-width: 0;
+.schedule-arrow {
+    color: var(--lumo-tertiary-text-color);
+    font-size: var(--cv-h2);
+    text-align: center;
+    line-height: 1;
+}
+
+/* Below 900px: side-by-side date + time inside a pair gets too tight,
+ * so stack date over time within each pair. The pair itself still
+ * sits in its grid column with the arrow centred between. */
+@media (max-width: 899px) {
+    .schedule-pair {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Smallest viewports (≤ 480px): the side-by-side groups don't fit even
+ * when each pair is stacked, so stack the start group, arrow, end
+ * group vertically. Hide the arrow — the start/end labels above the
+ * pickers carry the meaning. */
+@media (max-width: 480px) {
+    .schedule-grid {
+        grid-template-columns: 1fr;
+    }
+    .schedule-arrow {
+        display: none;
+    }
 }
 
 /* Schedule card header right slot: "Solving for end time ↻" inline flip
