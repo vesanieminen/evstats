@@ -576,25 +576,20 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         endTimePicker.setLocale(Locale.of("fi", "FI"));
         endTimePicker.setReadOnly(true);
 
-        // Schedule layout per design: [Start group] → [End group].
-        // Each group holds its date + time picker; the group's date/time
-        // sit side-by-side on wide screens and stack when there isn't
-        // enough room. The arrow lives between the two groups and is
-        // vertically centred against them. The derived pickers stay
-        // read-only so the user can see the computed end time.
+        // Schedule layout: [Start group] [End group]. Each group holds
+        // its date + time picker; on wide screens they sit side-by-side
+        // within the group, on narrower screens the date stacks above
+        // the time. The derived pickers stay read-only so the user can
+        // see the computed end time.
         Div startGroup = new Div(startDatePicker, startTimePicker);
         startGroup.addClassName("schedule-pair");
 
         Div endGroup = new Div(endDatePicker, endTimePicker);
         endGroup.addClassName("schedule-pair");
 
-        Span scheduleArrow = new Span("→");
-        scheduleArrow.addClassName("schedule-arrow");
-        scheduleArrow.getElement().setAttribute("aria-hidden", "true");
-
         Div scheduleGrid = new Div();
         scheduleGrid.addClassName("schedule-grid");
-        scheduleGrid.add(startGroup, scheduleArrow, endGroup);
+        scheduleGrid.add(startGroup, endGroup);
 
         // Duration row (moved from Summary card per issue #31)
         Div durationRow = new Div();

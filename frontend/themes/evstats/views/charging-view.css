@@ -600,16 +600,14 @@ html:where(.brand-polestar) .charging-view-container {
     gap: var(--lumo-space-s);
 }
 
-/* Schedule Section per design: [Start pair] → [End pair].
- * The arrow is vertically centred against both pairs. Each pair holds
- * its date + time picker; on wide screens the pair lays out side by
- * side, on narrower screens it stacks date over time. The smallest
- * viewports stack the whole thing (no arrow). */
+/* Schedule Section: [Start pair] [End pair]. Each pair holds its
+ * date + time picker; on wide screens the pair lays out side by side,
+ * on narrower screens it stacks date over time, on the smallest
+ * viewports the whole grid stacks. */
 .schedule-grid {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: calc(var(--cv-gap) * 0.6);
-    align-items: center;
 }
 
 .schedule-grid vaadin-date-picker,
@@ -623,32 +621,19 @@ html:where(.brand-polestar) .charging-view-container {
     gap: calc(var(--cv-gap) * 0.4);
 }
 
-.schedule-arrow {
-    color: var(--lumo-tertiary-text-color);
-    font-size: var(--cv-h2);
-    text-align: center;
-    line-height: 1;
-}
-
 /* Below 900px: side-by-side date + time inside a pair gets too tight,
- * so stack date over time within each pair. The pair itself still
- * sits in its grid column with the arrow centred between. */
+ * so stack date over time within each pair. */
 @media (max-width: 899px) {
     .schedule-pair {
         grid-template-columns: 1fr;
     }
 }
 
-/* Smallest viewports (≤ 480px): the side-by-side groups don't fit even
- * when each pair is stacked, so stack the start group, arrow, end
- * group vertically. Hide the arrow — the start/end labels above the
- * pickers carry the meaning. */
+/* Smallest viewports (≤ 480px): stack the start and end groups vertically
+ * too. */
 @media (max-width: 480px) {
     .schedule-grid {
         grid-template-columns: 1fr;
-    }
-    .schedule-arrow {
-        display: none;
     }
 }
 
