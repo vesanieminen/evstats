@@ -874,10 +874,6 @@ html[theme~="dark"]:where(.brand-bmw) {
 /* POLESTAR — verified dark palette (issue #22 comment) */
 /* Light mode: accent only on Lumo default surface (Tier 2). */
 html:where(.brand-polestar) {
-    /* Brand scale: scale every rem-based --cv-* token (and rem-based Lumo
-     * sizes) by 22/16. Pure CSS knob — no per-rule changes needed. */
-    font-size: 22px;
-
     --lumo-primary-color: #E07020;             /* Safety Orange */
     --lumo-primary-text-color: #C45E10;        /* primary-active */
     --lumo-primary-color-50pct: rgba(224, 112, 32, 0.5);
@@ -889,6 +885,20 @@ html:where(.brand-polestar) {
     --lumo-border-radius-s: 0;
     --lumo-border-radius-m: 0;
     --lumo-border-radius-l: 0;
+}
+/* Brand scale: bump the root font to 22px so every rem-based --cv-* token
+ * (and rem-based Lumo size) gets multiplied by 22/16. This is the in-car
+ * scale — only apply when the charging view is in its Comfortable preset,
+ * matching the density logic at the top of this file. On a phone (width
+ * < 600px in Auto, or user-forced Compact) we keep the default 16px root
+ * so the mobile preset renders at its intended size. */
+@media (min-width: 600px) {
+    html:where(.brand-polestar):not(.density-compact) {
+        font-size: 22px;
+    }
+}
+html.density-comfortable:where(.brand-polestar) {
+    font-size: 22px;
 }
 /* Dark mode: full Polestar dark palette. charging-view.css and Lumo's
  * dark-mode components read --lumo-contrast-Npct (theme-aware contrast family,
