@@ -748,7 +748,6 @@ html:where(.brand-polestar) .charging-view-container {
 .total-cost-row .value {
     font-size: var(--cv-h2);
     font-weight: 700;
-    color: var(--lumo-success-text-color);
 }
 
 /* Amperage Slider Label */
