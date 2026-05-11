@@ -11,16 +11,17 @@
  * Variants override --cv-* custom properties on the view container.
  * --------------------------------------------------------------------------- */
 .charging-view-container {
-    /* Default (mobile / compact) preset */
-    --cv-base: 14px;
-    --cv-h1: 28px;
-    --cv-h2: 22px;
-    --cv-h3: 17px;
-    --cv-label: 12px;
-    --cv-pad: 16px;
-    --cv-gap: 14px;
-    --cv-radius: 12px;
-    --cv-control: 40px;
+    /* Default (mobile / compact) preset. rem so a brand can scale the
+     * whole view by overriding html { font-size }. */
+    --cv-base: 0.875rem;   /* 14px */
+    --cv-h1: 1.75rem;      /* 28px */
+    --cv-h2: 1.375rem;     /* 22px */
+    --cv-h3: 1.0625rem;    /* 17px */
+    --cv-label: 0.75rem;   /* 12px */
+    --cv-pad: 1rem;        /* 16px */
+    --cv-gap: 0.875rem;    /* 14px */
+    --cv-radius: 0.75rem;  /* 12px */
+    --cv-control: 2.5rem;  /* 40px */
 
     /* Slider value display (Current % / Target % on the SoC slider, the
      * amperage value on the speed slider) — sized to match the old big
@@ -43,29 +44,29 @@
  * still win because they have higher specificity. */
 @media (min-width: 600px) {
     html:not(.density-compact):not(.density-comfortable) .charging-view-container {
-        --cv-base: 18px;
-        --cv-h1: 56px;
-        --cv-h2: 36px;
-        --cv-h3: 24px;
-        --cv-label: 14px;
-        --cv-pad: 24px;
-        --cv-gap: 20px;
-        --cv-radius: 14px;
-        --cv-control: 56px;
+        --cv-base: 1.125rem;   /* 18px */
+        --cv-h1: 3.5rem;       /* 56px */
+        --cv-h2: 2.25rem;      /* 36px */
+        --cv-h3: 1.5rem;       /* 24px */
+        --cv-label: 0.875rem;  /* 14px */
+        --cv-pad: 1.5rem;      /* 24px */
+        --cv-gap: 1.25rem;     /* 20px */
+        --cv-radius: 0.875rem; /* 14px */
+        --cv-control: 3.5rem;  /* 56px */
     }
 }
 
 /* User-forced Comfortable */
 html.density-comfortable .charging-view-container {
-    --cv-base: 18px;
-    --cv-h1: 56px;
-    --cv-h2: 36px;
-    --cv-h3: 24px;
-    --cv-label: 14px;
-    --cv-pad: 24px;
-    --cv-gap: 20px;
-    --cv-radius: 14px;
-    --cv-control: 56px;
+    --cv-base: 1.125rem;   /* 18px */
+    --cv-h1: 3.5rem;       /* 56px */
+    --cv-h2: 2.25rem;      /* 36px */
+    --cv-h3: 1.5rem;       /* 24px */
+    --cv-label: 0.875rem;  /* 14px */
+    --cv-pad: 1.5rem;      /* 24px */
+    --cv-gap: 1.25rem;     /* 20px */
+    --cv-radius: 0.875rem; /* 14px */
+    --cv-control: 3.5rem;  /* 56px */
 }
 
 /* User-forced Compact stays at the default values defined above. */
@@ -874,6 +875,10 @@ html[theme~="dark"]:where(.brand-bmw) {
 /* POLESTAR — verified dark palette (issue #22 comment) */
 /* Light mode: accent only on Lumo default surface (Tier 2). */
 html:where(.brand-polestar) {
+    /* Brand scale: scale every rem-based --cv-* token (and rem-based Lumo
+     * sizes) by 22/16. Pure CSS knob — no per-rule changes needed. */
+    font-size: 22px;
+
     --lumo-primary-color: #E07020;             /* Safety Orange */
     --lumo-primary-text-color: #C45E10;        /* primary-active */
     --lumo-primary-color-50pct: rgba(224, 112, 32, 0.5);

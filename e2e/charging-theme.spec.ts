@@ -64,6 +64,23 @@ test.describe('Charging-page brand theme', () => {
     expect(normalise(await primaryColor(page))).toBe(normalise('#E07020'));
   });
 
+  test('Polestar preset scales <html> font-size to 22px (rem-based --cv-* tokens scale with it)', async ({ page }) => {
+    // Read the default html font-size before switching brands.
+    const defaultSize = await page.evaluate(() => getComputedStyle(document.documentElement).fontSize);
+
+    await pickVehicle(page, /Polestar 2 LR/i, 'brand-polestar');
+    const polestarSize = await page.evaluate(() => getComputedStyle(document.documentElement).fontSize);
+    expect(polestarSize).toBe('22px');
+
+    // Sanity: --cv-base now resolves to a larger pixel value than under the default brand
+    // (the token is in rem; html font-size is what scales it).
+    const cvBasePx = await page.evaluate(() => {
+      const container = document.querySelector('.charging-view-container') as HTMLElement;
+      return container ? getComputedStyle(container).fontSize : null;
+    });
+    expect(cvBasePx).not.toBe(defaultSize);
+  });
+
   test('Custom resolves to bare Lumo tokens (brand-default is a no-op)', async ({ page }) => {
     // Capture Lumo's real default by stripping any brand class first — the
     // cold-load default is now brand-tesla (set by the inline boot script),
