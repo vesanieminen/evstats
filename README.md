@@ -4,7 +4,7 @@ A web app for Finnish EV enthusiasts. Calculate the cost of a charging session a
 
 Hosted at: https://auto.liukuri.fi
 
-![Charging tool](docs/screenshots/charging-themes/default.png)
+![Charging tool](docs/screenshots/charging-themes/polestar.png)
 
 ## Features
 
