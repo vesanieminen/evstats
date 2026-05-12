@@ -8,7 +8,10 @@
       "version": "lts"
     },
     "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers-extra/features/apt-packages:1": {
+      "packages": "tmux"
+    }
   },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "remoteEnv": {
