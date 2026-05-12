@@ -1,17 +1,22 @@
 {
   "name": "Java Agents",
-  "image": "mcr.microsoft.com/devcontainers/java:21-bookworm",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "lts"
-    }
+    },
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
-  "postCreateCommand": "curl -fsSL https://claude.ai/install.sh | bash && npm install -g @openai/codex @playwright/cli@latest && playwright-cli install --skills && ~/.local/bin/claude mcp add vaadin --transport http https://mcp.vaadin.com/docs && npm install && npx playwright install --with-deps chromium",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
   "remoteEnv": {
     "PATH": "${containerEnv:HOME}/.local/bin:${containerEnv:PATH}"
   },
-  "appPort": [
-    "8080:8080",
-    "35729:35729"
-  ]
+  "containerEnv": {
+    "GH_TOKEN": "${localEnv:GH_TOKEN}",
+    "CLAUDE_CODE_OAUTH_TOKEN": "${localEnv:CLAUDE_CODE_OAUTH_TOKEN}"
+  },
+  "forwardPorts": [5432]
 }
