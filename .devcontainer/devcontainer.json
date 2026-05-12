@@ -11,7 +11,9 @@
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers-extra/features/apt-packages:1": {
       "packages": "tmux"
-    }
+    },
+    "ghcr.io/devcontainers-extra/features/neovim:1": {},
+    "ghcr.io/devcontainers-extra/features/lazygit:1": {}
   },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "remoteEnv": {

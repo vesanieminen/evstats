@@ -8,6 +8,10 @@ services:
       - npm-cache:/home/vscode/.npm
       - pnpm-store:/home/vscode/.local/share/pnpm/store
       - playwright-cache:/home/vscode/.cache/ms-playwright
+      - nvim-config:/home/vscode/.config/nvim
+      - nvim-data:/home/vscode/.local/share/nvim
+      - nvim-state:/home/vscode/.local/state/nvim
+      - nvim-cache:/home/vscode/.cache/nvim
     command: sleep infinity
     network_mode: service:db
 
@@ -33,3 +37,7 @@ volumes:
   npm-cache:
   pnpm-store:
   playwright-cache:
+  nvim-config:
+  nvim-data:
+  nvim-state:
+  nvim-cache:
