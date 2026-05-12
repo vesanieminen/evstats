@@ -11,6 +11,12 @@ sudo chown -R vscode: \
   /home/vscode/.local \
   /home/vscode/.cache
 
+# Install extras not in the base image. Avoiding the apt-packages
+# devcontainer feature because its nanolayer binary crashes on Apple
+# Silicon's 16KB-page Linux VM ("Unsupported system page size").
+sudo apt-get update -qq
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends tmux
+
 # Pre-seed Claude Code config and credentials so the first-run wizard skips
 # and OAuth auth survives. Workaround for anthropics/claude-code#8938 —
 # CLAUDE_CODE_OAUTH_TOKEN alone doesn't satisfy the credential-file lookup
