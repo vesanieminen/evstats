@@ -10,7 +10,7 @@ test.describe('Charging tool', () => {
 
   test('default values load', async ({ page }) => {
     // Verify visible default values on main view
-    await expect(page.getByText('29%').first()).toBeVisible();
+    await expect(page.getByText('20%').first()).toBeVisible();
     await expect(page.getByText('80%').first()).toBeVisible();
     await expect(page.getByText('16 A')).toBeVisible();
     await expect(page.getByText('11.0 kW')).toBeVisible();
@@ -107,6 +107,46 @@ test.describe('Charging tool', () => {
 
     await expect.soft(spotValue).toHaveText(/\d/);
     await expect.soft(totalValue).toHaveText(/\d/);
+  });
+
+  test('SOC slider values persist across new sessions', async ({ page, context }) => {
+    // Sanity-check the documented defaults so a failure later is unambiguous.
+    await expect(page.getByText('20%').first()).toBeVisible();
+    await expect(page.getByText('80%').first()).toBeVisible();
+
+    // Drive the slider via the same custom events its LitElement dispatches to
+    // the server. Also set the host-element properties so the shadow-DOM labels
+    // re-render to the new values (the event alone doesn't mutate them).
+    await page.evaluate(() => {
+      const slider = document.querySelector('dual-range-slider') as any;
+      if (!slider) throw new Error('dual-range-slider not found');
+      slider.lowValue = 45;
+      slider.highValue = 75;
+      slider.dispatchEvent(new CustomEvent('low-value-changed', {
+        detail: { value: 45 }, bubbles: true, composed: true,
+      }));
+      slider.dispatchEvent(new CustomEvent('high-value-changed', {
+        detail: { value: 75 }, bubbles: true, composed: true,
+      }));
+    });
+
+    // Wait for the server round-trip: the listener writes WebStorage and syncs
+    // lowValue / highValue back to the element, so the labels must show 45/75.
+    await expect(page.getByText('45%').first()).toBeVisible();
+    await expect(page.getByText('75%').first()).toBeVisible();
+
+    // Drop the JSESSIONID so the next load creates a fresh
+    // @VaadinSessionScope PreservedState — the ONLY way 45/75 can survive is
+    // WebStorage hydration in readFieldValues(). A plain page.reload() would
+    // keep the session bean and pass spuriously even with the bug present.
+    await context.clearCookies();
+
+    await page.reload();
+    await page.getByRole('heading', { name: 'Charging tool' }).waitFor();
+    await page.getByText('Charging Summary').waitFor({ state: 'visible' });
+
+    await expect(page.getByText('45%').first()).toBeVisible();
+    await expect(page.getByText('75%').first()).toBeVisible();
   });
 
   test('field persistence across refresh', async ({ page }) => {

@@ -92,6 +92,8 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
     private final IntegerField voltageField;
     private final NumberField chargingLossField;
     private static final String AMPERES_STORAGE_KEY = "amperesSlider";
+    private static final String CURRENT_SOC_STORAGE_KEY = "currentSoc";
+    private static final String TARGET_SOC_STORAGE_KEY = "targetSoc";
     private static final String VEHICLE_STORAGE_KEY = "vehicleSelect";
     private static final String CAR_IMAGE_STORAGE_KEY = "carImage";
     private static final String BRAND_STORAGE_KEY = "theme.brand";
@@ -395,7 +397,11 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
         socSlider.setLowLabel("");
         socSlider.setHighLabel("");
         socSlider.setWidthFull();
-        socSlider.addValueChangeListener(e -> doCalculation());
+        socSlider.addValueChangeListener(e -> {
+            WebStorage.setItem(CURRENT_SOC_STORAGE_KEY, String.valueOf(e.getValue().lowValue()));
+            WebStorage.setItem(TARGET_SOC_STORAGE_KEY, String.valueOf(e.getValue().highValue()));
+            doCalculation();
+        });
 
         Div chargeLevelSummary = new Div();
         chargeLevelSummary.addClassName("charge-level-summary");
@@ -966,6 +972,30 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
                 }
             }
         });
+        WebStorage.getItem(CURRENT_SOC_STORAGE_KEY, item -> {
+            if (item != null && !item.isEmpty()) {
+                try {
+                    double soc = Double.parseDouble(item);
+                    socSlider.setLowValue(soc);
+                    preservedState.charge.setCurrentSOC(soc);
+                    doCalculation();
+                } catch (NumberFormatException e) {
+                    // Ignore invalid values
+                }
+            }
+        });
+        WebStorage.getItem(TARGET_SOC_STORAGE_KEY, item -> {
+            if (item != null && !item.isEmpty()) {
+                try {
+                    double soc = Double.parseDouble(item);
+                    socSlider.setHighValue(soc);
+                    preservedState.charge.setTargetSOC(soc);
+                    doCalculation();
+                } catch (NumberFormatException e) {
+                    // Ignore invalid values
+                }
+            }
+        });
         WebStorage.getItem(VEHICLE_STORAGE_KEY, item -> {
             if (item != null && !item.isEmpty()) {
                 // Find the matching EVModel by name
@@ -1024,7 +1054,7 @@ public class ChargingView extends Main implements com.vaadin.flow.router.HasDyna
     public static class PreservedState {
         Charge charge = new Charge(
                 75,
-                29,
+                20,
                 80,
                 16,
                 3,
