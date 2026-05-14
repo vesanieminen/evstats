@@ -25,6 +25,11 @@ test.describe('Settings dialog', () => {
     await expect
       .poll(async () => page.evaluate(() => document.documentElement.getAttribute('theme')))
       .toBe('dark');
+    // Wait for the option overlay to tear down before re-opening the select.
+    // Without this, the next click can land while the previous overlay is
+    // detaching, and Light resolves to a stale option that gets removed
+    // mid-click ("element was detached from the DOM, retrying").
+    await page.getByRole('option', { name: 'Dark', exact: true }).waitFor({ state: 'detached' });
 
     // Force Light explicitly.
     await page.locator('#settings-theme').click({ force: true });
@@ -62,6 +67,15 @@ test.describe('Settings dialog', () => {
     await expect
       .poll(async () => page.evaluate(() => document.documentElement.getAttribute('theme')))
       .toBe('');
+
+    // The inline index.html script sets `theme` synchronously, but the
+    // matchMedia 'change' listener lives in prefers-color-scheme.js which is
+    // loaded later by Vaadin. Emulating dark before the listener attaches
+    // makes the 'change' event a no-op and the test hangs. Wait for the
+    // module to install window.applyTheme first.
+    await expect
+      .poll(async () => page.evaluate(() => typeof (window as any).applyTheme))
+      .toBe('function');
 
     await page.emulateMedia({ colorScheme: 'dark' });
     await expect

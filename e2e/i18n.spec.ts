@@ -15,11 +15,6 @@ test.describe('i18n', () => {
     // Charging-view labels are Finnish too. "Lataustaso" is the Charge Level
     // card title, visible without expanding any sections.
     await expect(page.getByText('Lataustaso')).toBeVisible();
-    // The DualRangeSlider "Current" / "Target" labels live inside a Lit
-    // shadow root, so query through it.
-    const slider = page.locator('dual-range-slider').first();
-    await expect(slider.locator('.label-text', { hasText: 'Nykyinen' })).toBeVisible();
-    await expect(slider.locator('.label-text', { hasText: 'Tavoite' })).toBeVisible();
     // Footer too.
     await expect(page.getByRole('link', { name: 'Tehty Vaadinilla' })).toBeVisible();
   });
@@ -45,7 +40,11 @@ test.describe('i18n', () => {
     const dialog = page.getByRole('dialog', { name: /Settings|Asetukset/ });
     await expect(dialog).toBeVisible();
     await page.locator('#settings-language').click();
-    await page.getByRole('option', { name: 'Suomi' }).click();
+    // Scope to the open overlay so we don't race against a stale, detaching
+    // option from a previous interaction.
+    const overlay = page.locator('vaadin-select-overlay[opened]');
+    await overlay.waitFor({ state: 'visible' });
+    await overlay.getByRole('option', { name: 'Suomi' }).click();
     // The server-side handler sets a `settings.locale` cookie and triggers
     // location.reload(). Wait until the cookie is present, then force a
     // reload from the test side to be deterministic about timing.

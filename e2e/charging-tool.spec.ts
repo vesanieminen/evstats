@@ -130,10 +130,17 @@ test.describe('Charging tool', () => {
       }));
     });
 
-    // Wait for the server round-trip: the listener writes WebStorage and syncs
-    // lowValue / highValue back to the element, so the labels must show 45/75.
-    await expect(page.getByText('45%').first()).toBeVisible();
-    await expect(page.getByText('75%').first()).toBeVisible();
+    // The shadow-DOM label updates instantly from the `slider.lowValue = 45`
+    // property mutation, so checking visible text wouldn't prove the server
+    // round-trip actually fired. Poll WebStorage directly — only the server-
+    // side ValueChangeListener writes those keys, via an RPC that lands a few
+    // hundred ms after the dispatched event.
+    await expect
+      .poll(async () => page.evaluate(() => localStorage.getItem('currentSoc')))
+      .toBe('45.0');
+    await expect
+      .poll(async () => page.evaluate(() => localStorage.getItem('targetSoc')))
+      .toBe('75.0');
 
     // Drop the JSESSIONID so the next load creates a fresh
     // @VaadinSessionScope PreservedState — the ONLY way 45/75 can survive is
