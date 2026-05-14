@@ -61,6 +61,7 @@ public class MainLayout extends AppLayout {
         toggle.getElement().setAttribute("aria-label", "Menu toggle");
 
         viewTitle = new H2();
+        viewTitle.setId("view-title");
         viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
 
         addToNavbar(false, toggle, viewTitle);
